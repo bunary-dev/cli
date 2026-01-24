@@ -10,7 +10,9 @@
  */
 
 import { init } from "./commands/init.js";
+import { showHelp } from "./help.js";
 
+const VERSION = "0.0.1";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -20,7 +22,7 @@ async function main(): Promise<void> {
 	}
 
 	if (args[0] === "--version" || args[0] === "-v") {
-		console.log("@bunary/cli v0.0.1");
+		console.log(`@bunary/cli v${VERSION}`);
 		return;
 	}
 
@@ -38,22 +40,6 @@ async function main(): Promise<void> {
 	console.error(`Unknown command: ${args[0]}`);
 	showHelp();
 	process.exit(1);
-}
-
-function showHelp(): void {
-	console.log(`
-@bunary/cli - Bun-first backend platform inspired by Laravel
-
-Usage:
-  bunary init <name>   Create a new Bunary project
-  bunary init .        Create a new project in current directory
-  bunary --help        Show this help message
-  bunary --version     Show version
-
-Examples:
-  bunary init my-app   Create a new project called 'my-app'
-  bunary init .        Initialize in current directory
-`);
 }
 
 main().catch((error) => {
