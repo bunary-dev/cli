@@ -11,6 +11,12 @@ interface Command {
 	usage?: string;
 }
 
+interface Option {
+	name: string;
+	alias: string;
+	description: string;
+}
+
 const commands: Command[] = [
 	{
 		name: "init <name|.>",
@@ -19,9 +25,9 @@ const commands: Command[] = [
 	},
 ];
 
-const options: Command[] = [
-	{ name: "--help, -h", description: "Show this help message" },
-	{ name: "--version, -v", description: "Show version" },
+const options: Option[] = [
+	{ name: "--help", alias: "-h", description: "Show this help message" },
+	{ name: "--version", alias: "-v", description: "Show version" },
 ];
 
 export function showHelp(): void {
@@ -35,7 +41,7 @@ Commands:
 ${commands.map((cmd) => `  ${cmd.name.padEnd(18)} ${cmd.description}`).join("\n")}
 
 Options:
-${options.map((opt) => `  ${opt.name.padEnd(18)} ${opt.description}`).join("\n")}
+${options.map((opt) => `  ${opt.name}, ${opt.alias}`.padEnd(20) + opt.description).join("\n")}
 
 Examples:
 ${commands
