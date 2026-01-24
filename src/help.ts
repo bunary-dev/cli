@@ -13,14 +13,9 @@ interface Command {
 
 const commands: Command[] = [
 	{
-		name: "init <name>",
-		description: "Create a new Bunary project",
-		usage: "bunary init my-app",
-	},
-	{
-		name: "init .",
-		description: "Create a new project in current directory",
-		usage: "bunary init .",
+		name: "init <name|.>",
+		description: "Create a new Bunary project in a named directory or current directory",
+		usage: "bunary init <name|.>",
 	},
 ];
 
