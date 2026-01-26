@@ -3,7 +3,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makeModel } from "../../src/commands/model/makeModel.js";
 
@@ -14,8 +15,7 @@ describe("make:model command", () => {
 	beforeEach(async () => {
 		// Capture the current working directory at the start of each test
 		originalCwd = process.cwd();
-		testDir = `/tmp/bunary-cli-make-model-test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-		await mkdir(testDir, { recursive: true });
+		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-make-model-test-"));
 		process.chdir(testDir);
 
 		// Create a valid Bunary project structure

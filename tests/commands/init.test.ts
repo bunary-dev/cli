@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -10,15 +10,12 @@ import {
 	init,
 } from "../../src/commands/init.js";
 
-const TEST_DIR = join(tmpdir(), "bunary-cli-test");
+let TEST_DIR: string;
 
 describe("init command", () => {
 	beforeEach(async () => {
-		// Clean up test directory before each test
-		if (existsSync(TEST_DIR)) {
-			await rm(TEST_DIR, { recursive: true, force: true });
-		}
-		await mkdir(TEST_DIR, { recursive: true });
+		// Create a unique test directory for each test run
+		TEST_DIR = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
 	});
 
 	afterEach(async () => {
