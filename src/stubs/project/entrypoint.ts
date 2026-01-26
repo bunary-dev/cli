@@ -1,8 +1,4 @@
-/**
- * Generate src/index.ts content.
- */
-export function generateEntrypoint(): string {
-	return `import { createApp } from "@bunary/http";
+import { createApp } from "@bunary/http";
 
 const app = createApp();
 
@@ -17,6 +13,4 @@ app.get("/health", () => ({
 }));
 
 const server = app.listen(3000);
-console.log(\`🚀 Server running at http://localhost:\${server.port}\`);
-`;
-}
+console.log(`🚀 Server running at http://localhost:${server.port}`);

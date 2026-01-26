@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -10,15 +10,12 @@ import {
 	init,
 } from "../../src/commands/init.js";
 
-const TEST_DIR = join(tmpdir(), "bunary-cli-test");
+let TEST_DIR: string;
 
 describe("init command", () => {
 	beforeEach(async () => {
-		// Clean up test directory before each test
-		if (existsSync(TEST_DIR)) {
-			await rm(TEST_DIR, { recursive: true, force: true });
-		}
-		await mkdir(TEST_DIR, { recursive: true });
+		// Create a unique test directory for each test run
+		TEST_DIR = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
 	});
 
 	afterEach(async () => {
@@ -74,73 +71,73 @@ describe("init command", () => {
 	});
 
 	describe("generatePackageJson()", () => {
-		test("returns valid JSON", () => {
-			const json = generatePackageJson("test-app");
+		test("returns valid JSON", async () => {
+			const json = await generatePackageJson("test-app");
 			expect(() => JSON.parse(json)).not.toThrow();
 		});
 
-		test("includes project name", () => {
-			const json = generatePackageJson("my-awesome-app");
+		test("includes project name", async () => {
+			const json = await generatePackageJson("my-awesome-app");
 			const parsed = JSON.parse(json);
 			expect(parsed.name).toBe("my-awesome-app");
 		});
 
-		test("includes @bunary/core dependency", () => {
-			const json = generatePackageJson("test-app");
+		test("includes @bunary/core dependency", async () => {
+			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
 			expect(parsed.dependencies["@bunary/core"]).toBeDefined();
 		});
 
-		test("includes @bunary/http dependency", () => {
-			const json = generatePackageJson("test-app");
+		test("includes @bunary/http dependency", async () => {
+			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
 			expect(parsed.dependencies["@bunary/http"]).toBeDefined();
 		});
 
-		test("includes dev script", () => {
-			const json = generatePackageJson("test-app");
+		test("includes dev script", async () => {
+			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
 			expect(parsed.scripts.dev).toBeDefined();
 		});
 	});
 
 	describe("generateConfig()", () => {
-		test("returns valid TypeScript", () => {
-			const config = generateConfig("test-app");
+		test("returns valid TypeScript", async () => {
+			const config = await generateConfig("test-app");
 			expect(config).toContain("import");
 			expect(config).toContain("defineConfig");
 		});
 
-		test("includes app name", () => {
-			const config = generateConfig("my-app");
+		test("includes app name", async () => {
+			const config = await generateConfig("my-app");
 			expect(config).toContain("my-app");
 		});
 
-		test("includes development environment", () => {
-			const config = generateConfig("test-app");
+		test("includes development environment", async () => {
+			const config = await generateConfig("test-app");
 			expect(config).toContain("development");
 		});
 	});
 
 	describe("generateEntrypoint()", () => {
-		test("returns valid TypeScript", () => {
-			const entry = generateEntrypoint();
+		test("returns valid TypeScript", async () => {
+			const entry = await generateEntrypoint();
 			expect(entry).toContain("import");
 			expect(entry).toContain("createApp");
 		});
 
-		test("includes a GET route", () => {
-			const entry = generateEntrypoint();
+		test("includes a GET route", async () => {
+			const entry = await generateEntrypoint();
 			expect(entry).toContain(".get(");
 		});
 
-		test("includes app.listen()", () => {
-			const entry = generateEntrypoint();
+		test("includes app.listen()", async () => {
+			const entry = await generateEntrypoint();
 			expect(entry).toContain(".listen(");
 		});
 
-		test("includes port 3000", () => {
-			const entry = generateEntrypoint();
+		test("includes port 3000", async () => {
+			const entry = await generateEntrypoint();
 			expect(entry).toContain("3000");
 		});
 	});

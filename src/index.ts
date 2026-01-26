@@ -11,10 +11,10 @@
  */
 
 import { init } from "./commands/init.js";
-import { makeModel } from "./commands/make-model.js";
+import { makeModel } from "./commands/model/makeModel.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.3";
+const VERSION = "0.0.4";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -32,7 +32,9 @@ async function main(): Promise<void> {
 		const name = args[1];
 		if (!name) {
 			console.error("Error: Project name is required");
-			console.error("Usage: bunary init <name>");
+			console.error(
+				"Usage: bunary init <name>  (or 'bunary init .' for current directory)",
+			);
 			process.exit(1);
 		}
 		await init(name);

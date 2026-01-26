@@ -2,7 +2,8 @@
  * Validation utilities tests
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isBunaryProject } from "../../src/utils/validation.js";
 
@@ -10,8 +11,7 @@ describe("isBunaryProject", () => {
 	let testDir: string;
 
 	beforeEach(async () => {
-		testDir = `/tmp/bunary-cli-test-${Date.now()}`;
-		await mkdir(testDir, { recursive: true });
+		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
 	});
 
 	afterEach(async () => {

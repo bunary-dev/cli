@@ -4,9 +4,9 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { generateModel } from "../templates/model.js";
-import { tableNameToModelName } from "../utils/naming.js";
-import { isBunaryProject } from "../utils/validation.js";
+import { tableNameToModelName } from "../../utils/naming.js";
+import { loadStub } from "../../utils/stub.js";
+import { isBunaryProject } from "../../utils/validation.js";
 
 /**
  * Generate a model file for the ORM
@@ -49,8 +49,11 @@ export async function makeModel(tableName: string): Promise<void> {
 	// Create models directory if it doesn't exist
 	await mkdir(modelsDir, { recursive: true });
 
-	// Generate model content
-	const content = generateModel(modelName, tableName);
+	// Generate model content from stub
+	const content = await loadStub("model/make.ts", {
+		modelName,
+		tableName,
+	});
 
 	// Write model file
 	await writeFile(modelPath, content, "utf-8");
