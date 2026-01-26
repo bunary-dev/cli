@@ -5,7 +5,7 @@
  * Usage:
  *   bunary init <name>        - Create a new project in <name> directory
  *   bunary init .             - Create a new project in current directory
- *   bunary make:model <table> - Generate an ORM model for <table>
+ *   bunary model:make <table> - Generate an ORM model for <table>
  *   bunary --help             - Show help
  *   bunary --version          - Show version
  */
@@ -41,11 +41,11 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	if (args[0] === "make:model") {
+	if (args[0] === "model:make") {
 		const tableName = args[1];
 		if (!tableName) {
 			console.error("Error: Table name is required");
-			console.error("Usage: bunary make:model <table-name>");
+			console.error("Usage: bunary model:make <table-name>");
 			process.exit(1);
 		}
 		try {
