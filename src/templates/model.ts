@@ -24,7 +24,7 @@ export function generateModel(modelName: string, tableName: string): string {
  *
  * @example
  * \`\`\`ts
- * import { ${modelName} } from "./models/${modelName}.js";
+ * import { ${modelName} } from "../models/${modelName}.js";
  *
  * // Get all records
  * const records = await ${modelName}.all();
