@@ -1,5 +1,5 @@
 /**
- * make:model command tests
+ * model:make command tests
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makeModel } from "../../src/commands/model/makeModel.js";
 
-describe("make:model command", () => {
+describe("model:make command", () => {
 	let testDir: string;
 	let originalCwd: string;
 

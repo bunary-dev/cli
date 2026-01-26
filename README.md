@@ -49,14 +49,14 @@ bun install
 bun run dev
 ```
 
-### `bunary make:model <table-name>`
+### `bunary model:make <table-name>`
 
 Generate an ORM model file for a database table.
 
 ```bash
 # Generate a model for a table
-bunary make:model users
-bunary make:model user_profile  # Creates UserProfile.ts
+bunary model:make users
+bunary model:make user_profile  # Creates UserProfile.ts
 
 # The command automatically:
 # - Converts table names to PascalCase (user_profile → UserProfile)

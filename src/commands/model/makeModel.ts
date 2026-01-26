@@ -1,5 +1,5 @@
 /**
- * make:model command - scaffold ORM model files
+ * model:make command - scaffold ORM model files
  */
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";

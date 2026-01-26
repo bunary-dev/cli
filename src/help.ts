@@ -25,9 +25,9 @@ const commands: Command[] = [
 		usage: "bunary init <name|.>",
 	},
 	{
-		name: "make:model <table-name>",
+		name: "model:make <table-name>",
 		description: "Generate an ORM model class for the given table name",
-		usage: "bunary make:model <table-name>",
+		usage: "bunary model:make <table-name>",
 	},
 ];
 

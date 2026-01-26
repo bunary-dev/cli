@@ -11,9 +11,21 @@ import { fileURLToPath } from "node:url";
 function getStubsDir(): string {
 	const currentFile = fileURLToPath(import.meta.url);
 	// In development: currentFile is in src/utils/stub.js
-	// In production: currentFile is in dist/utils/stub.js
-	const utilsDir = dirname(currentFile); // src/utils or dist/utils
-	const baseDir = dirname(utilsDir); // src or dist
+	// In production (bundled): currentFile is in dist/index.js
+	// In production (unbundled): currentFile is in dist/utils/stub.js
+	
+	let baseDir: string;
+	
+	// Check if we're in a bundled file (index.js)
+	if (currentFile.endsWith("index.js")) {
+		// Bundled: stubs are in the same directory as index.js
+		baseDir = dirname(currentFile); // dist/
+	} else {
+		// Unbundled or dev: go up from utils/ to base
+		const utilsDir = dirname(currentFile); // src/utils or dist/utils
+		baseDir = dirname(utilsDir); // src or dist
+	}
+	
 	return join(baseDir, "stubs");
 }
 
