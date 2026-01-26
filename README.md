@@ -166,7 +166,7 @@ await init("my-app");
 ### Model Generation
 
 ```typescript
-import { makeModel } from "@bunary/cli/commands/model";
+import { makeModel } from "@bunary/cli";
 
 // Generate a model file
 await makeModel("user_profile");  // Creates src/models/UserProfile.ts

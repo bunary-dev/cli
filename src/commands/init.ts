@@ -50,5 +50,6 @@ export async function init(name: string): Promise<void> {
 	console.log("  bun run dev\n");
 }
 
-// Re-export generators for testing
+// Re-export generators and commands for programmatic use
 export { generateConfig, generateEntrypoint, generatePackageJson };
+export { makeModel } from "./model/makeModel.js";
