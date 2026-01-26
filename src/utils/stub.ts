@@ -1,7 +1,7 @@
 /**
  * Stub utility functions for loading and processing template files
  */
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
@@ -12,7 +12,8 @@ function getStubsDir(): string {
 	const currentFile = fileURLToPath(import.meta.url);
 	// In development: currentFile is in src/utils/stub.js
 	// In production: currentFile is in dist/utils/stub.js
-	const baseDir = join(currentFile, "..", "..");
+	const utilsDir = dirname(currentFile); // src/utils or dist/utils
+	const baseDir = dirname(utilsDir); // src or dist
 	return join(baseDir, "stubs");
 }
 
