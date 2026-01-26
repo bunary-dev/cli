@@ -14,7 +14,7 @@ import { init } from "./commands/init.js";
 import { makeModel } from "./commands/make-model.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.2";
+const VERSION = "0.0.3";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
