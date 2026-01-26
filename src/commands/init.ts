@@ -3,11 +3,9 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
-import {
-	generateConfig,
-	generateEntrypoint,
-	generatePackageJson,
-} from "../templates/index.js";
+import { generateConfig } from "./project/config.js";
+import { generateEntrypoint } from "./project/entrypoint.js";
+import { generatePackageJson } from "./project/packageJson.js";
 
 /**
  * Initialize a new Bunary project.
@@ -32,13 +30,16 @@ export async function init(name: string): Promise<void> {
 	// Write files
 	await writeFile(
 		join(projectDir, "package.json"),
-		generatePackageJson(projectName),
+		await generatePackageJson(projectName),
 	);
 	await writeFile(
 		join(projectDir, "bunary.config.ts"),
-		generateConfig(projectName),
+		await generateConfig(projectName),
 	);
-	await writeFile(join(projectDir, "src", "index.ts"), generateEntrypoint());
+	await writeFile(
+		join(projectDir, "src", "index.ts"),
+		await generateEntrypoint(),
+	);
 
 	console.log(`\n✨ Created Bunary project: ${projectName}\n`);
 	console.log("Next steps:");

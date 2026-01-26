@@ -1,6 +1,6 @@
 {
   "name": "@bunary/cli",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "CLI scaffolding tool for Bunary - a Bun-first backend framework inspired by Laravel",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun && bunx tsc -p tsconfig.build.json",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun && bunx tsc -p tsconfig.build.json && cp -r ./src/stubs ./dist/stubs",
     "test": "bun test",
     "lint": "bunx biome check ./src ./tests",
     "format": "bunx biome check --write ./src ./tests",

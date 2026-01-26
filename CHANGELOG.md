@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-01-26
+
+### Changed
+
+- Refactored template system to use stub files with placeholder syntax
+  - Templates moved from inline strings to `stubs/` directory
+  - Placeholder syntax: `{{key}}` for dynamic content replacement
+  - Generator functions (`generatePackageJson`, `generateConfig`, `generateEntrypoint`, `generateModel`) are now async
+- Build process now copies stubs to `dist/` directory for production builds
+- Stubs directory excluded from linting
+
+### Internal
+
+- Created `loadStub()` utility function for loading and processing stub files
+- Organized stubs by category: `stubs/model/` and `stubs/project/`
+- Removed old `templates/` directory in favor of stub-based system
+
 ## [0.0.3] - 2026-01-26
 
 ### Added

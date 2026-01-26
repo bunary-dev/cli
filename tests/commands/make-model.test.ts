@@ -5,13 +5,15 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { makeModel } from "../../src/commands/make-model.js";
+import { makeModel } from "../../src/commands/model/makeModel.js";
 
 describe("make:model command", () => {
 	let testDir: string;
-	const originalCwd = process.cwd();
+	let originalCwd: string;
 
 	beforeEach(async () => {
+		// Capture the current working directory at the start of each test
+		originalCwd = process.cwd();
 		testDir = `/tmp/bunary-cli-make-model-test-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 		await mkdir(testDir, { recursive: true });
 		process.chdir(testDir);
@@ -31,8 +33,22 @@ describe("make:model command", () => {
 	});
 
 	afterEach(async () => {
-		process.chdir(originalCwd);
-		await rm(testDir, { recursive: true, force: true });
+		// Try to change back to original directory, but don't fail if it doesn't exist
+		try {
+			if (originalCwd && existsSync(originalCwd)) {
+				process.chdir(originalCwd);
+			}
+		} catch (error) {
+			// Ignore chdir errors - directory might have been cleaned up
+		}
+		// Clean up test directory
+		if (testDir) {
+			try {
+				await rm(testDir, { recursive: true, force: true });
+			} catch (error) {
+				// Ignore cleanup errors
+			}
+		}
 	});
 
 	it("should create model file in src/models directory", async () => {

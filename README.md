@@ -49,6 +49,32 @@ bun install
 bun run dev
 ```
 
+### `bunary make:model <table-name>`
+
+Generate an ORM model file for a database table.
+
+```bash
+# Generate a model for a table
+bunary make:model users
+bunary make:model user_profile  # Creates UserProfile.ts
+
+# The command automatically:
+# - Converts table names to PascalCase (user_profile → UserProfile)
+# - Creates files in src/models/ directory
+# - Validates you're in a Bunary project
+# - Prevents overwriting existing files
+```
+
+**Requirements:**
+- Must be run from within a Bunary project directory
+- Project must have `@bunary/core` in `package.json` dependencies
+
+**Generated Model Structure:**
+```
+src/models/
+└── Users.ts  # Generated from "users" table name
+```
+
 ### Options
 
 ```bash
@@ -66,13 +92,17 @@ bunary --version  # Show version
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --target=bun --outdir=dist",
-    "start": "bun run dist/index.js"
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun"
   },
   "dependencies": {
     "@bunary/core": "^0.0.2",
     "@bunary/http": "^0.0.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.3"
   }
 }
 ```
@@ -86,6 +116,7 @@ export default defineConfig({
   app: {
     name: "my-app",
     env: "development",
+    debug: true,
   },
 });
 ```
@@ -93,19 +124,22 @@ export default defineConfig({
 ### src/index.ts
 
 ```typescript
-import { createApp, Router, Response } from "@bunary/http";
+import { createApp } from "@bunary/http";
 
-const router = new Router();
+const app = createApp();
 
-router.get("/", () => {
-  return Response.json({ message: "Welcome to Bunary!" });
-});
+app.get("/", () => ({
+  message: "Welcome to Bunary!",
+  docs: "https://github.com/bunary-dev",
+}));
 
-const app = createApp({ router });
+app.get("/health", () => ({
+  status: "ok",
+  timestamp: new Date().toISOString(),
+}));
 
-app.listen(3000, () => {
-  console.log("Server running at http://localhost:3000");
-});
+const server = app.listen(3000);
+console.log(`🚀 Server running at http://localhost:${server.port}`);
 ```
 
 ## Programmatic API
@@ -120,14 +154,27 @@ import {
   generateEntrypoint
 } from "@bunary/cli";
 
-// Generate files
-const packageJson = generatePackageJson("my-app");
-const config = generateConfig("my-app");
-const entrypoint = generateEntrypoint();
+// Generate files (all generator functions are async)
+const packageJson = await generatePackageJson("my-app");
+const config = await generateConfig("my-app");
+const entrypoint = await generateEntrypoint();
 
 // Or scaffold a full project
 await init("my-app");
 ```
+
+### Model Generation
+
+```typescript
+import { makeModel } from "@bunary/cli/commands/model";
+
+// Generate a model file
+await makeModel("user_profile");  // Creates src/models/UserProfile.ts
+```
+
+**Note:** 
+- Generator functions (`generatePackageJson`, `generateConfig`, `generateEntrypoint`) are async and must be awaited
+- `makeModel` requires being in a Bunary project directory
 
 ## Requirements
 
