@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2026-01-26
+
+### Changed
+
+- Renamed `make:model` command to `model:make` (following object:task pattern)
+  - Updated all documentation and help text
+  - Command now follows Laravel-style naming convention
+
+### Fixed
+
+- Fixed stub path resolution to work correctly with bundled code
+  - Stubs now resolve correctly in both development and production builds
+  - Handles bundled `index.js` file structure properly
+  - Fixes issue where `bunary init` failed with "stub file not found" error
+
 ## [0.0.4] - 2026-01-26
 
 ### Changed
