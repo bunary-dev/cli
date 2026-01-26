@@ -3,16 +3,18 @@
  * @bunary/cli - CLI scaffolding tool for Bunary
  *
  * Usage:
- *   bunary init <name>  - Create a new project in <name> directory
- *   bunary init .       - Create a new project in current directory
- *   bunary --help       - Show help
- *   bunary --version    - Show version
+ *   bunary init <name>        - Create a new project in <name> directory
+ *   bunary init .             - Create a new project in current directory
+ *   bunary make:model <table> - Generate an ORM model for <table>
+ *   bunary --help             - Show help
+ *   bunary --version          - Show version
  */
 
 import { init } from "./commands/init.js";
+import { makeModel } from "./commands/make-model.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.1";
+const VERSION = "0.0.2";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -34,6 +36,22 @@ async function main(): Promise<void> {
 			process.exit(1);
 		}
 		await init(name);
+		return;
+	}
+
+	if (args[0] === "make:model") {
+		const tableName = args[1];
+		if (!tableName) {
+			console.error("Error: Table name is required");
+			console.error("Usage: bunary make:model <table-name>");
+			process.exit(1);
+		}
+		try {
+			await makeModel(tableName);
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : String(error));
+			process.exit(1);
+		}
 		return;
 	}
 

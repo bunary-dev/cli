@@ -24,6 +24,11 @@ const commands: Command[] = [
 			"Create a new Bunary project in a named directory or current directory",
 		usage: "bunary init <name|.>",
 	},
+	{
+		name: "make:model <table-name>",
+		description: "Generate an ORM model class for the given table name",
+		usage: "bunary make:model <table-name>",
+	},
 ];
 
 const options: Option[] = [
