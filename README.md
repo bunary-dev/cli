@@ -2,6 +2,10 @@
 
 Command-line interface for the Bunary framework. Provides project scaffolding and development tools.
 
+## Documentation
+
+Canonical documentation for this package lives in [`docs/index.md`](./docs/index.md).
+
 ## Installation
 
 ```bash
