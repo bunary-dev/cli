@@ -39,7 +39,7 @@ export async function makeRoute(routeName: string): Promise<void> {
 
 	if (existsSync(routePath)) {
 		throw new Error(
-			`Error: Route file ${routePath} already exists.\nDelete the existing file if you want to regenerate it.`,
+			`Error: Route ${routeName} already exists at ${routePath}\nDelete the existing file if you want to regenerate it.`,
 		);
 	}
 
