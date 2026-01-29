@@ -62,10 +62,7 @@ describe("make:migration command", () => {
 
 		const migrationsDir = join(testDir, "migrations");
 		const files = readdirSync(migrationsDir).filter((f) => f.endsWith(".ts"));
-		const content = readFileSync(
-			join(migrationsDir, files[0]),
-			"utf-8",
-		);
+		const content = readFileSync(join(migrationsDir, files[0]), "utf-8");
 		expect(content).toContain("export async function up()");
 		expect(content).toContain("export async function down()");
 		expect(content).toContain("Schema.createTable");
@@ -78,10 +75,7 @@ describe("make:migration command", () => {
 
 		const migrationsDir = join(testDir, "migrations");
 		const files = readdirSync(migrationsDir).filter((f) => f.endsWith(".ts"));
-		const content = readFileSync(
-			join(migrationsDir, files[0]),
-			"utf-8",
-		);
+		const content = readFileSync(join(migrationsDir, files[0]), "utf-8");
 		expect(content).toContain('"posts"');
 	});
 

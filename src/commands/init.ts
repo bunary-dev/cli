@@ -91,9 +91,9 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 // Re-export generators and commands for programmatic use
 export { generateConfig, generateEntrypoint, generatePackageJson };
 export { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
+export { makeModel } from "./model/makeModel.js";
 export {
 	generateRoutesGroupExample,
 	generateRoutesIndex,
 	generateRoutesMain,
 } from "./project/routes.js";
-export { makeModel } from "./model/makeModel.js";
