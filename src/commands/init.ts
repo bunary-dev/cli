@@ -6,6 +6,11 @@ import { basename, join, resolve } from "node:path";
 import { generateConfig } from "./project/config.js";
 import { generateEntrypoint } from "./project/entrypoint.js";
 import { generatePackageJson } from "./project/packageJson.js";
+import {
+	generateRoutesGroupExample,
+	generateRoutesIndex,
+	generateRoutesMain,
+} from "./project/routes.js";
 
 /**
  * Initialize a new Bunary project.
@@ -24,8 +29,9 @@ export async function init(name: string): Promise<void> {
 		await mkdir(projectDir, { recursive: true });
 	}
 
-	// Create src directory
+	// Create src and src/routes directories
 	await mkdir(join(projectDir, "src"), { recursive: true });
+	await mkdir(join(projectDir, "src", "routes"), { recursive: true });
 
 	// Write files
 	await writeFile(
@@ -40,6 +46,18 @@ export async function init(name: string): Promise<void> {
 		join(projectDir, "src", "index.ts"),
 		await generateEntrypoint(),
 	);
+	await writeFile(
+		join(projectDir, "src", "routes", "main.ts"),
+		await generateRoutesMain(),
+	);
+	await writeFile(
+		join(projectDir, "src", "routes", "groupExample.ts"),
+		await generateRoutesGroupExample(),
+	);
+	await writeFile(
+		join(projectDir, "src", "routes", "index.ts"),
+		await generateRoutesIndex(),
+	);
 
 	console.log(`\n✨ Created Bunary project: ${projectName}\n`);
 	console.log("Next steps:");
@@ -52,4 +70,9 @@ export async function init(name: string): Promise<void> {
 
 // Re-export generators and commands for programmatic use
 export { generateConfig, generateEntrypoint, generatePackageJson };
+export {
+	generateRoutesGroupExample,
+	generateRoutesIndex,
+	generateRoutesMain,
+} from "./project/routes.js";
 export { makeModel } from "./model/makeModel.js";

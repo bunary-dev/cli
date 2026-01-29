@@ -35,7 +35,8 @@ bunary init .
 This creates a new Bunary project with:
 - `package.json` - Pre-configured with Bunary dependencies
 - `bunary.config.ts` - Application configuration
-- `src/index.ts` - Entry point with a working server
+- `src/index.ts` - Entry point that registers routes via `src/routes/`
+- `src/routes/` - Route modules: `main.ts`, `groupExample.ts`, `index.ts`
 
 **Generated Project Structure:**
 ```
@@ -43,7 +44,11 @@ my-app/
 ├── package.json
 ├── bunary.config.ts
 └── src/
-    └── index.ts
+    ├── index.ts
+    └── routes/
+        ├── index.ts   # Aggregates route registration
+        ├── main.ts    # Base routes (/ and /health)
+        └── groupExample.ts  # Example /api group
 ```
 
 **Next Steps:**
@@ -127,24 +132,24 @@ export default defineConfig({
 
 ### src/index.ts
 
+The entrypoint creates the app and registers routes from `src/routes/`:
+
 ```typescript
 import { createApp } from "@bunary/http";
+import { registerRoutes } from "./routes/index.js";
 
 const app = createApp();
-
-app.get("/", () => ({
-  message: "Welcome to Bunary!",
-  docs: "https://github.com/bunary-dev",
-}));
-
-app.get("/health", () => ({
-  status: "ok",
-  timestamp: new Date().toISOString(),
-}));
+registerRoutes(app);
 
 const server = app.listen(3000);
 console.log(`🚀 Server running at http://localhost:${server.port}`);
 ```
+
+### src/routes/
+
+- **index.ts** — Calls all route registration functions.
+- **main.ts** — Registers base routes: `/` and `/health`.
+- **groupExample.ts** — Example route group: `/api` with `/api/health`.
 
 ## Programmatic API
 
