@@ -20,12 +20,11 @@ export type { InitOptions } from "./project/types.js";
  * Initialize a new Bunary project.
  *
  * @param name - Project name or "." for current directory
- * @param options - Optional: auth "basic" or "jwt" to scaffold auth middleware; umbrella true to use bunary package instead of @bunary/*
+ * @param options - Optional: auth "basic" or "jwt" to scaffold auth middleware
  * @example
  * ```ts
  * await init("my-api");
  * await init("my-api", { auth: "jwt" });
- * await init("my-api", { umbrella: true });
  * ```
  */
 export async function init(name: string, options?: InitOptions): Promise<void> {

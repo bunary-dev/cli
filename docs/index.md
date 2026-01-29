@@ -18,7 +18,7 @@ bunx @bunary/cli --help
 
 | Command | Description |
 |--------|-------------|
-| `bunary init [name] [--auth basic\|jwt] [--umbrella]` | Create a new Bunary project |
+| `bunary init [name] [--auth basic\|jwt]` | Create a new Bunary project |
 | `bunary model:make <table-name>` | Generate ORM model in `src/models/` |
 | `bunary middleware:make <name>` | Generate middleware in `src/middleware/` |
 | `bunary migration:make <name>` | Create migration in `./migrations/` |
@@ -28,14 +28,13 @@ bunx @bunary/cli --help
 | `bunary route:make <name>` | Generate route module in `src/routes/` |
 | `bunary --help`, `bunary --version` | Help and version |
 
-### bunary init [name] [--auth basic|jwt] [--umbrella]
+### bunary init [name] [--auth basic|jwt]
 
-Creates a new Bunary project. You can pass a directory name or `.` for the current directory. With `--auth basic` or `--auth jwt` you get auth middleware stubs (same as running `middleware:make basic` or `jwt` after init). With `--umbrella` the project depends on the single `bunary` package and imports from `bunary/http` and `bunary/core` instead of `@bunary/http` and `@bunary/core`.
+Creates a new Bunary project. You can pass a directory name or `.` for the current directory. With `--auth basic` or `--auth jwt` you get auth middleware stubs (same as running `middleware:make basic` or `jwt` after init).
 
 ```bash
 bunary init my-app
 bunary init my-app --auth jwt
-bunary init my-app --umbrella
 bunary init .
 ```
 
@@ -63,11 +62,11 @@ Generates a route module in `src/routes/` with a register function (e.g. `regist
 
 ## Generated files (examples)
 
-What init and the generators produce. With `init --umbrella`, imports use `bunary/http` and `bunary/core`; otherwise `@bunary/http` and `@bunary/core`.
+What init and the generators produce.
 
-**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`. With `--umbrella` you instead get a single `bunary` dependency; if you also pass `--auth basic` or `--auth jwt`, `@bunary/auth` is added to that (so `--umbrella --auth jwt` yields both `bunary` and `@bunary/auth`).
+**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`. With `--auth basic` or `--auth jwt`, `@bunary/auth` is added.
 
-**bunary.config.ts:** Uses `defineConfig` from `@bunary/core` (or `bunary/core` when umbrella). Sets app name, env, debug.
+**bunary.config.ts:** Uses `defineConfig` from `@bunary/core`. Sets app name, env, debug.
 
 **src/index.ts:** Creates the app with `createApp`, calls `registerRoutes(app)`, then `app.listen({ port: 3000 })`. With auth, it also imports the middleware and calls `app.use(basicMiddleware)` or `app.use(jwtMiddleware)`.
 
@@ -98,16 +97,16 @@ import {
 import type { InitOptions } from "@bunary/cli";
 
 await init("my-app");
-await init("my-app", { auth: "jwt", umbrella: true });
+await init("my-app", { auth: "jwt" });
 
-const packageJson = await generatePackageJson("my-app", { umbrella: true });
-const config = await generateConfig("my-app", { umbrella: true });
+const packageJson = await generatePackageJson("my-app");
+const config = await generateConfig("my-app");
 const entrypoint = await generateEntrypoint({ auth: "basic" });
 
 await makeModel("user_profile");  // run from a Bunary project directory
 ```
 
-InitOptions: `{ auth?: "basic" | "jwt"; umbrella?: boolean }`. Pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and the route generators when you want auth scaffolding or umbrella imports. Commands like `middleware:make`, `migration:make`, `route:make`, and `migrate` are CLI-only; there is no programmatic API for those.
+InitOptions: `{ auth?: "basic" | "jwt" }`. Pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and the route generators when you want auth scaffolding. Commands like `middleware:make`, `migration:make`, `route:make`, and `migrate` are CLI-only; there is no programmatic API for those.
 
 ## Requirements
 

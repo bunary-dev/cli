@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 		if (!name) {
 			console.error("Error: Project name is required");
 			console.error(
-				"Usage: bunary init <name> [--auth basic|jwt] [--umbrella]  (or 'bunary init .' for current directory)",
+				"Usage: bunary init <name> [--auth basic|jwt]  (or 'bunary init .' for current directory)",
 			);
 			process.exit(1);
 		}
@@ -60,8 +60,7 @@ async function main(): Promise<void> {
 				auth = value;
 			}
 		}
-		const umbrella = args.includes("--umbrella");
-		await init(name, { auth, umbrella });
+		await init(name, { auth });
 		return;
 	}
 
