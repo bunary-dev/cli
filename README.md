@@ -125,6 +125,40 @@ src/middleware/
 └── ensure-auth.ts  # Exports ensureAuthMiddleware (Middleware type from @bunary/http)
 ```
 
+### `bunary make:migration <name>`
+
+Create a migration file in `./migrations/` (Laravel-inspired). Requires `@bunary/orm`.
+
+```bash
+# Create a migration (Laravel-style naming)
+bunary make:migration create_users_table   # Creates ./migrations/<timestamp>_create_users_table.ts
+bunary make:migration add_slug_to_posts    # Suggested table name "posts" in stub
+
+# The command automatically:
+# - Creates the file in ./migrations/ with timestamp prefix (YYYYMMDDHHmmss_name.ts)
+# - Generates up() and down() using Schema from @bunary/orm
+# - Derives table name from migration name (e.g. create_users_table → "users")
+# - Requires @bunary/orm in dependencies
+```
+
+**Generated migration structure:**
+```
+migrations/
+└── 20260129120000_create_users_table.ts  # export async function up() / down() with Schema
+```
+
+### `bunary migrate`, `bunary migrate:rollback`, `bunary migrate:status`
+
+Run migrations (Laravel-inspired). Uses `@bunary/orm` migrator; migrations live in `./migrations/`.
+
+```bash
+bunary migrate           # Run pending migrations (up)
+bunary migrate:rollback  # Rollback last batch (down)
+bunary migrate:status    # Show ran / pending migrations
+```
+
+On first run, the CLI creates `scripts/migrate.ts` in your project. Ensure `src/config/orm.ts` exists and calls `setOrmConfig(defineOrmConfig({ database: { ... } }))` so the migrator can connect.
+
 ### `bunary route:make <name>`
 
 Generate a route module in `src/routes/`.

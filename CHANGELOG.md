@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.11] - 2026-01-29
+
+### Added
+
+- **Migration commands** (Closes #13)
+  - `bunary make:migration <name>` — Create a migration in `./migrations/` with timestamp prefix (Laravel-style)
+  - `bunary migrate` — Run pending migrations (up)
+  - `bunary migrate:rollback` — Rollback last batch (down)
+  - `bunary migrate:status` — Show ran / pending migrations
+  - Migrations use Schema from `@bunary/orm`; requires `@bunary/orm` in project
+  - First migrate run creates `scripts/migrate.ts`; project needs `src/config/orm.ts` that calls `setOrmConfig`
+
 ## [0.0.10] - 2026-01-29
 
 ### Added

@@ -8,18 +8,28 @@
  *   bunary init .             - Create a new project in current directory
  *   bunary model:make <table>     - Generate an ORM model for <table>
  *   bunary make:middleware <name> - Generate a middleware in src/middleware/
- *   bunary route:make <name>      - Generate a route module in src/routes/
+ *   bunary make:migration <name>  - Create a migration in ./migrations/
+ *   bunary migrate                - Run pending migrations
+ *   bunary migrate:rollback      - Rollback last migration batch
+ *   bunary migrate:status        - Show migration status
+ *   bunary route:make <name>     - Generate a route module in src/routes/
  *   bunary --help             - Show help
  *   bunary --version          - Show version
  */
 
 import { init } from "./commands/init.js";
 import { makeMiddleware } from "./commands/middleware/makeMiddleware.js";
+import { makeMigration } from "./commands/migration/makeMigration.js";
+import {
+	migrateDown,
+	migrateStatus,
+	migrateUp,
+} from "./commands/migration/runMigrations.js";
 import { makeModel } from "./commands/model/makeModel.js";
 import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.10";
+const VERSION = "0.0.11";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -79,6 +89,54 @@ async function main(): Promise<void> {
 		}
 		try {
 			await makeMiddleware(middlewareName);
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : String(error));
+			process.exit(1);
+		}
+		return;
+	}
+
+	if (args[0] === "make:migration") {
+		const migrationName = args[1];
+		if (!migrationName) {
+			console.error("Error: Migration name is required");
+			console.error(
+				"Usage: bunary make:migration <name>  (e.g. create_users_table)",
+			);
+			process.exit(1);
+		}
+		try {
+			await makeMigration(migrationName);
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : String(error));
+			process.exit(1);
+		}
+		return;
+	}
+
+	if (args[0] === "migrate") {
+		try {
+			await migrateUp();
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : String(error));
+			process.exit(1);
+		}
+		return;
+	}
+
+	if (args[0] === "migrate:rollback") {
+		try {
+			await migrateDown();
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : String(error));
+			process.exit(1);
+		}
+		return;
+	}
+
+	if (args[0] === "migrate:status") {
+		try {
+			await migrateStatus();
 		} catch (error) {
 			console.error(error instanceof Error ? error.message : String(error));
 			process.exit(1);
