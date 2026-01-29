@@ -1,4 +1,4 @@
-import type { BunaryApp } from "@bunary/http";
+import type { BunaryApp } from "{{bunaryHttp}}";
 import { registerMain } from "./main.js";
 import { registerGroupExample } from "./groupExample.js";
 

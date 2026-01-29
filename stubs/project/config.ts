@@ -1,4 +1,4 @@
-import { defineConfig } from "@bunary/core";
+import { defineConfig } from "{{bunaryCore}}";
 
 export default defineConfig({
   app: {

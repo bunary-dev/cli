@@ -20,11 +20,12 @@ export type { InitOptions } from "./project/types.js";
  * Initialize a new Bunary project.
  *
  * @param name - Project name or "." for current directory
- * @param options - Optional: auth "basic" or "jwt" to scaffold auth middleware
+ * @param options - Optional: auth "basic" or "jwt" to scaffold auth middleware; umbrella true to use bunary package instead of @bunary/*
  * @example
  * ```ts
  * await init("my-api");
  * await init("my-api", { auth: "jwt" });
+ * await init("my-api", { umbrella: true });
  * ```
  */
 export async function init(name: string, options?: InitOptions): Promise<void> {
@@ -53,7 +54,7 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	);
 	await writeFile(
 		join(projectDir, "bunary.config.ts"),
-		await generateConfig(projectName),
+		await generateConfig(projectName, options),
 	);
 	await writeFile(
 		join(projectDir, "src", "index.ts"),
@@ -68,15 +69,15 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	}
 	await writeFile(
 		join(projectDir, "src", "routes", "main.ts"),
-		await generateRoutesMain(),
+		await generateRoutesMain(options),
 	);
 	await writeFile(
 		join(projectDir, "src", "routes", "groupExample.ts"),
-		await generateRoutesGroupExample(),
+		await generateRoutesGroupExample(options),
 	);
 	await writeFile(
 		join(projectDir, "src", "routes", "index.ts"),
-		await generateRoutesIndex(),
+		await generateRoutesIndex(options),
 	);
 
 	console.log(`\n✨ Created Bunary project: ${projectName}\n`);

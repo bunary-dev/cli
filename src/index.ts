@@ -29,7 +29,7 @@ import { makeModel } from "./commands/model/makeModel.js";
 import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.11";
+const VERSION = "0.0.12";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 		if (!name) {
 			console.error("Error: Project name is required");
 			console.error(
-				"Usage: bunary init <name> [--auth basic|jwt]  (or 'bunary init .' for current directory)",
+				"Usage: bunary init <name> [--auth basic|jwt] [--umbrella]  (or 'bunary init .' for current directory)",
 			);
 			process.exit(1);
 		}
@@ -60,7 +60,8 @@ async function main(): Promise<void> {
 				auth = value;
 			}
 		}
-		await init(name, { auth });
+		const umbrella = args.includes("--umbrella");
+		await init(name, { auth, umbrella });
 		return;
 	}
 
