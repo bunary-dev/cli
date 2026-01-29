@@ -16,7 +16,7 @@ bunx @bunary/cli --help
 
 ## Commands (high level)
 
-- `bunary init [name]` — Create a new Bunary project
+- `bunary init [name] [--auth basic|jwt]` — Create a new Bunary project (optionally with Basic or JWT auth scaffolding)
 - `bunary model:make <table-name>` — Generate an ORM model file
 
 See the README for the full command reference until the CLI docs are expanded.

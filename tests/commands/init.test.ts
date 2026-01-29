@@ -99,6 +99,72 @@ describe("init command", () => {
 				true,
 			);
 		});
+
+		test("with auth basic: adds @bunary/auth, src/auth.ts, and app.use(authMiddleware)", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app", { auth: "basic" });
+
+			const pkg = JSON.parse(
+				await Bun.file(join(projectDir, "package.json")).text(),
+			);
+			expect(pkg.dependencies["@bunary/auth"]).toBeDefined();
+
+			expect(existsSync(join(projectDir, "src", "auth.ts"))).toBe(true);
+			const authContent = await Bun.file(
+				join(projectDir, "src", "auth.ts"),
+			).text();
+			expect(authContent).toContain("createAuth");
+			expect(authContent).toContain("createBasicGuard");
+
+			const entryContent = await Bun.file(
+				join(projectDir, "src", "index.ts"),
+			).text();
+			expect(entryContent).toContain("authMiddleware");
+			expect(entryContent).toContain("app.use(authMiddleware)");
+		});
+
+		test("with auth jwt: adds @bunary/auth, src/auth.ts, and app.use(authMiddleware)", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app", { auth: "jwt" });
+
+			const pkg = JSON.parse(
+				await Bun.file(join(projectDir, "package.json")).text(),
+			);
+			expect(pkg.dependencies["@bunary/auth"]).toBeDefined();
+
+			expect(existsSync(join(projectDir, "src", "auth.ts"))).toBe(true);
+			const authContent = await Bun.file(
+				join(projectDir, "src", "auth.ts"),
+			).text();
+			expect(authContent).toContain("createAuth");
+			expect(authContent).toContain("createJwtGuard");
+
+			const entryContent = await Bun.file(
+				join(projectDir, "src", "index.ts"),
+			).text();
+			expect(entryContent).toContain("authMiddleware");
+			expect(entryContent).toContain("app.use(authMiddleware)");
+		});
+
+		test("without auth: no @bunary/auth, no src/auth.ts, no app.use(authMiddleware)", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			const pkg = JSON.parse(
+				await Bun.file(join(projectDir, "package.json")).text(),
+			);
+			expect(pkg.dependencies["@bunary/auth"]).toBeUndefined();
+			expect(existsSync(join(projectDir, "src", "auth.ts"))).toBe(false);
+
+			const entryContent = await Bun.file(
+				join(projectDir, "src", "index.ts"),
+			).text();
+			expect(entryContent).not.toContain("authMiddleware");
+			expect(entryContent).not.toContain("app.use(authMiddleware)");
+		});
 	});
 
 	describe("generatePackageJson()", () => {
@@ -123,6 +189,18 @@ describe("init command", () => {
 			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
 			expect(parsed.dependencies["@bunary/http"]).toBeDefined();
+		});
+
+		test("includes @bunary/auth when auth option is basic", async () => {
+			const json = await generatePackageJson("test-app", { auth: "basic" });
+			const parsed = JSON.parse(json);
+			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
+		});
+
+		test("includes @bunary/auth when auth option is jwt", async () => {
+			const json = await generatePackageJson("test-app", { auth: "jwt" });
+			const parsed = JSON.parse(json);
+			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
 		});
 
 		test("includes dev script", async () => {
@@ -171,6 +249,17 @@ describe("init command", () => {
 		test("includes port 3000", async () => {
 			const entry = await generateEntrypoint();
 			expect(entry).toContain("3000");
+		});
+
+		test("with auth option includes authMiddleware and app.use(authMiddleware)", async () => {
+			const entry = await generateEntrypoint({ auth: "basic" });
+			expect(entry).toContain("authMiddleware");
+			expect(entry).toContain("app.use(authMiddleware)");
+		});
+
+		test("without auth option does not include authMiddleware", async () => {
+			const entry = await generateEntrypoint();
+			expect(entry).not.toContain("authMiddleware");
 		});
 	});
 });

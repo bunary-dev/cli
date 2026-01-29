@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.9] - 2026-01-29
+
+### Added
+
+- **`bunary init --auth basic|jwt`** (Closes #17)
+  - Scaffolds auth middleware: adds `@bunary/auth`, `src/auth.ts`, and `app.use(authMiddleware)` in entrypoint
+  - `--auth basic`: Basic Auth guard with env-based verify (BASIC_AUTH_USER, BASIC_AUTH_PASSWORD)
+  - `--auth jwt`: JWT guard with JWT_SECRET from env; documented in CLI help and README
+
 ## [0.0.8] - 2026-01-29
 
 ### Changed

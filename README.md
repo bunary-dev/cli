@@ -20,35 +20,43 @@ bunx @bunary/cli init my-app
 
 ## Commands
 
-### `bunary init [name]`
+### `bunary init [name] [--auth basic|jwt]`
 
-Create a new Bunary project.
+Create a new Bunary project, optionally with Basic or JWT auth scaffolding.
 
 ```bash
 # Create a new project in a directory
 bunary init my-app
+
+# Scaffold with Basic Auth (env: BASIC_AUTH_USER, BASIC_AUTH_PASSWORD)
+bunary init my-app --auth basic
+
+# Scaffold with JWT (env: JWT_SECRET)
+bunary init my-app --auth jwt
 
 # Create a project in the current directory
 bunary init .
 ```
 
 This creates a new Bunary project with:
-- `package.json` - Pre-configured with Bunary dependencies
+- `package.json` - Pre-configured with Bunary dependencies (includes `@bunary/auth` when `--auth` is used)
 - `bunary.config.ts` - Application configuration
-- `src/index.ts` - Entry point that registers routes via `src/routes/`
+- `src/index.ts` - Entry point that registers routes via `src/routes/` (and `app.use(authMiddleware)` when `--auth` is used)
 - `src/routes/` - Route modules: `main.ts`, `groupExample.ts`, `index.ts`
+- `src/auth.ts` - Auth middleware (only when `--auth basic` or `--auth jwt`)
 
-**Generated Project Structure:**
+**Generated Project Structure (with `--auth jwt`):**
 ```
 my-app/
 ├── package.json
 ├── bunary.config.ts
 └── src/
     ├── index.ts
+    ├── auth.ts       # Auth middleware (when --auth used)
     └── routes/
-        ├── index.ts   # Aggregates route registration
-        ├── main.ts    # Base routes (/ and /health)
-        └── groupExample.ts  # Example /api group
+        ├── index.ts
+        ├── main.ts
+        └── groupExample.ts
 ```
 
 **Next Steps:**
