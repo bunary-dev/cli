@@ -16,7 +16,7 @@ import { makeModel } from "./commands/model/makeModel.js";
 import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.7";
+const VERSION = "0.0.8";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
