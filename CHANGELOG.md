@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Init template aligned with @bunary/http API** (Closes #16)
   - Entrypoint stub uses `app.listen({ port: 3000 })` instead of `app.listen(3000)`
-  - Comment added for `createApp({ basePath })` option
+  - Comment added for `createApp({ basePath })` option; reworded to avoid asserting current support, with commented example
 
 ## [0.0.7] - 2026-01-29
 
