@@ -20,6 +20,18 @@ bunx @bunary/cli init my-app
 
 ## Commands
 
+| Command | Description |
+|--------|-------------|
+| `bunary init [name] [--auth basic\|jwt] [--umbrella]` | Create a new Bunary project |
+| `bunary model:make <table>` | Generate ORM model in `src/models/` |
+| `bunary make:middleware <name>` | Generate middleware in `src/middleware/` |
+| `bunary make:migration <name>` | Create migration in `./migrations/` |
+| `bunary migrate` | Run pending migrations |
+| `bunary migrate:rollback` | Rollback last migration batch |
+| `bunary migrate:status` | Show migration status |
+| `bunary route:make <name>` | Generate route module in `src/routes/` |
+| `bunary --help`, `bunary --version` | Help and version |
+
 ### `bunary init [name] [--auth basic|jwt] [--umbrella]`
 
 Create a new Bunary project, optionally with Basic or JWT auth scaffolding, or using the umbrella `bunary` package.
@@ -195,9 +207,11 @@ bunary --help     # Show help
 bunary --version  # Show version
 ```
 
-## Generated Files
+## Generated Files (examples)
 
-### package.json
+These examples match what the CLI generates. With `init --umbrella`, imports use `bunary/http` and `bunary/core` instead of `@bunary/http` and `@bunary/core`.
+
+### package.json (default)
 
 ```json
 {
@@ -210,8 +224,8 @@ bunary --version  # Show version
     "build": "bun build ./src/index.ts --outdir ./dist --target bun"
   },
   "dependencies": {
-    "@bunary/core": "^0.0.2",
-    "@bunary/http": "^0.0.2"
+    "@bunary/core": "^0.0.5",
+    "@bunary/http": "^0.0.4"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -219,6 +233,8 @@ bunary --version  # Show version
   }
 }
 ```
+
+With `--umbrella`, `dependencies` is `{ "bunary": "^0.0.1" }` instead of `@bunary/core` and `@bunary/http`. With `--auth basic` or `--auth jwt`, `@bunary/auth` is added.
 
 ### bunary.config.ts
 
@@ -233,6 +249,8 @@ export default defineConfig({
   },
 });
 ```
+
+With `init --umbrella`, the import is `from "bunary/core"`.
 
 ### src/index.ts
 
@@ -249,45 +267,109 @@ const server = app.listen({ port: 3000 });
 console.log(`🚀 Server running at http://localhost:${server.port}`);
 ```
 
+With `init --umbrella`, the import is `from "bunary/http"`. With `--auth basic` or `--auth jwt`, the file also imports the middleware and calls `app.use(basicMiddleware)` or `app.use(jwtMiddleware)`.
+
 ### src/routes/
 
-- **index.ts** — Calls all route registration functions.
-- **main.ts** — Registers base routes: `/` and `/health`.
-- **groupExample.ts** — Example route group: `/api` with `/api/health`.
+- **index.ts** — Imports and calls `registerMain`, `registerGroupExample` (and any `route:make` modules you add).
+- **main.ts** — Registers `/` and `/health`.
+- **groupExample.ts** — Registers `/api` group with `/api/health`.
+
+Example `src/routes/main.ts`:
+
+```typescript
+import type { BunaryApp } from "@bunary/http";
+
+export function registerMain(app: BunaryApp): void {
+  app.get("/", () => ({ message: "Welcome to Bunary!", docs: "https://github.com/bunary-dev" }));
+  app.get("/health", () => ({ status: "ok", timestamp: new Date().toISOString() }));
+}
+```
+
+### make:migration output
+
+Example `./migrations/20260129120000_create_users_table.ts`:
+
+```typescript
+import { Schema } from "@bunary/orm";
+
+export async function up(): Promise<void> {
+  Schema.createTable("users", (table) => {
+    table.increments("id");
+    table.text("name");
+    table.timestamps();
+  });
+}
+
+export async function down(): Promise<void> {
+  Schema.dropTable("users");
+}
+```
+
+### make:middleware output (generic)
+
+Example `src/middleware/ensure-auth.ts`:
+
+```typescript
+import type { Middleware } from "@bunary/http";
+
+export const ensureAuthMiddleware: Middleware = async (ctx, next) => {
+  const response = await next();
+  return response;
+};
+```
+
+### route:make output
+
+Example `src/routes/users.ts`:
+
+```typescript
+import type { BunaryApp } from "@bunary/http";
+
+export function registerUsers(app: BunaryApp): void {
+  // app.get("/users", () => ({ list: [] }));
+}
+```
+
+Add `registerUsers` to `src/routes/index.ts` and call it from `registerRoutes`.
 
 ## Programmatic API
 
-You can also use the CLI functions programmatically:
+You can use init and project generators programmatically. All generator functions are async.
 
 ```typescript
 import {
   init,
   generatePackageJson,
   generateConfig,
-  generateEntrypoint
+  generateEntrypoint,
+  generateRoutesMain,
+  generateRoutesIndex,
+  generateRoutesGroupExample,
+  generateMiddlewareContent,
+  makeModel,
 } from "@bunary/cli";
+import type { InitOptions } from "@bunary/cli";
 
-// Generate files (all generator functions are async)
-const packageJson = await generatePackageJson("my-app");
-const config = await generateConfig("my-app");
-const entrypoint = await generateEntrypoint();
-
-// Or scaffold a full project
+// Scaffold a full project
 await init("my-app");
+await init("my-app", { auth: "jwt" });
+await init("my-app", { umbrella: true });
+
+// Generate individual files (e.g. for custom tooling)
+const packageJson = await generatePackageJson("my-app");
+const packageJsonUmbrella = await generatePackageJson("my-app", { umbrella: true });
+const config = await generateConfig("my-app", { umbrella: true });
+const entrypoint = await generateEntrypoint({ auth: "basic" });
+const routesMain = await generateRoutesMain({ umbrella: true });
+
+// Model generator (must be run from a Bunary project directory)
+await makeModel("user_profile");  // src/models/UserProfile.ts
 ```
 
-### Model Generation
+**InitOptions:** `{ auth?: "basic" | "jwt"; umbrella?: boolean }` — pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and route generators (`generateRoutesMain`, `generateRoutesIndex`, `generateRoutesGroupExample`) to control auth scaffolding and umbrella package usage.
 
-```typescript
-import { makeModel } from "@bunary/cli";
-
-// Generate a model file
-await makeModel("user_profile");  // Creates src/models/UserProfile.ts
-```
-
-**Note:** 
-- Generator functions (`generatePackageJson`, `generateConfig`, `generateEntrypoint`) are async and must be awaited
-- `makeModel` requires being in a Bunary project directory
+**Note:** `makeModel` and `generateMiddlewareContent` require a Bunary project context when writing files. Commands `make:middleware`, `make:migration`, `route:make`, and `migrate` are available via the CLI only.
 
 ## Requirements
 
