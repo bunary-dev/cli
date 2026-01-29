@@ -167,7 +167,7 @@ import { registerRoutes } from "./routes/index.js";
 const app = createApp();
 registerRoutes(app);
 
-const server = app.listen(3000);
+const server = app.listen({ port: 3000 });
 console.log(`🚀 Server running at http://localhost:${server.port}`);
 ```
 
