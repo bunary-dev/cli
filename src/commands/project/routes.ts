@@ -4,34 +4,26 @@
 import { loadStub } from "../../utils/stub.js";
 import type { InitOptions } from "./types.js";
 
-function bunaryHttpReplacement(options?: InitOptions): Record<string, string> {
-	const bunaryHttp = options?.umbrella ? "bunary/http" : "@bunary/http";
-	return { bunaryHttp };
-}
+const BUNARY_HTTP = "@bunary/http";
 
 export async function generateRoutesMain(
-	options?: InitOptions,
+	_options?: InitOptions,
 ): Promise<string> {
-	return await loadStub(
-		"project/routes/main.ts",
-		bunaryHttpReplacement(options),
-	);
+	return await loadStub("project/routes/main.ts", { bunaryHttp: BUNARY_HTTP });
 }
 
 export async function generateRoutesGroupExample(
-	options?: InitOptions,
+	_options?: InitOptions,
 ): Promise<string> {
-	return await loadStub(
-		"project/routes/groupExample.ts",
-		bunaryHttpReplacement(options),
-	);
+	return await loadStub("project/routes/groupExample.ts", {
+		bunaryHttp: BUNARY_HTTP,
+	});
 }
 
 export async function generateRoutesIndex(
-	options?: InitOptions,
+	_options?: InitOptions,
 ): Promise<string> {
-	return await loadStub(
-		"project/routes/index.ts",
-		bunaryHttpReplacement(options),
-	);
+	return await loadStub("project/routes/index.ts", {
+		bunaryHttp: BUNARY_HTTP,
+	});
 }

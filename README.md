@@ -22,7 +22,7 @@ bunx @bunary/cli init my-app
 
 | Command | Description |
 |--------|-------------|
-| `bunary init [name] [--auth basic\|jwt] [--umbrella]` | Create a new Bunary project |
+| `bunary init [name] [--auth basic\|jwt]` | Create a new Bunary project |
 | `bunary model:make <table>` | Generate ORM model in `src/models/` |
 | `bunary middleware:make <name>` | Generate middleware in `src/middleware/` |
 | `bunary migration:make <name>` | Create migration in `./migrations/` |
@@ -32,9 +32,9 @@ bunx @bunary/cli init my-app
 | `bunary route:make <name>` | Generate route module in `src/routes/` |
 | `bunary --help`, `bunary --version` | Help and version |
 
-### `bunary init [name] [--auth basic|jwt] [--umbrella]`
+### `bunary init [name] [--auth basic|jwt]`
 
-Create a new Bunary project, optionally with Basic or JWT auth scaffolding, or using the umbrella `bunary` package.
+Create a new Bunary project, optionally with Basic or JWT auth scaffolding.
 
 ```bash
 # Create a new project in a directory
@@ -46,15 +46,12 @@ bunary init my-app --auth basic
 # Scaffold with JWT (env: JWT_SECRET)
 bunary init my-app --auth jwt
 
-# Use umbrella package (bunary instead of @bunary/core + @bunary/http)
-bunary init my-app --umbrella
-
 # Create a project in the current directory
 bunary init .
 ```
 
 This creates a new Bunary project with:
-- `package.json` - Pre-configured with Bunary dependencies (`@bunary/core` + `@bunary/http` by default; single `bunary` when `--umbrella`; includes `@bunary/auth` when `--auth` is used)
+- `package.json` - Pre-configured with Bunary dependencies (`@bunary/core` + `@bunary/http`; includes `@bunary/auth` when `--auth` is used)
 - `bunary.config.ts` - Application configuration
 - `src/index.ts` - Entry point that registers routes via `src/routes/` (and `app.use(authMiddleware)` when `--auth` is used)
 - `src/routes/` - Route modules: `main.ts`, `groupExample.ts`, `index.ts`
@@ -209,7 +206,7 @@ bunary --version  # Show version
 
 ## Generated Files (examples)
 
-These examples match what the CLI generates. With `init --umbrella`, imports use `bunary/http` and `bunary/core` instead of `@bunary/http` and `@bunary/core`.
+These examples match what the CLI generates.
 
 ### package.json (default)
 
@@ -224,17 +221,17 @@ These examples match what the CLI generates. With `init --umbrella`, imports use
     "build": "bun build ./src/index.ts --outdir ./dist --target bun"
   },
   "dependencies": {
-    "@bunary/core": "^0.0.5",
-    "@bunary/http": "^0.0.4"
+    "@bunary/core": "^0.0.7",
+    "@bunary/http": "^0.0.11"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "typescript": "^5.7.3"
+    "typescript": "^5.9.3"
   }
 }
 ```
 
-With `--umbrella`, `dependencies` is `{ "bunary": "^0.0.1" }` instead of `@bunary/core` and `@bunary/http`. With `--auth basic` or `--auth jwt`, `@bunary/auth` is added.
+With `--auth basic` or `--auth jwt`, `@bunary/auth` is added.
 
 ### bunary.config.ts
 
@@ -249,8 +246,6 @@ export default defineConfig({
   },
 });
 ```
-
-With `init --umbrella`, the import is `from "bunary/core"`.
 
 ### src/index.ts
 
@@ -267,7 +262,7 @@ const server = app.listen({ port: 3000 });
 console.log(`🚀 Server running at http://localhost:${server.port}`);
 ```
 
-With `init --umbrella`, the import is `from "bunary/http"`. With `--auth basic` or `--auth jwt`, the file also imports the middleware and calls `app.use(basicMiddleware)` or `app.use(jwtMiddleware)`.
+With `--auth basic` or `--auth jwt`, the file also imports the middleware and calls `app.use(basicMiddleware)` or `app.use(jwtMiddleware)`.
 
 ### src/routes/
 
@@ -358,16 +353,15 @@ await init("my-app", { umbrella: true });
 
 // Generate individual files (e.g. for custom tooling)
 const packageJson = await generatePackageJson("my-app");
-const packageJsonUmbrella = await generatePackageJson("my-app", { umbrella: true });
-const config = await generateConfig("my-app", { umbrella: true });
+const config = await generateConfig("my-app");
 const entrypoint = await generateEntrypoint({ auth: "basic" });
-const routesMain = await generateRoutesMain({ umbrella: true });
+const routesMain = await generateRoutesMain();
 
 // Model generator (must be run from a Bunary project directory)
 await makeModel("user_profile");  // src/models/UserProfile.ts
 ```
 
-**InitOptions:** `{ auth?: "basic" | "jwt"; umbrella?: boolean }` — pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and route generators (`generateRoutesMain`, `generateRoutesIndex`, `generateRoutesGroupExample`) to control auth scaffolding and umbrella package usage.
+**InitOptions:** `{ auth?: "basic" | "jwt" }` — pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and route generators (`generateRoutesMain`, `generateRoutesIndex`, `generateRoutesGroupExample`) to control auth scaffolding.
 
 **Note:** `makeModel` and `generateMiddlewareContent` require a Bunary project context when writing files. Commands `middleware:make`, `migration:make`, `route:make`, and `migrate` are available via the CLI only.
 
