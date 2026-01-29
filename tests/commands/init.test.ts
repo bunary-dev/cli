@@ -58,6 +58,34 @@ describe("init command", () => {
 			expect(existsSync(join(projectDir, "src", "index.ts"))).toBe(true);
 		});
 
+		test("creates src/routes/ with index.ts, main.ts, groupExample.ts", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			expect(existsSync(join(projectDir, "src", "routes", "index.ts"))).toBe(
+				true,
+			);
+			expect(existsSync(join(projectDir, "src", "routes", "main.ts"))).toBe(
+				true,
+			);
+			expect(
+				existsSync(join(projectDir, "src", "routes", "groupExample.ts")),
+			).toBe(true);
+		});
+
+		test("src/index.ts uses registerRoutes from routes module", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			const entrypointPath = join(projectDir, "src", "index.ts");
+			const content = await Bun.file(entrypointPath).text();
+			expect(content).toContain("registerRoutes");
+			expect(content).toContain("routes/index");
+			expect(content).not.toContain('app.get("/",');
+		});
+
 		test("works with '.' for current directory", async () => {
 			const projectDir = join(TEST_DIR, "current-dir-test");
 			await mkdir(projectDir, { recursive: true });
@@ -67,6 +95,9 @@ describe("init command", () => {
 			expect(existsSync(join(projectDir, "package.json"))).toBe(true);
 			expect(existsSync(join(projectDir, "bunary.config.ts"))).toBe(true);
 			expect(existsSync(join(projectDir, "src", "index.ts"))).toBe(true);
+			expect(existsSync(join(projectDir, "src", "routes", "index.ts"))).toBe(
+				true,
+			);
 		});
 	});
 
@@ -126,9 +157,10 @@ describe("init command", () => {
 			expect(entry).toContain("createApp");
 		});
 
-		test("includes a GET route", async () => {
+		test("includes registerRoutes from routes module", async () => {
 			const entry = await generateEntrypoint();
-			expect(entry).toContain(".get(");
+			expect(entry).toContain("registerRoutes");
+			expect(entry).toContain("routes/index");
 		});
 
 		test("includes app.listen()", async () => {
