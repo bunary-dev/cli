@@ -19,15 +19,20 @@ interface Option {
 
 const commands: Command[] = [
 	{
-		name: "init <name|.>",
+		name: "init <name|.> [--auth basic|jwt]",
 		description:
-			"Create a new Bunary project in a named directory or current directory",
-		usage: "bunary init <name|.>",
+			"Create a new Bunary project (optionally with Basic or JWT auth scaffolding)",
+		usage: "bunary init <name|.> [--auth basic|jwt]",
 	},
 	{
 		name: "model:make <table-name>",
 		description: "Generate an ORM model class for the given table name",
 		usage: "bunary model:make <table-name>",
+	},
+	{
+		name: "make:middleware <name>",
+		description: "Generate a middleware in src/middleware/ (Laravel-inspired)",
+		usage: "bunary make:middleware <name>",
 	},
 	{
 		name: "route:make <name>",

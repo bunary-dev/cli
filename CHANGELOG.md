@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.10] - 2026-01-29
+
+### Added
+
+- **`bunary make:middleware <name>`** (Laravel-inspired)
+  - Generates a middleware file in `src/middleware/<name>.ts` with a camelCase export (e.g. ensure-auth → ensureAuthMiddleware)
+  - Requires Bunary project; documented in help and README
+
+### Changed
+
+- **Auth scaffolding** uses the same code path as `make:middleware`: auth stubs moved to `stubs/middleware/auth-basic.ts` and `auth-jwt.ts`; `init --auth basic|jwt` creates `src/middleware/basic.ts` or `jwt.ts` (same content as `bunary make:middleware basic|jwt`). Entrypoint imports `basicMiddleware`/`jwtMiddleware` from `./middleware/basic.js` or `./middleware/jwt.js`. Removed duplicate `project/auth.ts` and `stubs/project/auth-*.ts`.
+
+## [0.0.9] - 2026-01-29
+
+### Added
+
+- **`bunary init --auth basic|jwt`** (Closes #17)
+  - Scaffolds auth middleware: adds `@bunary/auth`, `src/middleware/auth.ts`, and `app.use(authMiddleware)` in entrypoint
+  - `--auth basic`: Basic Auth guard with env-based verify (BASIC_AUTH_USER, BASIC_AUTH_PASSWORD)
+  - `--auth jwt`: JWT guard with JWT_SECRET from env; documented in CLI help and README
+
 ## [0.0.8] - 2026-01-29
 
 ### Changed

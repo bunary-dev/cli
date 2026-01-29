@@ -3,6 +3,7 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
 import { generateEntrypoint } from "./project/entrypoint.js";
 import { generatePackageJson } from "./project/packageJson.js";
@@ -11,13 +12,22 @@ import {
 	generateRoutesIndex,
 	generateRoutesMain,
 } from "./project/routes.js";
+import type { InitOptions } from "./project/types.js";
+
+export type { InitOptions } from "./project/types.js";
 
 /**
  * Initialize a new Bunary project.
  *
  * @param name - Project name or "." for current directory
+ * @param options - Optional: auth "basic" or "jwt" to scaffold auth middleware
+ * @example
+ * ```ts
+ * await init("my-api");
+ * await init("my-api", { auth: "jwt" });
+ * ```
  */
-export async function init(name: string): Promise<void> {
+export async function init(name: string, options?: InitOptions): Promise<void> {
 	const isCurrentDir = name === ".";
 	const projectDir = isCurrentDir
 		? process.cwd()
@@ -29,14 +39,17 @@ export async function init(name: string): Promise<void> {
 		await mkdir(projectDir, { recursive: true });
 	}
 
-	// Create src and src/routes directories
+	// Create src, src/routes, and (when auth) src/middleware directories
 	await mkdir(join(projectDir, "src"), { recursive: true });
 	await mkdir(join(projectDir, "src", "routes"), { recursive: true });
+	if (options?.auth === "basic" || options?.auth === "jwt") {
+		await mkdir(join(projectDir, "src", "middleware"), { recursive: true });
+	}
 
 	// Write files
 	await writeFile(
 		join(projectDir, "package.json"),
-		await generatePackageJson(projectName),
+		await generatePackageJson(projectName, options),
 	);
 	await writeFile(
 		join(projectDir, "bunary.config.ts"),
@@ -44,8 +57,15 @@ export async function init(name: string): Promise<void> {
 	);
 	await writeFile(
 		join(projectDir, "src", "index.ts"),
-		await generateEntrypoint(),
+		await generateEntrypoint(options),
 	);
+	// init --auth basic|jwt is a shortcut to make:middleware basic|jwt (same content, no double-up)
+	if (options?.auth === "basic" || options?.auth === "jwt") {
+		await writeFile(
+			join(projectDir, "src", "middleware", `${options.auth}.ts`),
+			await generateMiddlewareContent(options.auth),
+		);
+	}
 	await writeFile(
 		join(projectDir, "src", "routes", "main.ts"),
 		await generateRoutesMain(),
@@ -70,6 +90,7 @@ export async function init(name: string): Promise<void> {
 
 // Re-export generators and commands for programmatic use
 export { generateConfig, generateEntrypoint, generatePackageJson };
+export { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 export {
 	generateRoutesGroupExample,
 	generateRoutesIndex,

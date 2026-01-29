@@ -58,3 +58,24 @@ export function routeNameToRegisterFunctionName(routeName: string): string {
 	const pascal = tableNameToModelName(routeName);
 	return `register${pascal}`;
 }
+
+/**
+ * Convert a middleware name to its export function name (camelCase + "Middleware").
+ * Laravel-inspired: make:middleware ensure-auth → ensureAuthMiddleware.
+ *
+ * @param middlewareName - The middleware name (e.g. "ensure-auth", "log-request")
+ * @returns The middleware function name (e.g. "ensureAuthMiddleware", "logRequestMiddleware")
+ *
+ * @example
+ * ```ts
+ * middlewareNameToFunctionName("ensure-auth") // "ensureAuthMiddleware"
+ * middlewareNameToFunctionName("log-request") // "logRequestMiddleware"
+ * ```
+ */
+export function middlewareNameToFunctionName(middlewareName: string): string {
+	if (!middlewareName || middlewareName.length === 0) {
+		throw new Error("Middleware name cannot be empty");
+	}
+	const pascal = tableNameToModelName(middlewareName);
+	return `${pascal.charAt(0).toLowerCase()}${pascal.slice(1)}Middleware`;
+}

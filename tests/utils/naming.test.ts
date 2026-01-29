@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from "bun:test";
 import {
+	middlewareNameToFunctionName,
 	routeNameToRegisterFunctionName,
 	tableNameToModelName,
 } from "../../src/utils/naming.js";
@@ -71,6 +72,33 @@ describe("routeNameToRegisterFunctionName", () => {
 	it("should throw error for empty string", () => {
 		expect(() => routeNameToRegisterFunctionName("")).toThrow(
 			"Route name cannot be empty",
+		);
+	});
+});
+
+describe("middlewareNameToFunctionName", () => {
+	it("should convert middleware name to camelCase + Middleware", () => {
+		expect(middlewareNameToFunctionName("ensure-auth")).toBe(
+			"ensureAuthMiddleware",
+		);
+		expect(middlewareNameToFunctionName("log-request")).toBe(
+			"logRequestMiddleware",
+		);
+	});
+
+	it("should handle single word", () => {
+		expect(middlewareNameToFunctionName("logger")).toBe("loggerMiddleware");
+	});
+
+	it("should handle snake_case", () => {
+		expect(middlewareNameToFunctionName("ensure_auth")).toBe(
+			"ensureAuthMiddleware",
+		);
+	});
+
+	it("should throw error for empty string", () => {
+		expect(() => middlewareNameToFunctionName("")).toThrow(
+			"Middleware name cannot be empty",
 		);
 	});
 });
