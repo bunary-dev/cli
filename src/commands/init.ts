@@ -12,10 +12,9 @@ import {
 	generateRoutesIndex,
 	generateRoutesMain,
 } from "./project/routes.js";
+import type { InitOptions } from "./project/types.js";
 
-export interface InitOptions {
-	auth?: "basic" | "jwt";
-}
+export type { InitOptions } from "./project/types.js";
 
 /**
  * Initialize a new Bunary project.

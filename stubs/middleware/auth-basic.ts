@@ -2,14 +2,18 @@ import { createAuth, createBasicGuard } from "@bunary/auth";
 import type { AuthUser } from "@bunary/auth";
 
 /**
- * Basic Auth guard: verify username/password (e.g. against env or database).
- * Replace the verify implementation with your own logic.
+ * Basic Auth guard: verify username/password against env (or replace with DB lookup).
+ * Requires BASIC_AUTH_USER and BASIC_AUTH_PASSWORD in env (e.g. in .env).
  */
+const envUser = process.env.BASIC_AUTH_USER;
+const envPass = process.env.BASIC_AUTH_PASSWORD;
+if (!envUser?.trim() || !envPass?.trim()) {
+	throw new Error(
+		"BASIC_AUTH_USER and BASIC_AUTH_PASSWORD are required. Set them in your environment (e.g. in .env).",
+	);
+}
 const basicGuard = createBasicGuard({
 	async verify(username, password) {
-		// Example: check against env vars. Replace with DB lookup or your logic.
-		const envUser = process.env.BASIC_AUTH_USER ?? "admin";
-		const envPass = process.env.BASIC_AUTH_PASSWORD ?? "changeme";
 		if (username === envUser && password === envPass) {
 			return { id: username, username } as AuthUser;
 		}

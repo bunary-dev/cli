@@ -1,12 +1,9 @@
-import { middlewareNameToFunctionName } from "../../utils/naming.js";
 /**
  * Generate src/index.ts content.
  */
+import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
-
-export interface EntrypointOptions {
-	auth?: "basic" | "jwt";
-}
+import type { InitOptions } from "./types.js";
 
 /**
  * Generate entrypoint content, optionally with auth middleware.
@@ -16,7 +13,7 @@ export interface EntrypointOptions {
  * @returns Entrypoint TypeScript content
  */
 export async function generateEntrypoint(
-	options?: EntrypointOptions,
+	options?: InitOptions,
 ): Promise<string> {
 	let authImport = "";
 	let authUse = "";

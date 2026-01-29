@@ -2,10 +2,10 @@
  * Generate package.json content for a new project.
  */
 import { loadStub } from "../../utils/stub.js";
+import type { InitOptions } from "./types.js";
 
-export interface InitOptions {
-	auth?: "basic" | "jwt";
-}
+/** @bunary/auth version for init --auth. Update when publishing a new auth release. */
+const BUNARY_AUTH_VERSION = "^0.0.7";
 
 /**
  * Generate package.json content.
@@ -24,7 +24,7 @@ export async function generatePackageJson(
 	};
 	if (options?.auth === "basic" || options?.auth === "jwt") {
 		parsed.dependencies = parsed.dependencies ?? {};
-		parsed.dependencies["@bunary/auth"] = "^0.0.7";
+		parsed.dependencies["@bunary/auth"] = BUNARY_AUTH_VERSION;
 	}
 	const out = `${JSON.stringify(parsed, null, 2)}\n`;
 	return out;
