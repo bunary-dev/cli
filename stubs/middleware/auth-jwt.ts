@@ -7,7 +7,7 @@ const jwtGuard = createJwtGuard({
 	secret: process.env.JWT_SECRET ?? "change-me-in-production",
 });
 
-export const authMiddleware = createAuth({
+export const {{functionName}} = createAuth({
 	defaultGuard: "jwt",
 	guards: { jwt: jwtGuard },
 });

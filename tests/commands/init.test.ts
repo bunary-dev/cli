@@ -100,7 +100,7 @@ describe("init command", () => {
 			);
 		});
 
-		test("with auth basic: adds @bunary/auth, src/auth.ts, and app.use(authMiddleware)", async () => {
+		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as make:middleware basic), and app.use(basicMiddleware)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "basic" });
@@ -110,21 +110,25 @@ describe("init command", () => {
 			);
 			expect(pkg.dependencies["@bunary/auth"]).toBeDefined();
 
-			expect(existsSync(join(projectDir, "src", "auth.ts"))).toBe(true);
+			expect(
+				existsSync(join(projectDir, "src", "middleware", "basic.ts")),
+			).toBe(true);
 			const authContent = await Bun.file(
-				join(projectDir, "src", "auth.ts"),
+				join(projectDir, "src", "middleware", "basic.ts"),
 			).text();
 			expect(authContent).toContain("createAuth");
 			expect(authContent).toContain("createBasicGuard");
+			expect(authContent).toContain("basicMiddleware");
 
 			const entryContent = await Bun.file(
 				join(projectDir, "src", "index.ts"),
 			).text();
-			expect(entryContent).toContain("authMiddleware");
-			expect(entryContent).toContain("app.use(authMiddleware)");
+			expect(entryContent).toContain("basicMiddleware");
+			expect(entryContent).toContain("app.use(basicMiddleware)");
+			expect(entryContent).toContain("./middleware/basic.js");
 		});
 
-		test("with auth jwt: adds @bunary/auth, src/auth.ts, and app.use(authMiddleware)", async () => {
+		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as make:middleware jwt), and app.use(jwtMiddleware)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "jwt" });
@@ -134,21 +138,25 @@ describe("init command", () => {
 			);
 			expect(pkg.dependencies["@bunary/auth"]).toBeDefined();
 
-			expect(existsSync(join(projectDir, "src", "auth.ts"))).toBe(true);
+			expect(existsSync(join(projectDir, "src", "middleware", "jwt.ts"))).toBe(
+				true,
+			);
 			const authContent = await Bun.file(
-				join(projectDir, "src", "auth.ts"),
+				join(projectDir, "src", "middleware", "jwt.ts"),
 			).text();
 			expect(authContent).toContain("createAuth");
 			expect(authContent).toContain("createJwtGuard");
+			expect(authContent).toContain("jwtMiddleware");
 
 			const entryContent = await Bun.file(
 				join(projectDir, "src", "index.ts"),
 			).text();
-			expect(entryContent).toContain("authMiddleware");
-			expect(entryContent).toContain("app.use(authMiddleware)");
+			expect(entryContent).toContain("jwtMiddleware");
+			expect(entryContent).toContain("app.use(jwtMiddleware)");
+			expect(entryContent).toContain("./middleware/jwt.js");
 		});
 
-		test("without auth: no @bunary/auth, no src/auth.ts, no app.use(authMiddleware)", async () => {
+		test("without auth: no @bunary/auth, no src/middleware/basic.ts or jwt.ts, no auth middleware in entrypoint", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app");
@@ -157,13 +165,20 @@ describe("init command", () => {
 				await Bun.file(join(projectDir, "package.json")).text(),
 			);
 			expect(pkg.dependencies["@bunary/auth"]).toBeUndefined();
-			expect(existsSync(join(projectDir, "src", "auth.ts"))).toBe(false);
+			expect(
+				existsSync(join(projectDir, "src", "middleware", "basic.ts")),
+			).toBe(false);
+			expect(existsSync(join(projectDir, "src", "middleware", "jwt.ts"))).toBe(
+				false,
+			);
 
 			const entryContent = await Bun.file(
 				join(projectDir, "src", "index.ts"),
 			).text();
-			expect(entryContent).not.toContain("authMiddleware");
-			expect(entryContent).not.toContain("app.use(authMiddleware)");
+			expect(entryContent).not.toContain("basicMiddleware");
+			expect(entryContent).not.toContain("jwtMiddleware");
+			expect(entryContent).not.toContain("app.use(basicMiddleware)");
+			expect(entryContent).not.toContain("app.use(jwtMiddleware)");
 		});
 	});
 
@@ -251,15 +266,24 @@ describe("init command", () => {
 			expect(entry).toContain("3000");
 		});
 
-		test("with auth option includes authMiddleware and app.use(authMiddleware)", async () => {
+		test("with auth basic includes basicMiddleware and app.use(basicMiddleware)", async () => {
 			const entry = await generateEntrypoint({ auth: "basic" });
-			expect(entry).toContain("authMiddleware");
-			expect(entry).toContain("app.use(authMiddleware)");
+			expect(entry).toContain("basicMiddleware");
+			expect(entry).toContain("app.use(basicMiddleware)");
+			expect(entry).toContain("./middleware/basic.js");
 		});
 
-		test("without auth option does not include authMiddleware", async () => {
+		test("with auth jwt includes jwtMiddleware and app.use(jwtMiddleware)", async () => {
+			const entry = await generateEntrypoint({ auth: "jwt" });
+			expect(entry).toContain("jwtMiddleware");
+			expect(entry).toContain("app.use(jwtMiddleware)");
+			expect(entry).toContain("./middleware/jwt.js");
+		});
+
+		test("without auth option does not include auth middleware", async () => {
 			const entry = await generateEntrypoint();
-			expect(entry).not.toContain("authMiddleware");
+			expect(entry).not.toContain("basicMiddleware");
+			expect(entry).not.toContain("jwtMiddleware");
 		});
 	});
 });

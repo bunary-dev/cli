@@ -17,7 +17,7 @@ const basicGuard = createBasicGuard({
 	},
 });
 
-export const authMiddleware = createAuth({
+export const {{functionName}} = createAuth({
 	defaultGuard: "basic",
 	guards: { basic: basicGuard },
 });

@@ -30,6 +30,11 @@ const commands: Command[] = [
 		usage: "bunary model:make <table-name>",
 	},
 	{
+		name: "make:middleware <name>",
+		description: "Generate a middleware in src/middleware/ (Laravel-inspired)",
+		usage: "bunary make:middleware <name>",
+	},
+	{
 		name: "route:make <name>",
 		description: "Generate a route module in src/routes/",
 		usage: "bunary route:make <name>",

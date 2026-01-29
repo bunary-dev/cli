@@ -43,7 +43,7 @@ This creates a new Bunary project with:
 - `bunary.config.ts` - Application configuration
 - `src/index.ts` - Entry point that registers routes via `src/routes/` (and `app.use(authMiddleware)` when `--auth` is used)
 - `src/routes/` - Route modules: `main.ts`, `groupExample.ts`, `index.ts`
-- `src/auth.ts` - Auth middleware (only when `--auth basic` or `--auth jwt`)
+- `src/middleware/basic.ts` or `src/middleware/jwt.ts` - Auth middleware (only when `--auth basic` or `--auth jwt`; same as `make:middleware basic` / `make:middleware jwt`)
 
 **Generated Project Structure (with `--auth jwt`):**
 ```
@@ -52,12 +52,15 @@ my-app/
 ├── bunary.config.ts
 └── src/
     ├── index.ts
-    ├── auth.ts       # Auth middleware (when --auth used)
+    ├── middleware/
+    │   └── jwt.ts    # Same as bunary make:middleware jwt
     └── routes/
         ├── index.ts
         ├── main.ts
         └── groupExample.ts
 ```
+
+`init --auth basic` or `init --auth jwt` is a shortcut: it creates the same `src/middleware/basic.ts` or `src/middleware/jwt.ts` as running `bunary make:middleware basic` or `bunary make:middleware jwt` after init.
 
 **Next Steps:**
 ```bash
@@ -90,6 +93,36 @@ bunary model:make user_profile  # Creates UserProfile.ts
 ```
 src/models/
 └── Users.ts  # Generated from "users" table name
+```
+
+### `bunary make:middleware <name>`
+
+Generate a middleware file in `src/middleware/` (Laravel-inspired).
+
+```bash
+# Generate a generic middleware
+bunary make:middleware ensure-auth   # Creates src/middleware/ensure-auth.ts with ensureAuthMiddleware
+bunary make:middleware log-request   # Creates src/middleware/log-request.ts with logRequestMiddleware
+
+# Auth middleware (same stubs as init --auth basic|jwt)
+bunary make:middleware basic         # Creates src/middleware/basic.ts with basicMiddleware (@bunary/auth Basic guard)
+bunary make:middleware jwt           # Creates src/middleware/jwt.ts with jwtMiddleware (@bunary/auth JWT guard)
+
+# The command automatically:
+# - Creates the file in src/middleware/ directory
+# - For basic/jwt uses auth stubs; for other names uses the generic (ctx, next) stub
+# - Validates you're in a Bunary project
+# - Prevents overwriting existing files
+```
+
+**Requirements:**
+- Must be run from within a Bunary project directory
+- Project must have `@bunary/core` in `package.json` dependencies
+
+**Generated Middleware Structure:**
+```
+src/middleware/
+└── ensure-auth.ts  # Exports ensureAuthMiddleware (Middleware type from @bunary/http)
 ```
 
 ### `bunary route:make <name>`
