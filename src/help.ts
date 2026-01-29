@@ -30,14 +30,14 @@ const commands: Command[] = [
 		usage: "bunary model:make <table-name>",
 	},
 	{
-		name: "make:middleware <name>",
+		name: "middleware:make <name>",
 		description: "Generate a middleware in src/middleware/ (Laravel-inspired)",
-		usage: "bunary make:middleware <name>",
+		usage: "bunary middleware:make <name>",
 	},
 	{
-		name: "make:migration <name>",
+		name: "migration:make <name>",
 		description: "Create a migration in ./migrations/ (Laravel-inspired)",
-		usage: "bunary make:migration <name>",
+		usage: "bunary migration:make <name>",
 	},
 	{
 		name: "migrate",

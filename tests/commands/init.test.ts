@@ -100,7 +100,7 @@ describe("init command", () => {
 			);
 		});
 
-		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as make:middleware basic), and app.use(basicMiddleware)", async () => {
+		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as middleware:make basic), and app.use(basicMiddleware)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "basic" });
@@ -128,7 +128,7 @@ describe("init command", () => {
 			expect(entryContent).toContain("./middleware/basic.js");
 		});
 
-		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as make:middleware jwt), and app.use(jwtMiddleware)", async () => {
+		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as middleware:make jwt), and app.use(jwtMiddleware)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "jwt" });

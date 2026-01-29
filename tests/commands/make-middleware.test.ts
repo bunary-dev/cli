@@ -1,5 +1,5 @@
 /**
- * make:middleware command tests
+ * middleware:make command tests
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makeMiddleware } from "../../src/commands/middleware/makeMiddleware.js";
 
-describe("make:middleware command", () => {
+describe("middleware:make command", () => {
 	let testDir: string;
 	let originalCwd: string;
 
@@ -125,7 +125,7 @@ describe("make:middleware command", () => {
 		expect(content).toContain("next");
 	});
 
-	it("make:middleware basic creates auth stub (same as init --auth basic)", async () => {
+	it("middleware:make basic creates auth stub (same as init --auth basic)", async () => {
 		await makeMiddleware("basic");
 
 		const content = readFileSync(
@@ -137,7 +137,7 @@ describe("make:middleware command", () => {
 		expect(content).toContain("createBasicGuard");
 	});
 
-	it("make:middleware jwt creates auth stub (same as init --auth jwt)", async () => {
+	it("middleware:make jwt creates auth stub (same as init --auth jwt)", async () => {
 		await makeMiddleware("jwt");
 
 		const content = readFileSync(

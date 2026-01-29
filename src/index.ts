@@ -7,8 +7,8 @@
  *   bunary init <name> --auth basic|jwt - Scaffold with Basic or JWT auth
  *   bunary init .             - Create a new project in current directory
  *   bunary model:make <table>     - Generate an ORM model for <table>
- *   bunary make:middleware <name> - Generate a middleware in src/middleware/
- *   bunary make:migration <name>  - Create a migration in ./migrations/
+ *   bunary middleware:make <name> - Generate a middleware in src/middleware/
+ *   bunary migration:make <name>  - Create a migration in ./migrations/
  *   bunary migrate                - Run pending migrations
  *   bunary migrate:rollback      - Rollback last migration batch
  *   bunary migrate:status        - Show migration status
@@ -81,11 +81,11 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	if (args[0] === "make:middleware") {
+	if (args[0] === "middleware:make") {
 		const middlewareName = args[1];
 		if (!middlewareName) {
 			console.error("Error: Middleware name is required");
-			console.error("Usage: bunary make:middleware <name>");
+			console.error("Usage: bunary middleware:make <name>");
 			process.exit(1);
 		}
 		try {
@@ -97,12 +97,12 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	if (args[0] === "make:migration") {
+	if (args[0] === "migration:make") {
 		const migrationName = args[1];
 		if (!migrationName) {
 			console.error("Error: Migration name is required");
 			console.error(
-				"Usage: bunary make:migration <name>  (e.g. create_users_table)",
+				"Usage: bunary migration:make <name>  (e.g. create_users_table)",
 			);
 			process.exit(1);
 		}

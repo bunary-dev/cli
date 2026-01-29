@@ -1,5 +1,5 @@
 /**
- * make:migration command - create a new migration file (Laravel-inspired)
+ * migration:make command - create a new migration file (Laravel-inspired)
  */
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";

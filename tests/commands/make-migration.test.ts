@@ -1,5 +1,5 @@
 /**
- * make:migration command tests
+ * migration:make command tests
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makeMigration } from "../../src/commands/migration/makeMigration.js";
 
-describe("make:migration command", () => {
+describe("migration:make command", () => {
 	let testDir: string;
 	let originalCwd: string;
 
