@@ -12,6 +12,9 @@ import type { InitOptions } from "./types.js";
  * @param options - When auth is "basic" or "jwt", adds import and app.use(basicMiddleware|jwtMiddleware)
  * @returns Entrypoint TypeScript content
  */
+const BUNARY_HTTP = "@bunary/http";
+const BUNARY_HTTP_UMBRELLA = "bunary/http";
+
 export async function generateEntrypoint(
 	options?: InitOptions,
 ): Promise<string> {
@@ -22,8 +25,10 @@ export async function generateEntrypoint(
 		authImport = `import { ${exportName} } from "./middleware/${options.auth}.js";\n\n`;
 		authUse = `app.use(${exportName});\n`;
 	}
+	const bunaryHttp = options?.umbrella ? BUNARY_HTTP_UMBRELLA : BUNARY_HTTP;
 	return await loadStub("project/entrypoint.ts", {
 		authImport,
 		authUse,
+		bunaryHttp,
 	});
 }

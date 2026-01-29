@@ -16,7 +16,7 @@ bunx @bunary/cli --help
 
 ## Commands (high level)
 
-- `bunary init [name] [--auth basic|jwt]` — Create a new Bunary project (optionally with Basic or JWT auth scaffolding)
+- `bunary init [name] [--auth basic|jwt] [--umbrella]` — Create a new Bunary project (optionally with Basic or JWT auth; `--umbrella` uses `bunary` package instead of `@bunary/*`)
 - `bunary model:make <table-name>` — Generate an ORM model file
 - `bunary make:middleware <name>` — Generate a middleware in src/middleware/ (Laravel-inspired)
 - `bunary make:migration <name>` — Create a migration in ./migrations/ (Laravel-inspired)

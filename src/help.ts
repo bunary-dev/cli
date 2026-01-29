@@ -19,10 +19,10 @@ interface Option {
 
 const commands: Command[] = [
 	{
-		name: "init <name|.> [--auth basic|jwt]",
+		name: "init <name|.> [--auth basic|jwt] [--umbrella]",
 		description:
-			"Create a new Bunary project (optionally with Basic or JWT auth scaffolding)",
-		usage: "bunary init <name|.> [--auth basic|jwt]",
+			"Create a new Bunary project (optionally with Basic or JWT auth; --umbrella uses bunary package instead of @bunary/*)",
+		usage: "bunary init <name|.> [--auth basic|jwt] [--umbrella]",
 	},
 	{
 		name: "model:make <table-name>",

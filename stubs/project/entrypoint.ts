@@ -1,4 +1,4 @@
-import { createApp } from "@bunary/http";
+import { createApp } from "{{bunaryHttp}}";
 import { registerRoutes } from "./routes/index.js";
 {{authImport}}
 // If supported by your @bunary/http version, you can pass { basePath: "/api" } to prefix all routes:
