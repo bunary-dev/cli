@@ -60,7 +60,7 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		join(projectDir, "src", "index.ts"),
 		await generateEntrypoint(options),
 	);
-	// init --auth basic|jwt is a shortcut to make:middleware basic|jwt (same content, no double-up)
+	// init --auth basic|jwt is a shortcut to middleware:make basic|jwt (same content, no double-up)
 	if (options?.auth === "basic" || options?.auth === "jwt") {
 		await writeFile(
 			join(projectDir, "src", "middleware", `${options.auth}.ts`),

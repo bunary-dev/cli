@@ -1,5 +1,5 @@
 /**
- * make:middleware command - scaffold middleware files (Laravel-inspired)
+ * middleware:make command - scaffold middleware files (Laravel-inspired)
  * init --auth basic|jwt is a shortcut that uses this same content generator.
  */
 import { existsSync } from "node:fs";
@@ -10,7 +10,7 @@ import { loadStub } from "../../utils/stub.js";
 import { isBunaryProject } from "../../utils/validation.js";
 
 /**
- * Generate middleware file content. Used by make:middleware and by init --auth.
+ * Generate middleware file content. Used by middleware:make and by init --auth.
  * For "basic" and "jwt" uses auth stubs; for other names uses the generic middleware stub.
  *
  * @param middlewareName - e.g. "basic", "jwt", "ensure-auth", "log-request"
@@ -36,7 +36,7 @@ export async function generateMiddlewareContent(
 
 /**
  * Generate a middleware file in src/middleware/.
- * init --auth basic|jwt is equivalent to running make:middleware basic|jwt after init.
+ * init --auth basic|jwt is equivalent to running middleware:make basic|jwt after init.
  *
  * @param middlewareName - Middleware name (e.g. "basic", "jwt", "ensure-auth")
  * @throws Error if not in a Bunary project or file already exists

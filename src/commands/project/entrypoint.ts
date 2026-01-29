@@ -7,7 +7,7 @@ import type { InitOptions } from "./types.js";
 
 /**
  * Generate entrypoint content, optionally with auth middleware.
- * init --auth basic|jwt uses the same middleware as make:middleware basic|jwt (basic.ts / jwt.ts).
+ * init --auth basic|jwt uses the same middleware as middleware:make basic|jwt (basic.ts / jwt.ts).
  *
  * @param options - When auth is "basic" or "jwt", adds import and app.use(basicMiddleware|jwtMiddleware)
  * @returns Entrypoint TypeScript content

@@ -61,7 +61,7 @@ export function routeNameToRegisterFunctionName(routeName: string): string {
 
 /**
  * Convert a middleware name to its export function name (camelCase + "Middleware").
- * Laravel-inspired: make:middleware ensure-auth → ensureAuthMiddleware.
+ * Laravel-inspired: middleware:make ensure-auth → ensureAuthMiddleware.
  *
  * @param middlewareName - The middleware name (e.g. "ensure-auth", "log-request")
  * @returns The middleware function name (e.g. "ensureAuthMiddleware", "logRequestMiddleware")

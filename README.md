@@ -24,8 +24,8 @@ bunx @bunary/cli init my-app
 |--------|-------------|
 | `bunary init [name] [--auth basic\|jwt] [--umbrella]` | Create a new Bunary project |
 | `bunary model:make <table>` | Generate ORM model in `src/models/` |
-| `bunary make:middleware <name>` | Generate middleware in `src/middleware/` |
-| `bunary make:migration <name>` | Create migration in `./migrations/` |
+| `bunary middleware:make <name>` | Generate middleware in `src/middleware/` |
+| `bunary migration:make <name>` | Create migration in `./migrations/` |
 | `bunary migrate` | Run pending migrations |
 | `bunary migrate:rollback` | Rollback last migration batch |
 | `bunary migrate:status` | Show migration status |
@@ -58,7 +58,7 @@ This creates a new Bunary project with:
 - `bunary.config.ts` - Application configuration
 - `src/index.ts` - Entry point that registers routes via `src/routes/` (and `app.use(authMiddleware)` when `--auth` is used)
 - `src/routes/` - Route modules: `main.ts`, `groupExample.ts`, `index.ts`
-- `src/middleware/basic.ts` or `src/middleware/jwt.ts` - Auth middleware (only when `--auth basic` or `--auth jwt`; same as `make:middleware basic` / `make:middleware jwt`)
+- `src/middleware/basic.ts` or `src/middleware/jwt.ts` - Auth middleware (only when `--auth basic` or `--auth jwt`; same as `middleware:make basic` / `middleware:make jwt`)
 
 **Generated Project Structure (with `--auth jwt`):**
 ```
@@ -68,14 +68,14 @@ my-app/
 └── src/
     ├── index.ts
     ├── middleware/
-    │   └── jwt.ts    # Same as bunary make:middleware jwt
+    │   └── jwt.ts    # Same as bunary middleware:make jwt
     └── routes/
         ├── index.ts
         ├── main.ts
         └── groupExample.ts
 ```
 
-`init --auth basic` or `init --auth jwt` is a shortcut: it creates the same `src/middleware/basic.ts` or `src/middleware/jwt.ts` as running `bunary make:middleware basic` or `bunary make:middleware jwt` after init.
+`init --auth basic` or `init --auth jwt` is a shortcut: it creates the same `src/middleware/basic.ts` or `src/middleware/jwt.ts` as running `bunary middleware:make basic` or `bunary middleware:make jwt` after init.
 
 **Next Steps:**
 ```bash
@@ -110,18 +110,18 @@ src/models/
 └── Users.ts  # Generated from "users" table name
 ```
 
-### `bunary make:middleware <name>`
+### `bunary middleware:make <name>`
 
 Generate a middleware file in `src/middleware/` (Laravel-inspired).
 
 ```bash
 # Generate a generic middleware
-bunary make:middleware ensure-auth   # Creates src/middleware/ensure-auth.ts with ensureAuthMiddleware
-bunary make:middleware log-request   # Creates src/middleware/log-request.ts with logRequestMiddleware
+bunary middleware:make ensure-auth   # Creates src/middleware/ensure-auth.ts with ensureAuthMiddleware
+bunary middleware:make log-request   # Creates src/middleware/log-request.ts with logRequestMiddleware
 
 # Auth middleware (same stubs as init --auth basic|jwt)
-bunary make:middleware basic         # Creates src/middleware/basic.ts with basicMiddleware (@bunary/auth Basic guard)
-bunary make:middleware jwt           # Creates src/middleware/jwt.ts with jwtMiddleware (@bunary/auth JWT guard)
+bunary middleware:make basic         # Creates src/middleware/basic.ts with basicMiddleware (@bunary/auth Basic guard)
+bunary middleware:make jwt           # Creates src/middleware/jwt.ts with jwtMiddleware (@bunary/auth JWT guard)
 
 # The command automatically:
 # - Creates the file in src/middleware/ directory
@@ -140,14 +140,14 @@ src/middleware/
 └── ensure-auth.ts  # Exports ensureAuthMiddleware (Middleware type from @bunary/http)
 ```
 
-### `bunary make:migration <name>`
+### `bunary migration:make <name>`
 
 Create a migration file in `./migrations/` (Laravel-inspired). Requires `@bunary/orm`.
 
 ```bash
 # Create a migration (Laravel-style naming)
-bunary make:migration create_users_table   # Creates ./migrations/<timestamp>_create_users_table.ts
-bunary make:migration add_slug_to_posts    # Suggested table name "posts" in stub
+bunary migration:make create_users_table   # Creates ./migrations/<timestamp>_create_users_table.ts
+bunary migration:make add_slug_to_posts    # Suggested table name "posts" in stub
 
 # The command automatically:
 # - Creates the file in ./migrations/ with timestamp prefix (YYYYMMDDHHmmss_name.ts)
@@ -286,7 +286,7 @@ export function registerMain(app: BunaryApp): void {
 }
 ```
 
-### make:migration output
+### migration:make output
 
 Example `./migrations/20260129120000_create_users_table.ts`:
 
@@ -306,7 +306,7 @@ export async function down(): Promise<void> {
 }
 ```
 
-### make:middleware output (generic)
+### middleware:make output (generic)
 
 Example `src/middleware/ensure-auth.ts`:
 
@@ -369,7 +369,7 @@ await makeModel("user_profile");  // src/models/UserProfile.ts
 
 **InitOptions:** `{ auth?: "basic" | "jwt"; umbrella?: boolean }` — pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and route generators (`generateRoutesMain`, `generateRoutesIndex`, `generateRoutesGroupExample`) to control auth scaffolding and umbrella package usage.
 
-**Note:** `makeModel` and `generateMiddlewareContent` require a Bunary project context when writing files. Commands `make:middleware`, `make:migration`, `route:make`, and `migrate` are available via the CLI only.
+**Note:** `makeModel` and `generateMiddlewareContent` require a Bunary project context when writing files. Commands `middleware:make`, `migration:make`, `route:make`, and `migrate` are available via the CLI only.
 
 ## Requirements
 

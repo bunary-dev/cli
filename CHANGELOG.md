@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Migration commands** (Closes #13)
-  - `bunary make:migration <name>` — Create a migration in `./migrations/` with timestamp prefix (Laravel-style)
+  - `bunary migration:make <name>` — Create a migration in `./migrations/` with timestamp prefix (Laravel-style)
   - `bunary migrate` — Run pending migrations (up)
   - `bunary migrate:rollback` — Rollback last batch (down)
   - `bunary migrate:status` — Show ran / pending migrations
@@ -30,13 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`bunary make:middleware <name>`** (Laravel-inspired)
+- **`bunary middleware:make <name>`** (Laravel-inspired)
   - Generates a middleware file in `src/middleware/<name>.ts` with a camelCase export (e.g. ensure-auth → ensureAuthMiddleware)
   - Requires Bunary project; documented in help and README
 
 ### Changed
 
-- **Auth scaffolding** uses the same code path as `make:middleware`: auth stubs moved to `stubs/middleware/auth-basic.ts` and `auth-jwt.ts`; `init --auth basic|jwt` creates `src/middleware/basic.ts` or `jwt.ts` (same content as `bunary make:middleware basic|jwt`). Entrypoint imports `basicMiddleware`/`jwtMiddleware` from `./middleware/basic.js` or `./middleware/jwt.js`. Removed duplicate `project/auth.ts` and `stubs/project/auth-*.ts`.
+- **Auth scaffolding** uses the same code path as `middleware:make`: auth stubs moved to `stubs/middleware/auth-basic.ts` and `auth-jwt.ts`; `init --auth basic|jwt` creates `src/middleware/basic.ts` or `jwt.ts` (same content as `bunary middleware:make basic|jwt`). Entrypoint imports `basicMiddleware`/`jwtMiddleware` from `./middleware/basic.js` or `./middleware/jwt.js`. Removed duplicate `project/auth.ts` and `stubs/project/auth-*.ts`.
 
 ## [0.0.9] - 2026-01-29
 
