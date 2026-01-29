@@ -6,15 +6,17 @@
  *   bunary init <name>        - Create a new project in <name> directory
  *   bunary init .             - Create a new project in current directory
  *   bunary model:make <table> - Generate an ORM model for <table>
+ *   bunary route:make <name>  - Generate a route module in src/routes/
  *   bunary --help             - Show help
  *   bunary --version          - Show version
  */
 
 import { init } from "./commands/init.js";
 import { makeModel } from "./commands/model/makeModel.js";
+import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
 
-const VERSION = "0.0.5";
+const VERSION = "0.0.7";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -50,6 +52,22 @@ async function main(): Promise<void> {
 		}
 		try {
 			await makeModel(tableName);
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : String(error));
+			process.exit(1);
+		}
+		return;
+	}
+
+	if (args[0] === "route:make") {
+		const routeName = args[1];
+		if (!routeName) {
+			console.error("Error: Route name is required");
+			console.error("Usage: bunary route:make <name>");
+			process.exit(1);
+		}
+		try {
+			await makeRoute(routeName);
 		} catch (error) {
 			console.error(error instanceof Error ? error.message : String(error));
 			process.exit(1);

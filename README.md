@@ -84,6 +84,32 @@ src/models/
 └── Users.ts  # Generated from "users" table name
 ```
 
+### `bunary route:make <name>`
+
+Generate a route module in `src/routes/`.
+
+```bash
+# Generate a route module
+bunary route:make users       # Creates src/routes/users.ts with registerUsers(app)
+bunary route:make user-profile  # Creates src/routes/user-profile.ts with registerUserProfile(app)
+
+# The command automatically:
+# - Creates the file in src/routes/ directory
+# - Generates a register function (e.g. registerUsers) for the route name
+# - Validates you're in a Bunary project
+# - Prevents overwriting existing files
+```
+
+**Requirements:**
+- Must be run from within a Bunary project directory
+- Project must have `@bunary/core` in `package.json` dependencies
+
+**Generated Route Structure:**
+```
+src/routes/
+└── users.ts  # Exports registerUsers(app); add it to src/routes/index.ts manually
+```
+
 ### Options
 
 ```bash

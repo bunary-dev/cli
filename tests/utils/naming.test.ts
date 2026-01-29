@@ -2,7 +2,10 @@
  * Naming utilities tests
  */
 import { describe, expect, it } from "bun:test";
-import { tableNameToModelName } from "../../src/utils/naming.js";
+import {
+	routeNameToRegisterFunctionName,
+	tableNameToModelName,
+} from "../../src/utils/naming.js";
 
 describe("tableNameToModelName", () => {
 	it("should convert snake_case to PascalCase", () => {
@@ -44,5 +47,30 @@ describe("tableNameToModelName", () => {
 
 	it("should handle single character", () => {
 		expect(tableNameToModelName("u")).toBe("U");
+	});
+});
+
+describe("routeNameToRegisterFunctionName", () => {
+	it("should convert route name to register function name", () => {
+		expect(routeNameToRegisterFunctionName("users")).toBe("registerUsers");
+		expect(routeNameToRegisterFunctionName("posts")).toBe("registerPosts");
+	});
+
+	it("should handle kebab-case route names", () => {
+		expect(routeNameToRegisterFunctionName("user-profile")).toBe(
+			"registerUserProfile",
+		);
+	});
+
+	it("should handle snake_case route names", () => {
+		expect(routeNameToRegisterFunctionName("user_profile")).toBe(
+			"registerUserProfile",
+		);
+	});
+
+	it("should throw error for empty string", () => {
+		expect(() => routeNameToRegisterFunctionName("")).toThrow(
+			"Route name cannot be empty",
+		);
 	});
 });

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2026-01-29
+
+### Added
+
+- **`bunary route:make <name>`** (Closes #15)
+  - Generates a route module in `src/routes/<name>.ts` with a register function
+  - Stub uses placeholders `{{routeName}}` and `{{functionName}}` (e.g. users → registerUsers)
+  - Command documented in CLI help and README
+  - Requires Bunary project (package.json with @bunary/core)
+
 ## [0.0.6] - 2026-01-29
 
 ### Added
