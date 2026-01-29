@@ -35,6 +35,26 @@ const commands: Command[] = [
 		usage: "bunary make:middleware <name>",
 	},
 	{
+		name: "make:migration <name>",
+		description: "Create a migration in ./migrations/ (Laravel-inspired)",
+		usage: "bunary make:migration <name>",
+	},
+	{
+		name: "migrate",
+		description: "Run pending migrations",
+		usage: "bunary migrate",
+	},
+	{
+		name: "migrate:rollback",
+		description: "Rollback last migration batch",
+		usage: "bunary migrate:rollback",
+	},
+	{
+		name: "migrate:status",
+		description: "Show migration status (ran / pending)",
+		usage: "bunary migrate:status",
+	},
+	{
 		name: "route:make <name>",
 		description: "Generate a route module in src/routes/",
 		usage: "bunary route:make <name>",

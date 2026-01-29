@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
  * In development: stubs are at package root (stubs/).
  * In production: stubs are copied to dist/stubs/.
  */
-function getStubsDir(): string {
+export function getStubsDir(): string {
 	const currentFile = fileURLToPath(import.meta.url);
 	// In development: currentFile is in src/utils/stub.js
 	// In production (bundled): currentFile is in dist/index.js

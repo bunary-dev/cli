@@ -38,14 +38,14 @@ describe("model:make command", () => {
 			if (originalCwd && existsSync(originalCwd)) {
 				process.chdir(originalCwd);
 			}
-		} catch (error) {
+		} catch (_error) {
 			// Ignore chdir errors - directory might have been cleaned up
 		}
 		// Clean up test directory
 		if (testDir) {
 			try {
 				await rm(testDir, { recursive: true, force: true });
-			} catch (error) {
+			} catch (_error) {
 				// Ignore cleanup errors
 			}
 		}
