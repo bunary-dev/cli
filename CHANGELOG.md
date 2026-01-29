@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Moved stubs from `src/stubs/` to top-level `stubs/` directory (Closes #25)
+  - Template files are no longer inside `src/`, simplifying tsconfig and biome
+  - Build copies from `stubs/` to `dist/stubs/`; dev uses `stubs/` at package root
+  - Removed `src/stubs` from tsconfig exclude and biome ignore; stubs now ignored via `stubs/**`
+
 ## [0.0.5] - 2026-01-26
 
 ### Changed

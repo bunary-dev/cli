@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 
 /**
  * Get the directory where stub files are located
- * Works in both development (src/) and production (dist/) builds
+ * In development: stubs are at package root (stubs/).
+ * In production: stubs are copied to dist/stubs/.
  */
 function getStubsDir(): string {
 	const currentFile = fileURLToPath(import.meta.url);
@@ -16,14 +17,18 @@ function getStubsDir(): string {
 
 	let baseDir: string;
 
-	// Check if we're in a bundled file (index.js)
 	if (currentFile.endsWith("index.js")) {
-		// Bundled: stubs are in the same directory as index.js
-		baseDir = dirname(currentFile); // dist/
+		// Bundled: stubs are in dist/stubs
+		baseDir = dirname(currentFile);
 	} else {
-		// Unbundled or dev: go up from utils/ to base
-		const utilsDir = dirname(currentFile); // src/utils or dist/utils
-		baseDir = dirname(utilsDir); // src or dist
+		const utilsDir = dirname(currentFile);
+		const parent = dirname(utilsDir);
+		// parent is "src" (dev) or "dist" (prod unbundled)
+		if (parent.endsWith("src")) {
+			baseDir = dirname(parent); // package root
+		} else {
+			baseDir = parent; // dist
+		}
 	}
 
 	return join(baseDir, "stubs");

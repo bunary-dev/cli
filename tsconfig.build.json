@@ -9,5 +9,5 @@
     "noEmit": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "src/stubs"]
+  "exclude": ["node_modules", "dist", "tests"]
 }
