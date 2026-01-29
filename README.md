@@ -20,9 +20,9 @@ bunx @bunary/cli init my-app
 
 ## Commands
 
-### `bunary init [name] [--auth basic|jwt]`
+### `bunary init [name] [--auth basic|jwt] [--umbrella]`
 
-Create a new Bunary project, optionally with Basic or JWT auth scaffolding.
+Create a new Bunary project, optionally with Basic or JWT auth scaffolding, or using the umbrella `bunary` package.
 
 ```bash
 # Create a new project in a directory
@@ -34,12 +34,15 @@ bunary init my-app --auth basic
 # Scaffold with JWT (env: JWT_SECRET)
 bunary init my-app --auth jwt
 
+# Use umbrella package (bunary instead of @bunary/core + @bunary/http)
+bunary init my-app --umbrella
+
 # Create a project in the current directory
 bunary init .
 ```
 
 This creates a new Bunary project with:
-- `package.json` - Pre-configured with Bunary dependencies (includes `@bunary/auth` when `--auth` is used)
+- `package.json` - Pre-configured with Bunary dependencies (`@bunary/core` + `@bunary/http` by default; single `bunary` when `--umbrella`; includes `@bunary/auth` when `--auth` is used)
 - `bunary.config.ts` - Application configuration
 - `src/index.ts` - Entry point that registers routes via `src/routes/` (and `app.use(authMiddleware)` when `--auth` is used)
 - `src/routes/` - Route modules: `main.ts`, `groupExample.ts`, `index.ts`

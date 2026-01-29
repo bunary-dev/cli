@@ -180,6 +180,58 @@ describe("init command", () => {
 			expect(entryContent).not.toContain("app.use(basicMiddleware)");
 			expect(entryContent).not.toContain("app.use(jwtMiddleware)");
 		});
+
+		test("without --umbrella: package.json has @bunary/core and @bunary/http, imports use @bunary/*", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			const pkg = JSON.parse(
+				await Bun.file(join(projectDir, "package.json")).text(),
+			);
+			expect(pkg.dependencies["@bunary/core"]).toBeDefined();
+			expect(pkg.dependencies["@bunary/http"]).toBeDefined();
+			expect(pkg.dependencies.bunary).toBeUndefined();
+
+			const entryContent = await Bun.file(
+				join(projectDir, "src", "index.ts"),
+			).text();
+			expect(entryContent).toContain('from "@bunary/http"');
+			const configContent = await Bun.file(
+				join(projectDir, "bunary.config.ts"),
+			).text();
+			expect(configContent).toContain('from "@bunary/core"');
+			const mainContent = await Bun.file(
+				join(projectDir, "src", "routes", "main.ts"),
+			).text();
+			expect(mainContent).toContain('from "@bunary/http"');
+		});
+
+		test("with --umbrella: package.json has bunary, imports use bunary/http and bunary/core", async () => {
+			const projectDir = join(TEST_DIR, "my-app-umbrella");
+			process.chdir(TEST_DIR);
+			await init("my-app-umbrella", { umbrella: true });
+
+			const pkg = JSON.parse(
+				await Bun.file(join(projectDir, "package.json")).text(),
+			);
+			expect(pkg.dependencies.bunary).toBeDefined();
+			expect(pkg.dependencies["@bunary/core"]).toBeUndefined();
+			expect(pkg.dependencies["@bunary/http"]).toBeUndefined();
+
+			const entryContent = await Bun.file(
+				join(projectDir, "src", "index.ts"),
+			).text();
+			expect(entryContent).toContain('from "bunary/http"');
+			const configContent = await Bun.file(
+				join(projectDir, "bunary.config.ts"),
+			).text();
+			expect(configContent).toContain('from "bunary/core"');
+			const mainContent = await Bun.file(
+				join(projectDir, "src", "routes", "main.ts"),
+			).text();
+			expect(mainContent).toContain('from "bunary/http"');
+		});
 	});
 
 	describe("generatePackageJson()", () => {
@@ -218,6 +270,16 @@ describe("init command", () => {
 			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
 		});
 
+		test("with umbrella: includes bunary dependency, no @bunary/core or @bunary/http", async () => {
+			const json = await generatePackageJson("test-app", {
+				umbrella: true,
+			});
+			const parsed = JSON.parse(json);
+			expect(parsed.dependencies.bunary).toBeDefined();
+			expect(parsed.dependencies["@bunary/core"]).toBeUndefined();
+			expect(parsed.dependencies["@bunary/http"]).toBeUndefined();
+		});
+
 		test("includes dev script", async () => {
 			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
@@ -240,6 +302,16 @@ describe("init command", () => {
 		test("includes development environment", async () => {
 			const config = await generateConfig("test-app");
 			expect(config).toContain("development");
+		});
+
+		test("without umbrella uses @bunary/core", async () => {
+			const config = await generateConfig("test-app");
+			expect(config).toContain('from "@bunary/core"');
+		});
+
+		test("with umbrella uses bunary/core", async () => {
+			const config = await generateConfig("test-app", { umbrella: true });
+			expect(config).toContain('from "bunary/core"');
 		});
 	});
 
@@ -284,6 +356,16 @@ describe("init command", () => {
 			const entry = await generateEntrypoint();
 			expect(entry).not.toContain("basicMiddleware");
 			expect(entry).not.toContain("jwtMiddleware");
+		});
+
+		test("without umbrella uses @bunary/http", async () => {
+			const entry = await generateEntrypoint();
+			expect(entry).toContain('from "@bunary/http"');
+		});
+
+		test("with umbrella uses bunary/http", async () => {
+			const entry = await generateEntrypoint({ umbrella: true });
+			expect(entry).toContain('from "bunary/http"');
 		});
 	});
 });

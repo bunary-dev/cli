@@ -1,4 +1,4 @@
-import type { BunaryApp } from "@bunary/http";
+import type { BunaryApp } from "{{bunaryHttp}}";
 
 /**
  * Example route group: /api prefix.
