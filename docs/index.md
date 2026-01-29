@@ -19,7 +19,7 @@ bunx @bunary/cli init my-app
 | Command | Description |
 |--------|-------------|
 | `bunary init [name] [--auth basic\|jwt] [--umbrella]` | Create a new Bunary project |
-| `bunary model:make <table>` | Generate ORM model in `src/models/` |
+| `bunary model:make <table-name>` | Generate ORM model in `src/models/` |
 | `bunary make:middleware <name>` | Generate middleware in `src/middleware/` |
 | `bunary make:migration <name>` | Create migration in `./migrations/` |
 | `bunary migrate` | Run pending migrations |
@@ -65,7 +65,7 @@ Generates a route module in `src/routes/` with a register function (e.g. `regist
 
 What init and the generators produce. With `init --umbrella`, imports use `bunary/http` and `bunary/core`; otherwise `@bunary/http` and `@bunary/core`.
 
-**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`. With `--umbrella` you get a single `bunary` dependency. With `--auth basic` or `jwt`, `@bunary/auth` is added.
+**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`. With `--umbrella` you instead get a single `bunary` dependency; if you also pass `--auth basic` or `--auth jwt`, `@bunary/auth` is added to that (so `--umbrella --auth jwt` yields both `bunary` and `@bunary/auth`).
 
 **bunary.config.ts:** Uses `defineConfig` from `@bunary/core` (or `bunary/core` when umbrella). Sets app name, env, debug.
 

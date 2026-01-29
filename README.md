@@ -1,6 +1,6 @@
 # @bunary/cli
 
-CLI for the Bunary framework. Scaffolds projects, generates models and routes, and runs migrations. Full reference lives in [docs/index.md](./docs/index.md); that file is the canonical package doc and is synced to the documentation repo.
+CLI for the Bunary framework. Scaffolds projects, generates models and routes, and runs migrations. Full reference lives in [docs/index.md](./docs/index.md); that file is the canonical package documentation.
 
 ## Installation
 
