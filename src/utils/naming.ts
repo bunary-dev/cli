@@ -37,3 +37,24 @@ export function tableNameToModelName(tableName: string): string {
 
 	return words.join("");
 }
+
+/**
+ * Convert a route name to the register function name (camelCase).
+ * Used for route module stubs: "users" → "registerUsers".
+ *
+ * @param routeName - The route name (e.g. "users", "user-profile")
+ * @returns The register function name (e.g. "registerUsers", "registerUserProfile")
+ *
+ * @example
+ * ```ts
+ * routeNameToRegisterFunctionName("users") // "registerUsers"
+ * routeNameToRegisterFunctionName("user-profile") // "registerUserProfile"
+ * ```
+ */
+export function routeNameToRegisterFunctionName(routeName: string): string {
+	if (!routeName || routeName.length === 0) {
+		throw new Error("Route name cannot be empty");
+	}
+	const pascal = tableNameToModelName(routeName);
+	return `register${pascal}`;
+}

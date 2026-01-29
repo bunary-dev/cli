@@ -29,6 +29,11 @@ const commands: Command[] = [
 		description: "Generate an ORM model class for the given table name",
 		usage: "bunary model:make <table-name>",
 	},
+	{
+		name: "route:make <name>",
+		description: "Generate a route module in src/routes/",
+		usage: "bunary route:make <name>",
+	},
 ];
 
 const options: Option[] = [
