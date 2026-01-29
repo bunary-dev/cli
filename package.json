@@ -21,7 +21,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun && bunx tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r src/stubs/* dist/stubs/",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun && bunx tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r stubs/* dist/stubs/",
     "test": "bun test",
     "lint": "bunx biome check ./src ./tests",
     "format": "bunx biome check --write ./src ./tests",
