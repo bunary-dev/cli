@@ -219,28 +219,28 @@ describe("init command", () => {
 			expect(parsed.name).toBe("my-awesome-app");
 		});
 
-		test("includes @bunary/core dependency", async () => {
+		test("includes @bunary/core dependency at ^0.2.0", async () => {
 			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/core"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/core"]).toBe("^0.2.0");
 		});
 
-		test("includes @bunary/http dependency", async () => {
+		test("includes @bunary/http dependency at ^0.3.0", async () => {
 			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/http"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/http"]).toBe("^0.3.0");
 		});
 
-		test("includes @bunary/auth when auth option is basic", async () => {
+		test("includes @bunary/auth at ^0.1.0 when auth option is basic", async () => {
 			const json = await generatePackageJson("test-app", { auth: "basic" });
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/auth"]).toBe("^0.1.0");
 		});
 
-		test("includes @bunary/auth when auth option is jwt", async () => {
+		test("includes @bunary/auth at ^0.1.0 when auth option is jwt", async () => {
 			const json = await generatePackageJson("test-app", { auth: "jwt" });
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/auth"]).toBe("^0.1.0");
 		});
 
 		test("includes dev script", async () => {
