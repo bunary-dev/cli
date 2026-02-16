@@ -7,7 +7,7 @@ import { registerRoutes } from "./routes/index.js";
 //
 // You can also pass options:
 //   createApp({ basePath: "/api" })    — prefix all routes
-//   createApp({ onNotFound: (ctx) => … })  — custom 404 handler
+//   createApp({ onNotFound: (ctx) => ... })  — custom 404 handler
 const app = createApp();
 registerRoutes(app);
 {{authUse}}
