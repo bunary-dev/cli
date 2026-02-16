@@ -63,6 +63,19 @@ describe("route:make command", () => {
 		expect(content).toContain("BunaryApp");
 	});
 
+	it("should generate with named routes and typed params", async () => {
+		await makeRoute("users");
+
+		const content = readFileSync(
+			join(testDir, "src", "routes", "users.ts"),
+			"utf-8",
+		);
+		expect(content).toContain('.name("users.index")');
+		expect(content).toContain('.name("users.show")');
+		expect(content).toContain("ctx.params.id");
+		expect(content).toContain("whereNumber");
+	});
+
 	it("should convert kebab-case route name to register function name", async () => {
 		await makeRoute("user-profile");
 

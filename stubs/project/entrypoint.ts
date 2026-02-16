@@ -1,8 +1,13 @@
 import { createApp } from "{{bunaryHttp}}";
 import { registerRoutes } from "./routes/index.js";
 {{authImport}}
-// If supported by your @bunary/http version, you can pass { basePath: "/api" } to prefix all routes:
-// const app = createApp({ basePath: "/api" });
+// createApp<TLocals>() accepts a generic for typed per-request data:
+//   const app = createApp<{ user: User }>();
+//   ctx.locals.user   // typed in handlers and middleware
+//
+// You can also pass options:
+//   createApp({ basePath: "/api" })    — prefix all routes
+//   createApp({ onNotFound: (ctx) => ... })  — custom 404 handler
 const app = createApp();
 registerRoutes(app);
 {{authUse}}

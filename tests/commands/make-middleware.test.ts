@@ -65,6 +65,18 @@ describe("middleware:make command", () => {
 		expect(content).toContain("Middleware");
 	});
 
+	it("should mention TLocals generic and include realistic pattern", async () => {
+		await makeMiddleware("ensure-auth");
+
+		const content = readFileSync(
+			join(testDir, "src", "middleware", "ensure-auth.ts"),
+			"utf-8",
+		);
+		expect(content).toContain("TLocals");
+		expect(content).toContain("await next()");
+		expect(content).toContain("performance.now()");
+	});
+
 	it("should convert kebab-case middleware name to camelCase function name", async () => {
 		await makeMiddleware("log-request");
 

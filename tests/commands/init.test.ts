@@ -210,6 +210,46 @@ describe("init command", () => {
 			).text();
 			expect(mainContent).toContain('from "@bunary/http"');
 		});
+
+		test("entrypoint mentions createApp options (basePath, TLocals, onNotFound)", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			const content = await Bun.file(
+				join(projectDir, "src", "index.ts"),
+			).text();
+			expect(content).toContain("basePath");
+			expect(content).toContain("TLocals");
+			expect(content).toContain("onNotFound");
+			expect(content).not.toContain("If supported by your");
+		});
+
+		test("main routes use .name() for named routes", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			const content = await Bun.file(
+				join(projectDir, "src", "routes", "main.ts"),
+			).text();
+			expect(content).toContain('.name("home")');
+			expect(content).toContain('.name("health")');
+		});
+
+		test("group example uses options form with name prefix, typed params, and constraints", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			const content = await Bun.file(
+				join(projectDir, "src", "routes", "groupExample.ts"),
+			).text();
+			expect(content).toContain('prefix: "/api"');
+			expect(content).toContain('name: "api."');
+			expect(content).toContain("ctx.params.id");
+			expect(content).toContain("whereNumber");
+		});
 	});
 
 	describe("generatePackageJson()", () => {
