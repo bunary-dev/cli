@@ -28,8 +28,8 @@ import {
 import { makeModel } from "./commands/model/makeModel.js";
 import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
+import { getVersion } from "./utils/version.js";
 
-const VERSION = "0.0.12";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
@@ -39,7 +39,7 @@ async function main(): Promise<void> {
 	}
 
 	if (args[0] === "--version" || args[0] === "-v") {
-		console.log(`@bunary/cli v${VERSION}`);
+		console.log(`@bunary/cli v${getVersion()}`);
 		return;
 	}
 
