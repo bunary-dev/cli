@@ -5,7 +5,7 @@ import { loadStub } from "../../utils/stub.js";
 import type { InitOptions } from "./types.js";
 
 /** @bunary/auth version for init --auth. Update when publishing a new auth release. */
-const BUNARY_AUTH_VERSION = "^0.0.7";
+const BUNARY_AUTH_VERSION = "^0.1.0";
 
 /**
  * Generate package.json content.

@@ -10,6 +10,11 @@ import {
 	init,
 } from "../../src/commands/init.js";
 
+/** Expected dependency versions — update here when packages are released. */
+const EXPECTED_CORE_VERSION = "^0.2.0";
+const EXPECTED_HTTP_VERSION = "^0.3.0";
+const EXPECTED_AUTH_VERSION = "^0.1.0";
+
 let TEST_DIR: string;
 
 describe("init command", () => {
@@ -219,28 +224,28 @@ describe("init command", () => {
 			expect(parsed.name).toBe("my-awesome-app");
 		});
 
-		test("includes @bunary/core dependency", async () => {
+		test("includes @bunary/core at expected version", async () => {
 			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/core"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/core"]).toBe(EXPECTED_CORE_VERSION);
 		});
 
-		test("includes @bunary/http dependency", async () => {
+		test("includes @bunary/http at expected version", async () => {
 			const json = await generatePackageJson("test-app");
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/http"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/http"]).toBe(EXPECTED_HTTP_VERSION);
 		});
 
-		test("includes @bunary/auth when auth option is basic", async () => {
+		test("includes @bunary/auth at expected version when auth option is basic", async () => {
 			const json = await generatePackageJson("test-app", { auth: "basic" });
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/auth"]).toBe(EXPECTED_AUTH_VERSION);
 		});
 
-		test("includes @bunary/auth when auth option is jwt", async () => {
+		test("includes @bunary/auth at expected version when auth option is jwt", async () => {
 			const json = await generatePackageJson("test-app", { auth: "jwt" });
 			const parsed = JSON.parse(json);
-			expect(parsed.dependencies["@bunary/auth"]).toBeDefined();
+			expect(parsed.dependencies["@bunary/auth"]).toBe(EXPECTED_AUTH_VERSION);
 		});
 
 		test("includes dev script", async () => {

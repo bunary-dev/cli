@@ -8,8 +8,8 @@
     "build": "bun build ./src/index.ts --outdir ./dist --target bun"
   },
   "dependencies": {
-    "@bunary/core": "^0.0.7",
-    "@bunary/http": "^0.0.11"
+    "@bunary/core": "^0.2.0",
+    "@bunary/http": "^0.3.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
