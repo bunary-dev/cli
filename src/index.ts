@@ -28,6 +28,7 @@ import {
 import { makeModel } from "./commands/model/makeModel.js";
 import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
+import { dim, red } from "./utils/color.js";
 import { getVersion } from "./utils/version.js";
 
 const args = process.argv.slice(2);
@@ -46,9 +47,11 @@ async function main(): Promise<void> {
 	if (args[0] === "init") {
 		const name = args[1];
 		if (!name) {
-			console.error("Error: Project name is required");
+			console.error(red("Error: Project name is required"));
 			console.error(
-				"Usage: bunary init <name> [--auth basic|jwt]  (or 'bunary init .' for current directory)",
+				dim(
+					"Usage: bunary init <name> [--auth basic|jwt]  (or 'bunary init .' for current directory)",
+				),
 			);
 			process.exit(1);
 		}
@@ -67,14 +70,16 @@ async function main(): Promise<void> {
 	if (args[0] === "model:make") {
 		const tableName = args[1];
 		if (!tableName) {
-			console.error("Error: Table name is required");
-			console.error("Usage: bunary model:make <table-name>");
+			console.error(red("Error: Table name is required"));
+			console.error(dim("Usage: bunary model:make <table-name>"));
 			process.exit(1);
 		}
 		try {
 			await makeModel(tableName);
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
@@ -83,14 +88,16 @@ async function main(): Promise<void> {
 	if (args[0] === "middleware:make") {
 		const middlewareName = args[1];
 		if (!middlewareName) {
-			console.error("Error: Middleware name is required");
-			console.error("Usage: bunary middleware:make <name>");
+			console.error(red("Error: Middleware name is required"));
+			console.error(dim("Usage: bunary middleware:make <name>"));
 			process.exit(1);
 		}
 		try {
 			await makeMiddleware(middlewareName);
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
@@ -99,16 +106,18 @@ async function main(): Promise<void> {
 	if (args[0] === "migration:make") {
 		const migrationName = args[1];
 		if (!migrationName) {
-			console.error("Error: Migration name is required");
+			console.error(red("Error: Migration name is required"));
 			console.error(
-				"Usage: bunary migration:make <name>  (e.g. create_users_table)",
+				dim("Usage: bunary migration:make <name>  (e.g. create_users_table)"),
 			);
 			process.exit(1);
 		}
 		try {
 			await makeMigration(migrationName);
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
@@ -118,7 +127,9 @@ async function main(): Promise<void> {
 		try {
 			await migrateUp();
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
@@ -128,7 +139,9 @@ async function main(): Promise<void> {
 		try {
 			await migrateDown();
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
@@ -138,7 +151,9 @@ async function main(): Promise<void> {
 		try {
 			await migrateStatus();
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
@@ -147,25 +162,27 @@ async function main(): Promise<void> {
 	if (args[0] === "route:make") {
 		const routeName = args[1];
 		if (!routeName) {
-			console.error("Error: Route name is required");
-			console.error("Usage: bunary route:make <name>");
+			console.error(red("Error: Route name is required"));
+			console.error(dim("Usage: bunary route:make <name>"));
 			process.exit(1);
 		}
 		try {
 			await makeRoute(routeName);
 		} catch (error) {
-			console.error(error instanceof Error ? error.message : String(error));
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
 			process.exit(1);
 		}
 		return;
 	}
 
-	console.error(`Unknown command: ${args[0]}`);
-	showHelp();
+	console.error(red(`Unknown command: ${args[0]}`));
+	console.error(dim("Run bunary --help for all commands."));
 	process.exit(1);
 }
 
 main().catch((error) => {
-	console.error("Error:", error.message);
+	console.error(red(`Error: ${error.message}`));
 	process.exit(1);
 });

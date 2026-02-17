@@ -5,6 +5,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { cyan, green } from "../../utils/color.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
 import { isBunaryProject } from "../../utils/validation.js";
@@ -72,5 +73,5 @@ export async function makeMiddleware(middlewareName: string): Promise<void> {
 
 	await writeFile(middlewarePath, content, "utf-8");
 
-	console.log(`✅ Created middleware: ${middlewarePath}`);
+	console.log(green(`✅ Created middleware: ${cyan(middlewarePath)}`));
 }
