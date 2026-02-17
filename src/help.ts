@@ -2,95 +2,127 @@
  * CLI help and usage information
  */
 
-const CLI_NAME = "@bunary/cli";
+import { bold, cyan, dim } from "./utils/color.js";
+
 const CLI_DESCRIPTION = "Bun-first backend platform inspired by Laravel";
 
-interface Command {
-	name: string;
-	description: string;
-	usage?: string;
-}
+/** Column width for command names — keeps descriptions aligned. */
+const CMD_COL = 26;
 
-interface Option {
+interface HelpCommand {
 	name: string;
-	alias: string;
+	args?: string;
 	description: string;
 }
 
-const commands: Command[] = [
+interface HelpSection {
+	title: string;
+	commands: HelpCommand[];
+}
+
+const sections: HelpSection[] = [
 	{
-		name: "init <name|.> [--auth basic|jwt]",
-		description:
-			"Create a new Bunary project (optionally with Basic or JWT auth)",
-		usage: "bunary init <name|.> [--auth basic|jwt]",
+		title: "Scaffold",
+		commands: [
+			{
+				name: "init",
+				args: "<name|.>",
+				description: "Create a new project",
+			},
+			{
+				name: "route:make",
+				args: "<name>",
+				description: "Generate a route module",
+			},
+			{
+				name: "middleware:make",
+				args: "<name>",
+				description: "Generate a middleware",
+			},
+			{
+				name: "model:make",
+				args: "<table>",
+				description: "Generate an ORM model",
+			},
+		],
 	},
 	{
-		name: "model:make <table-name>",
-		description: "Generate an ORM model class for the given table name",
-		usage: "bunary model:make <table-name>",
-	},
-	{
-		name: "middleware:make <name>",
-		description: "Generate a middleware in src/middleware/ (Laravel-inspired)",
-		usage: "bunary middleware:make <name>",
-	},
-	{
-		name: "migration:make <name>",
-		description: "Create a migration in ./migrations/ (Laravel-inspired)",
-		usage: "bunary migration:make <name>",
-	},
-	{
-		name: "migrate",
-		description: "Run pending migrations",
-		usage: "bunary migrate",
-	},
-	{
-		name: "migrate:rollback",
-		description: "Rollback last migration batch",
-		usage: "bunary migrate:rollback",
-	},
-	{
-		name: "migrate:status",
-		description: "Show migration status (ran / pending)",
-		usage: "bunary migrate:status",
-	},
-	{
-		name: "route:make <name>",
-		description: "Generate a route module in src/routes/",
-		usage: "bunary route:make <name>",
+		title: "Database",
+		commands: [
+			{
+				name: "migration:make",
+				args: "<name>",
+				description: "Create a migration",
+			},
+			{ name: "migrate", description: "Run pending migrations" },
+			{
+				name: "migrate:rollback",
+				description: "Rollback last batch",
+			},
+			{
+				name: "migrate:status",
+				description: "Show migration status",
+			},
+		],
 	},
 ];
 
-const options: Option[] = [
-	{ name: "--help", alias: "-h", description: "Show this help message" },
-	{ name: "--version", alias: "-v", description: "Show version" },
+const globalOptions = [
+	{ flags: "--help, -h", description: "Show this help" },
+	{ flags: "--version, -v", description: "Show version" },
+	{
+		flags: "--auth basic|jwt",
+		description: "Auth scaffolding (init only)",
+	},
 ];
+
+function formatCommandLine(cmd: HelpCommand): string {
+	const label = cmd.args
+		? `${cyan(cmd.name)} ${dim(cmd.args)}`
+		: cyan(cmd.name);
+
+	// For padding we need the "visual" length (without ANSI codes)
+	const visualLen = cmd.name.length + (cmd.args ? 1 + cmd.args.length : 0);
+	const padding = " ".repeat(Math.max(1, CMD_COL - visualLen));
+
+	return `    ${label}${padding}${cmd.description}`;
+}
 
 export function showHelp(): void {
-	console.log(`
-${CLI_NAME} - ${CLI_DESCRIPTION}
+	const lines: string[] = [
+		"",
+		`  ${bold("bunary")} ${dim("—")} ${CLI_DESCRIPTION}`,
+		"",
+		`  ${bold("Usage:")}  bunary ${dim("<command>")} ${dim("[options]")}`,
+		"",
+	];
 
-Usage:
-  bunary <command> [options]
+	for (const section of sections) {
+		lines.push(`  ${bold(section.title)}`);
+		for (const cmd of section.commands) {
+			lines.push(formatCommandLine(cmd));
+		}
+		lines.push("");
+	}
 
-Commands:
-${commands.map((cmd) => `  ${cmd.name.padEnd(18)} ${cmd.description}`).join("\n")}
+	lines.push(`  ${bold("Options")}`);
+	for (const opt of globalOptions) {
+		const padding = " ".repeat(Math.max(1, CMD_COL - opt.flags.length));
+		lines.push(`    ${dim(opt.flags)}${padding}${opt.description}`);
+	}
+	lines.push("");
 
-Options:
-${options.map((opt) => `  ${opt.name}, ${opt.alias}`.padEnd(20) + opt.description).join("\n")}
-
-Examples:
-${commands
-	.filter((cmd) => cmd.usage)
-	.map((cmd) => `  ${cmd.usage}`)
-	.join("\n")}
-`);
+	console.log(lines.join("\n"));
 }
 
 export function showCommandHelp(command: string): void {
-	const cmd = commands.find((c) => c.name.startsWith(command));
+	const allCommands = sections.flatMap((s) => s.commands);
+	const cmd = allCommands.find((c) => c.name === command);
 	if (cmd) {
-		console.log(`\nUsage: bunary ${cmd.name}\n\n${cmd.description}\n`);
+		const usage = cmd.args
+			? `bunary ${cyan(cmd.name)} ${dim(cmd.args)}`
+			: `bunary ${cyan(cmd.name)}`;
+		console.log(`\n  ${bold("Usage:")} ${usage}\n\n  ${cmd.description}\n`);
 	} else {
 		console.error(`Unknown command: ${command}`);
 		showHelp();

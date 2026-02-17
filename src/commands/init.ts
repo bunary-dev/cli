@@ -3,6 +3,7 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import { bold, cyan, dim, green } from "../utils/color.js";
 import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
 import { generateEntrypoint } from "./project/entrypoint.js";
@@ -79,13 +80,15 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		await generateRoutesIndex(options),
 	);
 
-	console.log(`\n✨ Created Bunary project: ${projectName}\n`);
-	console.log("Next steps:");
+	console.log(
+		`\n${green(`✨ Created Bunary project: ${cyan(projectName)}`)}\n`,
+	);
+	console.log(bold("Next steps:"));
 	if (!isCurrentDir) {
-		console.log(`  cd ${name}`);
+		console.log(`  ${dim("$")} ${cyan(`cd ${name}`)}`);
 	}
-	console.log("  bun install");
-	console.log("  bun run dev\n");
+	console.log(`  ${dim("$")} ${cyan("bun install")}`);
+	console.log(`  ${dim("$")} ${cyan("bun run dev")}\n`);
 }
 
 // Re-export generators and commands for programmatic use

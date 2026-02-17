@@ -4,6 +4,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { cyan, green } from "../../utils/color.js";
 import { loadStub } from "../../utils/stub.js";
 import { isBunaryProject } from "../../utils/validation.js";
 
@@ -70,5 +71,5 @@ export async function makeMigration(name: string): Promise<void> {
 
 	await writeFile(migrationPath, content, "utf-8");
 
-	console.log(`✅ Created migration: ${migrationPath}`);
+	console.log(green(`✅ Created migration: ${cyan(migrationPath)}`));
 }

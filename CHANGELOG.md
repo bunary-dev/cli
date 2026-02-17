@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-02-18
+
+### Added
+
+- **Color output and visual hierarchy** (Closes #56)
+  - `src/utils/color.ts` — zero-dependency ANSI helpers (`bold`, `dim`, `red`, `green`, `yellow`, `cyan`)
+  - Respects `NO_COLOR` env var and non-TTY pipes (clean text when piped to file)
+  - Help output grouped into Scaffold / Database / Options sections with aligned columns
+  - Success messages (`✅ Created ...`) in green with paths in cyan
+  - Error messages in red, usage hints in dim
+  - Init next-steps block with bold header and cyan commands
+  - Unknown command no longer dumps full help — shows short hint instead
+  - Tests for color module covering TTY, `NO_COLOR`, and non-TTY scenarios
+
 ## [0.1.0] - 2026-01-31
 
 ### Added
