@@ -106,6 +106,27 @@ describe("color utilities", () => {
 		});
 	});
 
+	describe("when NO_COLOR is empty string", () => {
+		beforeEach(() => {
+			process.env.NO_COLOR = "";
+			Object.defineProperty(process.stdout, "isTTY", {
+				value: true,
+				writable: true,
+				configurable: true,
+			});
+		});
+
+		test("bold returns plain text (presence is enough)", async () => {
+			const { bold } = await loadColor();
+			expect(bold("hello")).toBe("hello");
+		});
+
+		test("red returns plain text (presence is enough)", async () => {
+			const { red } = await loadColor();
+			expect(red("error")).toBe("error");
+		});
+	});
+
 	describe("when stdout is not a TTY", () => {
 		beforeEach(() => {
 			delete process.env.NO_COLOR;
@@ -124,6 +145,27 @@ describe("color utilities", () => {
 		test("red returns plain text", async () => {
 			const { red } = await loadColor();
 			expect(red("error")).toBe("error");
+		});
+	});
+
+	describe("when stdout.isTTY is undefined (piped/redirected)", () => {
+		beforeEach(() => {
+			delete process.env.NO_COLOR;
+			Object.defineProperty(process.stdout, "isTTY", {
+				value: undefined,
+				writable: true,
+				configurable: true,
+			});
+		});
+
+		test("bold returns plain text", async () => {
+			const { bold } = await loadColor();
+			expect(bold("hello")).toBe("hello");
+		});
+
+		test("cyan returns plain text", async () => {
+			const { cyan } = await loadColor();
+			expect(cyan("info")).toBe("info");
 		});
 	});
 });

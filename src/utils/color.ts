@@ -16,7 +16,8 @@
  * ```
  */
 
-const enabled = process.stdout.isTTY !== false && !process.env.NO_COLOR;
+// NO_COLOR spec: presence of the variable (even empty) disables color.
+const enabled = process.stdout.isTTY === true && !("NO_COLOR" in process.env);
 
 /** Bold text — use for section headers and emphasis. */
 export const bold = (s: string): string =>
