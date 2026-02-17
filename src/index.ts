@@ -29,6 +29,7 @@ import { makeModel } from "./commands/model/makeModel.js";
 import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
 import { dim, red } from "./utils/color.js";
+import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
 
 const args = process.argv.slice(2);
@@ -178,6 +179,10 @@ async function main(): Promise<void> {
 	}
 
 	console.error(red(`Unknown command: ${args[0]}`));
+	const suggestion = suggestCommand(args[0]);
+	if (suggestion) {
+		console.error(`\n  Did you mean: ${suggestion}?\n`);
+	}
 	console.error(dim("Run bunary --help for all commands."));
 	process.exit(1);
 }

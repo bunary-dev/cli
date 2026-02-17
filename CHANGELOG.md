@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-02-18
+
+### Added
+
+- **"Did you mean?" suggestions for unknown commands** (Closes #58)
+  - `src/utils/suggest.ts` — Levenshtein distance algorithm and command suggestion logic
+  - Typos within 2 edits suggest the correct command (e.g. `iinit` → `init`)
+  - Prefix matches suggest when unambiguous (e.g. `ini` → `init`)
+  - No suggestion shown when nothing is close enough
+  - Unknown commands no longer dump full help — show suggestion + `--help` hint
+  - 25 unit tests covering distance calculation, prefix matching, and edge cases
+
 ## [0.1.1] - 2026-02-18
 
 ### Added
