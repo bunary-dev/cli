@@ -71,7 +71,7 @@ async function main(): Promise<void> {
 		const tableName = args[1];
 		if (!tableName) {
 			console.error(red("Error: Table name is required"));
-			console.error(dim("Usage: bunary model:make <table-name>"));
+			console.error(dim("Usage: bunary model:make <table>"));
 			process.exit(1);
 		}
 		try {
