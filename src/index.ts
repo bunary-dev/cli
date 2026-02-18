@@ -16,17 +16,16 @@ import { getVersion } from "./utils/version.js";
 
 const args = process.argv.slice(2);
 
-/**
- * Parse flags from the argument list.
- *
- * Extracts `--key value` pairs and returns the remaining positional args.
- *
- * @param argv - Raw CLI arguments after the command name
- * @returns Tuple of [positional args, parsed flags]
- */
-function parseFlags(argv: string[]): [string[], Record<string, string>] {
-	const positional: string[] = [];
-	const flags: Record<string, string> = {};
+async function main(): Promise<void> {
+	if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
+		showHelp();
+		return;
+	}
+
+	if (args[0] === "--version" || args[0] === "-v") {
+		console.log(`@bunary/cli v${getVersion()}`);
+		return;
+	}
 
 	const command = findCommand(args[0]);
 
