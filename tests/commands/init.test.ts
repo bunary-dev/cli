@@ -47,12 +47,12 @@ describe("init command", () => {
 			expect(existsSync(join(projectDir, "package.json"))).toBe(true);
 		});
 
-		test("creates bunary.config.ts in project directory", async () => {
+		test("creates config/bunary.ts in project directory", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app");
 
-			expect(existsSync(join(projectDir, "bunary.config.ts"))).toBe(true);
+			expect(existsSync(join(projectDir, "config", "bunary.ts"))).toBe(true);
 		});
 
 		test("creates src/index.ts in project directory", async () => {
@@ -98,7 +98,7 @@ describe("init command", () => {
 			await init(".");
 
 			expect(existsSync(join(projectDir, "package.json"))).toBe(true);
-			expect(existsSync(join(projectDir, "bunary.config.ts"))).toBe(true);
+			expect(existsSync(join(projectDir, "config", "bunary.ts"))).toBe(true);
 			expect(existsSync(join(projectDir, "src", "index.ts"))).toBe(true);
 			expect(existsSync(join(projectDir, "src", "routes", "index.ts"))).toBe(
 				true,
@@ -202,7 +202,7 @@ describe("init command", () => {
 			).text();
 			expect(entryContent).toContain('from "@bunary/http"');
 			const configContent = await Bun.file(
-				join(projectDir, "bunary.config.ts"),
+				join(projectDir, "config", "bunary.ts"),
 			).text();
 			expect(configContent).toContain('from "@bunary/core"');
 			const mainContent = await Bun.file(

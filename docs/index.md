@@ -38,7 +38,7 @@ bunary init my-app --auth jwt
 bunary init .
 ```
 
-The command creates `package.json`, `bunary.config.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`.
+The command creates `package.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`.
 
 ### bunary model:make \<table-name\>
 
@@ -66,7 +66,7 @@ What init and the generators produce.
 
 **package.json (default):** dependencies include `@bunary/core` and `@bunary/http`. With `--auth basic` or `--auth jwt`, `@bunary/auth` is added.
 
-**bunary.config.ts:** Uses `defineConfig` from `@bunary/core`. Sets app name, env, debug.
+**config/bunary.ts:** Uses `defineConfig` from `@bunary/core`. Sets app name, env, debug.
 
 **src/index.ts:** Creates the app with `createApp`, calls `registerRoutes(app)`, then `app.listen({ port: 3000 })`. With auth, it also imports the middleware and calls `app.use(basicMiddleware)` or `app.use(jwtMiddleware)`.
 

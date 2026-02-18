@@ -42,7 +42,8 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		await mkdir(projectDir, { recursive: true });
 	}
 
-	// Create src, src/routes, and (when auth) src/middleware directories
+	// Create src, src/routes, config/, and (when auth) src/middleware directories
+	await mkdir(join(projectDir, "config"), { recursive: true });
 	await mkdir(join(projectDir, "src"), { recursive: true });
 	await mkdir(join(projectDir, "src", "routes"), { recursive: true });
 	if (options?.auth === "basic" || options?.auth === "jwt") {
@@ -60,10 +61,10 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	createdFiles.push("package.json");
 
 	await writeFile(
-		join(projectDir, "bunary.config.ts"),
+		join(projectDir, "config", "bunary.ts"),
 		await generateConfig(projectName, options),
 	);
-	createdFiles.push("bunary.config.ts");
+	createdFiles.push("config/bunary.ts");
 
 	await writeFile(
 		join(projectDir, "src", "index.ts"),

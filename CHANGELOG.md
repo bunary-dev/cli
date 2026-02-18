@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tree updates correctly when `--auth` adds middleware files (7 files)
   - New `buildFileTree()` utility in `src/utils/fileTree.ts` with 13 unit tests
 
+### Changed
+
+- **Move config from `bunary.config.ts` to `config/bunary.ts`** (Closes #72)
+  - `bunary init` now scaffolds config in a dedicated `config/` directory
+  - Prepares for additional config files as projects grow
+
 ## [0.1.4] - 2026-02-18
 
 ### Changed
