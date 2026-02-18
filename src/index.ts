@@ -10,34 +10,11 @@
 import { showHelp } from "./help.js";
 import { findCommand } from "./registry.js";
 import { dim, red } from "./utils/color.js";
+import { parseFlags, validateFlags } from "./utils/parseFlags.js";
 import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
 
 const args = process.argv.slice(2);
-
-/**
- * Parse flags from the argument list.
- *
- * Extracts `--key value` pairs and returns the remaining positional args.
- *
- * @param argv - Raw CLI arguments after the command name
- * @returns Tuple of [positional args, parsed flags]
- */
-function parseFlags(argv: string[]): [string[], Record<string, string>] {
-	const positional: string[] = [];
-	const flags: Record<string, string> = {};
-
-	for (let i = 0; i < argv.length; i++) {
-		if (argv[i].startsWith("--") && i + 1 < argv.length) {
-			flags[argv[i].slice(2)] = argv[i + 1];
-			i++; // skip the value
-		} else {
-			positional.push(argv[i]);
-		}
-	}
-
-	return [positional, flags];
-}
 
 async function main(): Promise<void> {
 	if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
@@ -64,6 +41,18 @@ async function main(): Promise<void> {
 
 	// Parse positional args and flags from remaining argv
 	const [positional, flags] = parseFlags(args.slice(1));
+
+	// Validate flags against command definitions
+	if (command.flags) {
+		try {
+			validateFlags(flags, command.flags);
+		} catch (error) {
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
+			process.exit(1);
+		}
+	}
 
 	// Validate required args
 	if (command.args) {

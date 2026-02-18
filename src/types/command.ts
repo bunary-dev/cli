@@ -95,5 +95,8 @@ export interface Command {
 	/** Supported flags */
 	flags?: CommandFlag[];
 	/** The handler function */
-	run: (args: string[], flags: Record<string, string>) => Promise<void>;
+	run: (
+		args: string[],
+		flags: Record<string, string | boolean>,
+	) => Promise<void>;
 }

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-02-18
+
+### Changed
+
+- **Harden flag parsing infrastructure**
+  - Extract `parseFlags()` and `validateFlags()` into `src/utils/parseFlags.ts` with full test coverage (27 tests)
+  - Support boolean flags (`--dry-run`) — flags at end of args or followed by another flag are set to `true`
+  - Update `Command.run()` signature from `Record<string, string>` to `Record<string, string | boolean>`
+  - Detect and throw on duplicate flags (`--auth basic --auth jwt` → `Duplicate flag: --auth`)
+  - Validate flag names and values against command definitions at dispatch level (fail fast before execution)
+  - Auto-generate help Options section from command flag definitions (no hardcoded `globalOptions` to maintain)
+  - Extract `ensureBunaryProject()` and `ensureOrmDependency()` guards into `src/utils/validation.ts`
+  - Replace 5 duplicated `isBunaryProject` + throw blocks and 2 duplicated `hasOrm` checks with single-line guard calls
+  - 6 new validation guard tests (180 total tests passing)
+
 ## [0.1.3] - 2026-02-18
 
 ### Changed

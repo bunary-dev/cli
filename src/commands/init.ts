@@ -123,9 +123,10 @@ export const command: Command = {
 	],
 	async run(args, flags) {
 		const name = args[0];
+		const authValue = flags.auth;
 		let auth: "basic" | "jwt" | undefined;
-		if (flags.auth === "basic" || flags.auth === "jwt") {
-			auth = flags.auth;
+		if (authValue === "basic" || authValue === "jwt") {
+			auth = authValue;
 		}
 		await init(name, { auth });
 	},

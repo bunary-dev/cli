@@ -8,7 +8,7 @@ import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { routeNameToRegisterFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
-import { isBunaryProject } from "../../utils/validation.js";
+import { ensureBunaryProject } from "../../utils/validation.js";
 
 /**
  * Generate a route module file in src/routes/.
@@ -27,13 +27,7 @@ import { isBunaryProject } from "../../utils/validation.js";
  */
 export async function makeRoute(routeName: string): Promise<void> {
 	const cwd = process.cwd();
-
-	if (!isBunaryProject(cwd)) {
-		throw new Error(
-			"Error: Not in a Bunary project.\n" +
-				"Make sure you're in a directory with package.json containing @bunary/core dependency.",
-		);
-	}
+	ensureBunaryProject(cwd);
 
 	const functionName = routeNameToRegisterFunctionName(routeName);
 	const routesDir = join(cwd, "src", "routes");

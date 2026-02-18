@@ -6,7 +6,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { getStubsDir } from "../../utils/stub.js";
-import { isBunaryProject } from "../../utils/validation.js";
+import { ensureOrmDependency } from "../../utils/validation.js";
 
 /**
  * Ensure scripts/migrate.ts exists in project; create from stub if missing.
@@ -33,26 +33,7 @@ async function runMigrateScript(
 	cwd: string,
 	cmd: "up" | "down" | "status",
 ): Promise<void> {
-	if (!isBunaryProject(cwd)) {
-		throw new Error(
-			"Error: Not in a Bunary project.\n" +
-				"Make sure you're in a directory with package.json containing @bunary/core dependency.",
-		);
-	}
-
-	const pkgPath = join(cwd, "package.json");
-	const pkg = JSON.parse(await Bun.file(pkgPath).text()) as {
-		dependencies?: Record<string, string>;
-		devDependencies?: Record<string, string>;
-	};
-	const hasOrm =
-		pkg.dependencies?.["@bunary/orm"] || pkg.devDependencies?.["@bunary/orm"];
-	if (!hasOrm) {
-		throw new Error(
-			"Error: Project must have @bunary/orm in dependencies.\n" +
-				"Run: bun add @bunary/orm",
-		);
-	}
+	ensureOrmDependency(cwd);
 
 	await ensureMigrateRunner(cwd);
 

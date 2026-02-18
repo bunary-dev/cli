@@ -8,7 +8,7 @@ import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { tableNameToModelName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
-import { isBunaryProject } from "../../utils/validation.js";
+import { ensureBunaryProject } from "../../utils/validation.js";
 
 /**
  * Generate a model file for the ORM
@@ -27,14 +27,7 @@ import { isBunaryProject } from "../../utils/validation.js";
  */
 export async function makeModel(tableName: string): Promise<void> {
 	const cwd = process.cwd();
-
-	// Validate we're in a Bunary project
-	if (!isBunaryProject(cwd)) {
-		throw new Error(
-			"Error: Not in a Bunary project.\n" +
-				"Make sure you're in a directory with package.json containing @bunary/core dependency.",
-		);
-	}
+	ensureBunaryProject(cwd);
 
 	// Convert table name to model name
 	const modelName = tableNameToModelName(tableName);
