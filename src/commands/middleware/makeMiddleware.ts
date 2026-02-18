@@ -6,8 +6,9 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
-import { cyan, green } from "../../utils/color.js";
+import { cyan, dim, green } from "../../utils/color.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
+import { middlewareNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
 import { ensureBunaryProject } from "../../utils/validation.js";
 
@@ -68,7 +69,9 @@ export async function makeMiddleware(middlewareName: string): Promise<void> {
 
 	await writeFile(middlewarePath, content, "utf-8");
 
+	const functionName = middlewareNameToFunctionName(middlewareName);
 	console.log(green(`✅ Created middleware: ${cyan(middlewarePath)}`));
+	console.log(dim(middlewareNextSteps(middlewareName, functionName)));
 }
 
 /** Command definition for the registry. */

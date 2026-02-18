@@ -5,8 +5,9 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
-import { cyan, green } from "../../utils/color.js";
+import { cyan, dim, green } from "../../utils/color.js";
 import { tableNameToModelName } from "../../utils/naming.js";
+import { modelNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
 import { ensureBunaryProject } from "../../utils/validation.js";
 
@@ -54,6 +55,7 @@ export async function makeModel(tableName: string): Promise<void> {
 	await writeFile(modelPath, content, "utf-8");
 
 	console.log(green(`✅ Created model: ${cyan(modelPath)}`));
+	console.log(dim(modelNextSteps(tableName, modelName)));
 }
 
 /** Command definition for the registry. */
