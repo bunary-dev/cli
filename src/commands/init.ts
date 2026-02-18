@@ -5,6 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import type { Command } from "../types/command.js";
 import { bold, cyan, dim, green } from "../utils/color.js";
+import { buildFileTree } from "../utils/fileTree.js";
 import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
 import { generateEntrypoint } from "./project/entrypoint.js";
@@ -48,42 +49,74 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		await mkdir(join(projectDir, "src", "middleware"), { recursive: true });
 	}
 
+	// Track created files for tree display
+	const createdFiles: string[] = [];
+
 	// Write files
 	await writeFile(
 		join(projectDir, "package.json"),
 		await generatePackageJson(projectName, options),
 	);
+	createdFiles.push("package.json");
+
 	await writeFile(
 		join(projectDir, "bunary.config.ts"),
 		await generateConfig(projectName, options),
 	);
+	createdFiles.push("bunary.config.ts");
+
 	await writeFile(
 		join(projectDir, "src", "index.ts"),
 		await generateEntrypoint(options),
 	);
+	createdFiles.push("src/index.ts");
+
 	// init --auth basic|jwt is a shortcut to middleware:make basic|jwt (same content, no double-up)
 	if (options?.auth === "basic" || options?.auth === "jwt") {
 		await writeFile(
 			join(projectDir, "src", "middleware", `${options.auth}.ts`),
 			await generateMiddlewareContent(options.auth),
 		);
+		createdFiles.push(`src/middleware/${options.auth}.ts`);
 	}
 	await writeFile(
 		join(projectDir, "src", "routes", "main.ts"),
 		await generateRoutesMain(options),
 	);
+	createdFiles.push("src/routes/main.ts");
+
 	await writeFile(
 		join(projectDir, "src", "routes", "groupExample.ts"),
 		await generateRoutesGroupExample(options),
 	);
+	createdFiles.push("src/routes/groupExample.ts");
+
 	await writeFile(
 		join(projectDir, "src", "routes", "index.ts"),
 		await generateRoutesIndex(options),
 	);
+	createdFiles.push("src/routes/index.ts");
 
 	console.log(
 		`\n${green(`✨ Created Bunary project: ${cyan(projectName)}`)}\n`,
 	);
+
+	// Render file tree with colors
+	const tree = buildFileTree(projectName, createdFiles);
+	for (const line of tree.split("\n")) {
+		if (line.trim()) {
+			// Colorize: tree connectors dim, rest green
+			const colored = line
+				.replace(/([├└│─]+)/g, (match) => dim(match))
+				.replace(/(\S+\.\S+)$/g, (match) => green(match))
+				.replace(/(\S+\/)$/g, (match) => cyan(match));
+			console.log(`  ${colored}`);
+		} else {
+			console.log("");
+		}
+	}
+
+	console.log("");
 	console.log(bold("Next steps:"));
 	if (!isCurrentDir) {
 		console.log(`  ${dim("$")} ${cyan(`cd ${name}`)}`);
