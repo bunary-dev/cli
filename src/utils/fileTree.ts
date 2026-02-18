@@ -19,13 +19,12 @@
  * ]);
  * console.log(tree);
  * // my-app/
- * // ├── config/
- * // │   └── bunary.ts
  * // ├── src/
  * // │   ├── routes/
  * // │   │   └── main.ts
  * // │   └── index.ts
- * // └── package.json
+ * // ├── package.json
+ * // └── bunary.config.ts
  * //
  * // 4 files created
  * ```

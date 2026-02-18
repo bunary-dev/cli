@@ -109,8 +109,8 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 			// Colorize: tree connectors dim, rest green
 			const colored = line
 				.replace(/([├└│─]+)/g, (match) => dim(match))
-				.replace(/(\S+\.\S+)$/g, (match) => green(match))
-				.replace(/(\S+\/)$/g, (match) => cyan(match));
+				.replace(/(\S+\/)$/g, (match) => cyan(match))
+				.replace(/(?<=── )(\S+)$/g, (match) => green(match));
 			console.log(`  ${colored}`);
 		} else {
 			console.log("");
