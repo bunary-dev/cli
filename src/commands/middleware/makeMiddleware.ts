@@ -5,6 +5,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
@@ -75,3 +76,14 @@ export async function makeMiddleware(middlewareName: string): Promise<void> {
 
 	console.log(green(`✅ Created middleware: ${cyan(middlewarePath)}`));
 }
+
+/** Command definition for the registry. */
+export const command: Command = {
+	name: "middleware:make",
+	description: "Generate a middleware",
+	category: "scaffold",
+	args: [{ name: "name", required: true, description: "Middleware name" }],
+	async run(args) {
+		await makeMiddleware(args[0]);
+	},
+};

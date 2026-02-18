@@ -4,6 +4,7 @@
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import type { Command } from "../../types/command.js";
 import { getStubsDir } from "../../utils/stub.js";
 import { isBunaryProject } from "../../utils/validation.js";
 
@@ -79,3 +80,33 @@ export async function migrateDown(): Promise<void> {
 export async function migrateStatus(): Promise<void> {
 	await runMigrateScript(process.cwd(), "status");
 }
+
+/** Command definition for `migrate`. */
+export const migrateCommand: Command = {
+	name: "migrate",
+	description: "Run pending migrations",
+	category: "database",
+	async run() {
+		await migrateUp();
+	},
+};
+
+/** Command definition for `migrate:rollback`. */
+export const migrateRollbackCommand: Command = {
+	name: "migrate:rollback",
+	description: "Rollback last batch",
+	category: "database",
+	async run() {
+		await migrateDown();
+	},
+};
+
+/** Command definition for `migrate:status`. */
+export const migrateStatusCommand: Command = {
+	name: "migrate:status",
+	description: "Show migration status",
+	category: "database",
+	async run() {
+		await migrateStatus();
+	},
+};

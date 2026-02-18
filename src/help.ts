@@ -1,7 +1,9 @@
 /**
- * CLI help and usage information
+ * CLI help and usage information — auto-generated from the command registry.
  */
 
+import { commands } from "./registry.js";
+import type { Command, CommandCategory } from "./types/command.js";
 import { bold, cyan, dim } from "./utils/color.js";
 
 const CLI_DESCRIPTION = "Bun-first backend platform inspired by Laravel";
@@ -9,63 +11,14 @@ const CLI_DESCRIPTION = "Bun-first backend platform inspired by Laravel";
 /** Column width for command names — keeps descriptions aligned. */
 const CMD_COL = 26;
 
-interface HelpCommand {
-	name: string;
-	args?: string;
-	description: string;
-}
+/** Display order for help sections. */
+const CATEGORY_LABELS: Record<CommandCategory, string> = {
+	scaffold: "Scaffold",
+	database: "Database",
+};
 
-interface HelpSection {
-	title: string;
-	commands: HelpCommand[];
-}
-
-const sections: HelpSection[] = [
-	{
-		title: "Scaffold",
-		commands: [
-			{
-				name: "init",
-				args: "<name|.>",
-				description: "Create a new project",
-			},
-			{
-				name: "route:make",
-				args: "<name>",
-				description: "Generate a route module",
-			},
-			{
-				name: "middleware:make",
-				args: "<name>",
-				description: "Generate a middleware",
-			},
-			{
-				name: "model:make",
-				args: "<table>",
-				description: "Generate an ORM model",
-			},
-		],
-	},
-	{
-		title: "Database",
-		commands: [
-			{
-				name: "migration:make",
-				args: "<name>",
-				description: "Create a migration",
-			},
-			{ name: "migrate", description: "Run pending migrations" },
-			{
-				name: "migrate:rollback",
-				description: "Rollback last batch",
-			},
-			{
-				name: "migrate:status",
-				description: "Show migration status",
-			},
-		],
-	},
-];
+/** Ordered list of categories to display. */
+const CATEGORY_ORDER: CommandCategory[] = ["scaffold", "database"];
 
 const globalOptions = [
 	{ flags: "--help, -h", description: "Show this help" },
@@ -76,18 +29,33 @@ const globalOptions = [
 	},
 ];
 
-function formatCommandLine(cmd: HelpCommand): string {
-	const label = cmd.args
-		? `${cyan(cmd.name)} ${dim(cmd.args)}`
-		: cyan(cmd.name);
+function formatCommandLine(cmd: Command): string {
+	const argsStr = cmd.args
+		? cmd.args
+				.map((a) => (a.required ? `<${a.name}>` : `[${a.name}]`))
+				.join(" ")
+		: undefined;
+
+	const label = argsStr ? `${cyan(cmd.name)} ${dim(argsStr)}` : cyan(cmd.name);
 
 	// For padding we need the "visual" length (without ANSI codes)
-	const visualLen = cmd.name.length + (cmd.args ? 1 + cmd.args.length : 0);
+	const visualLen = cmd.name.length + (argsStr ? 1 + argsStr.length : 0);
 	const padding = " ".repeat(Math.max(1, CMD_COL - visualLen));
 
 	return `    ${label}${padding}${cmd.description}`;
 }
 
+/**
+ * Show the full CLI help output.
+ *
+ * Sections and commands are auto-generated from the command registry,
+ * so adding a new command to the registry automatically updates help.
+ *
+ * @example
+ * ```ts
+ * showHelp(); // prints grouped help to stdout
+ * ```
+ */
 export function showHelp(): void {
 	const lines: string[] = [
 		"",
@@ -97,9 +65,12 @@ export function showHelp(): void {
 		"",
 	];
 
-	for (const section of sections) {
-		lines.push(`  ${bold(section.title)}`);
-		for (const cmd of section.commands) {
+	for (const category of CATEGORY_ORDER) {
+		const sectionCommands = commands.filter((c) => c.category === category);
+		if (sectionCommands.length === 0) continue;
+
+		lines.push(`  ${bold(CATEGORY_LABELS[category])}`);
+		for (const cmd of sectionCommands) {
 			lines.push(formatCommandLine(cmd));
 		}
 		lines.push("");
@@ -115,16 +86,29 @@ export function showHelp(): void {
 	console.log(lines.join("\n"));
 }
 
-export function showCommandHelp(command: string): void {
-	const allCommands = sections.flatMap((s) => s.commands);
-	const cmd = allCommands.find((c) => c.name === command);
+/**
+ * Show help for a specific command.
+ *
+ * @param commandName - The command name to show help for
+ * @example
+ * ```ts
+ * showCommandHelp("route:make");
+ * ```
+ */
+export function showCommandHelp(commandName: string): void {
+	const cmd = commands.find((c) => c.name === commandName);
 	if (cmd) {
-		const usage = cmd.args
-			? `bunary ${cyan(cmd.name)} ${dim(cmd.args)}`
+		const argsStr = cmd.args
+			? cmd.args
+					.map((a) => (a.required ? `<${a.name}>` : `[${a.name}]`))
+					.join(" ")
+			: undefined;
+		const usage = argsStr
+			? `bunary ${cyan(cmd.name)} ${dim(argsStr)}`
 			: `bunary ${cyan(cmd.name)}`;
 		console.log(`\n  ${bold("Usage:")} ${usage}\n\n  ${cmd.description}\n`);
 	} else {
-		console.error(`Unknown command: ${command}`);
+		console.error(`Unknown command: ${commandName}`);
 		showHelp();
 	}
 }

@@ -4,6 +4,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { routeNameToRegisterFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
@@ -55,3 +56,14 @@ export async function makeRoute(routeName: string): Promise<void> {
 
 	console.log(green(`✅ Created route: ${cyan(routePath)}`));
 }
+
+/** Command definition for the registry. */
+export const command: Command = {
+	name: "route:make",
+	description: "Generate a route module",
+	category: "scaffold",
+	args: [{ name: "name", required: true, description: "Route name" }],
+	async run(args) {
+		await makeRoute(args[0]);
+	},
+};

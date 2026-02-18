@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-02-18
+
+### Changed
+
+- **Refactor to command registry pattern** (Closes #62)
+  - `src/types/command.ts` — `Command`, `CommandArg`, `CommandFlag`, `CommandCategory` interfaces
+  - `src/registry.ts` — central registry with `commands`, `findCommand()`, `getCommandNames()`
+  - Each command module exports a `command` definition alongside its implementation
+  - `index.ts` dispatches via registry lookup instead of 170-line `if/else` chain
+  - Help output auto-generates from registry (no separate command list to maintain)
+  - `suggest.ts` pulls command names from registry instead of hardcoded list
+  - Adding a new command = create file + add one import to the registry
+  - 15 new registry tests, all 147 tests passing
+  - No behavior changes from the user's perspective
+
 ## [0.1.2] - 2026-02-18
 
 ### Added

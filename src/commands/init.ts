@@ -3,6 +3,7 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import type { Command } from "../types/command.js";
 import { bold, cyan, dim, green } from "../utils/color.js";
 import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
@@ -100,3 +101,32 @@ export {
 	generateRoutesIndex,
 	generateRoutesMain,
 } from "./project/routes.js";
+
+/** Command definition for the registry. */
+export const command: Command = {
+	name: "init",
+	description: "Create a new project",
+	category: "scaffold",
+	args: [
+		{
+			name: "name",
+			required: true,
+			description: "Project name or '.' for current directory",
+		},
+	],
+	flags: [
+		{
+			name: "--auth",
+			description: "Auth scaffolding type",
+			values: ["basic", "jwt"],
+		},
+	],
+	async run(args, flags) {
+		const name = args[0];
+		let auth: "basic" | "jwt" | undefined;
+		if (flags.auth === "basic" || flags.auth === "jwt") {
+			auth = flags.auth;
+		}
+		await init(name, { auth });
+	},
+};

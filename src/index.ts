@@ -2,37 +2,42 @@
 /**
  * @bunary/cli - CLI scaffolding tool for Bunary
  *
- * Usage:
- *   bunary init <name>        - Create a new project in <name> directory
- *   bunary init <name> --auth basic|jwt - Scaffold with Basic or JWT auth
- *   bunary init .             - Create a new project in current directory
- *   bunary model:make <table>     - Generate an ORM model for <table>
- *   bunary middleware:make <name> - Generate a middleware in src/middleware/
- *   bunary migration:make <name>  - Create a migration in ./migrations/
- *   bunary migrate                - Run pending migrations
- *   bunary migrate:rollback      - Rollback last migration batch
- *   bunary migrate:status        - Show migration status
- *   bunary route:make <name>     - Generate a route module in src/routes/
- *   bunary --help             - Show help
- *   bunary --version          - Show version
+ * Dispatches commands via the command registry. Each command is a
+ * self-contained module — see src/types/command.ts for the interface
+ * and src/registry.ts for the full list.
  */
 
-import { init } from "./commands/init.js";
-import { makeMiddleware } from "./commands/middleware/makeMiddleware.js";
-import { makeMigration } from "./commands/migration/makeMigration.js";
-import {
-	migrateDown,
-	migrateStatus,
-	migrateUp,
-} from "./commands/migration/runMigrations.js";
-import { makeModel } from "./commands/model/makeModel.js";
-import { makeRoute } from "./commands/route/makeRoute.js";
 import { showHelp } from "./help.js";
+import { findCommand } from "./registry.js";
 import { dim, red } from "./utils/color.js";
 import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
 
 const args = process.argv.slice(2);
+
+/**
+ * Parse flags from the argument list.
+ *
+ * Extracts `--key value` pairs and returns the remaining positional args.
+ *
+ * @param argv - Raw CLI arguments after the command name
+ * @returns Tuple of [positional args, parsed flags]
+ */
+function parseFlags(argv: string[]): [string[], Record<string, string>] {
+	const positional: string[] = [];
+	const flags: Record<string, string> = {};
+
+	for (let i = 0; i < argv.length; i++) {
+		if (argv[i].startsWith("--") && i + 1 < argv.length) {
+			flags[argv[i].slice(2)] = argv[i + 1];
+			i++; // skip the value
+		} else {
+			positional.push(argv[i]);
+		}
+	}
+
+	return [positional, flags];
+}
 
 async function main(): Promise<void> {
 	if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
@@ -45,146 +50,42 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	if (args[0] === "init") {
-		const name = args[1];
-		if (!name) {
-			console.error(red("Error: Project name is required"));
-			console.error(
-				dim(
-					"Usage: bunary init <name> [--auth basic|jwt]  (or 'bunary init .' for current directory)",
-				),
-			);
-			process.exit(1);
+	const command = findCommand(args[0]);
+
+	if (!command) {
+		console.error(red(`Unknown command: ${args[0]}`));
+		const suggestion = suggestCommand(args[0]);
+		if (suggestion) {
+			console.error(`\n  Did you mean: ${suggestion}?\n`);
 		}
-		let auth: "basic" | "jwt" | undefined;
-		const authIdx = args.indexOf("--auth");
-		if (authIdx !== -1 && args[authIdx + 1]) {
-			const value = args[authIdx + 1];
-			if (value === "basic" || value === "jwt") {
-				auth = value;
+		console.error(dim("Run bunary --help for all commands."));
+		process.exit(1);
+	}
+
+	// Parse positional args and flags from remaining argv
+	const [positional, flags] = parseFlags(args.slice(1));
+
+	// Validate required args
+	if (command.args) {
+		for (let i = 0; i < command.args.length; i++) {
+			const arg = command.args[i];
+			if (arg.required && !positional[i]) {
+				console.error(red(`Error: ${arg.description} is required`));
+				const argPlaceholders = command.args
+					.map((a) => (a.required ? `<${a.name}>` : `[${a.name}]`))
+					.join(" ");
+				console.error(dim(`Usage: bunary ${command.name} ${argPlaceholders}`));
+				process.exit(1);
 			}
 		}
-		await init(name, { auth });
-		return;
 	}
 
-	if (args[0] === "model:make") {
-		const tableName = args[1];
-		if (!tableName) {
-			console.error(red("Error: Table name is required"));
-			console.error(dim("Usage: bunary model:make <table>"));
-			process.exit(1);
-		}
-		try {
-			await makeModel(tableName);
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
+	try {
+		await command.run(positional, flags);
+	} catch (error) {
+		console.error(red(error instanceof Error ? error.message : String(error)));
+		process.exit(1);
 	}
-
-	if (args[0] === "middleware:make") {
-		const middlewareName = args[1];
-		if (!middlewareName) {
-			console.error(red("Error: Middleware name is required"));
-			console.error(dim("Usage: bunary middleware:make <name>"));
-			process.exit(1);
-		}
-		try {
-			await makeMiddleware(middlewareName);
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
-	}
-
-	if (args[0] === "migration:make") {
-		const migrationName = args[1];
-		if (!migrationName) {
-			console.error(red("Error: Migration name is required"));
-			console.error(
-				dim("Usage: bunary migration:make <name>  (e.g. create_users_table)"),
-			);
-			process.exit(1);
-		}
-		try {
-			await makeMigration(migrationName);
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
-	}
-
-	if (args[0] === "migrate") {
-		try {
-			await migrateUp();
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
-	}
-
-	if (args[0] === "migrate:rollback") {
-		try {
-			await migrateDown();
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
-	}
-
-	if (args[0] === "migrate:status") {
-		try {
-			await migrateStatus();
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
-	}
-
-	if (args[0] === "route:make") {
-		const routeName = args[1];
-		if (!routeName) {
-			console.error(red("Error: Route name is required"));
-			console.error(dim("Usage: bunary route:make <name>"));
-			process.exit(1);
-		}
-		try {
-			await makeRoute(routeName);
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-		return;
-	}
-
-	console.error(red(`Unknown command: ${args[0]}`));
-	const suggestion = suggestCommand(args[0]);
-	if (suggestion) {
-		console.error(`\n  Did you mean: ${suggestion}?\n`);
-	}
-	console.error(dim("Run bunary --help for all commands."));
-	process.exit(1);
 }
 
 main().catch((error) => {
