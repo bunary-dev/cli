@@ -9,19 +9,13 @@ describe("buildFileTree()", () => {
 	});
 
 	test("renders multiple files at root level", () => {
-		const result = buildFileTree("my-app", [
-			"package.json",
-			"tsconfig.json",
-		]);
+		const result = buildFileTree("my-app", ["package.json", "tsconfig.json"]);
 		expect(result).toContain("├── package.json");
 		expect(result).toContain("└── tsconfig.json");
 	});
 
 	test("renders nested directories", () => {
-		const result = buildFileTree("my-app", [
-			"package.json",
-			"src/index.ts",
-		]);
+		const result = buildFileTree("my-app", ["package.json", "src/index.ts"]);
 		// Directories sort before files
 		expect(result).toContain("├── src/");
 		// src/ is not last, so child prefix is │
@@ -78,11 +72,7 @@ describe("buildFileTree()", () => {
 	});
 
 	test("includes file count at the bottom", () => {
-		const files = [
-			"package.json",
-			"config/bunary.ts",
-			"src/index.ts",
-		];
+		const files = ["package.json", "config/bunary.ts", "src/index.ts"];
 
 		const result = buildFileTree("my-app", files);
 		expect(result).toContain("3 files");
@@ -122,9 +112,7 @@ describe("buildFileTree()", () => {
 	});
 
 	test("handles deeply nested paths", () => {
-		const result = buildFileTree("app", [
-			"src/a/b/c/deep.ts",
-		]);
+		const result = buildFileTree("app", ["src/a/b/c/deep.ts"]);
 		expect(result).toContain("app/");
 		expect(result).toContain("src/");
 		expect(result).toContain("a/");
@@ -134,11 +122,7 @@ describe("buildFileTree()", () => {
 	});
 
 	test("directories are sorted before files at each level", () => {
-		const files = [
-			"README.md",
-			"src/index.ts",
-			"package.json",
-		];
+		const files = ["README.md", "src/index.ts", "package.json"];
 
 		const result = buildFileTree("my-app", files);
 		const lines = result.split("\n");
@@ -154,11 +138,7 @@ describe("buildFileTree()", () => {
 	});
 
 	test("each line has consistent indentation", () => {
-		const files = [
-			"package.json",
-			"src/index.ts",
-			"src/routes/main.ts",
-		];
+		const files = ["package.json", "src/index.ts", "src/routes/main.ts"];
 
 		const result = buildFileTree("my-app", files);
 		const lines = result.split("\n").filter((l) => l.trim());
