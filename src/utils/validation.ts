@@ -46,3 +46,62 @@ export function isBunaryProject(cwd: string = process.cwd()): boolean {
 		return false;
 	}
 }
+
+/**
+ * Throw if `cwd` is not inside a Bunary project.
+ *
+ * Use this at the top of every command that operates on an existing
+ * project. Centralises the guard so the error message stays consistent
+ * and each command doesn't have to duplicate the check.
+ *
+ * @param cwd - Directory to check (defaults to process.cwd())
+ * @throws When the directory is not a Bunary project
+ *
+ * @example
+ * ```ts
+ * ensureBunaryProject();          // throws if cwd isn't a project
+ * ensureBunaryProject("/tmp/x");  // throws if /tmp/x isn't a project
+ * ```
+ */
+export function ensureBunaryProject(cwd: string = process.cwd()): void {
+	if (!isBunaryProject(cwd)) {
+		throw new Error(
+			"Error: Not in a Bunary project.\n" +
+				"Make sure you're in a directory with package.json containing @bunary/core dependency.",
+		);
+	}
+}
+
+/**
+ * Throw if the project at `cwd` does not depend on `@bunary/orm`.
+ *
+ * Reads `package.json` and checks both `dependencies` and
+ * `devDependencies`. Also calls {@link ensureBunaryProject} first,
+ * so callers don't need two separate guards.
+ *
+ * @param cwd - Directory to check (defaults to process.cwd())
+ * @throws When the project is missing `@bunary/orm`
+ *
+ * @example
+ * ```ts
+ * ensureOrmDependency();  // throws if @bunary/orm not installed
+ * ```
+ */
+export function ensureOrmDependency(cwd: string = process.cwd()): void {
+	ensureBunaryProject(cwd);
+
+	const pkgPath = join(cwd, "package.json");
+	const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as {
+		dependencies?: Record<string, string>;
+		devDependencies?: Record<string, string>;
+	};
+	const hasOrm =
+		pkg.dependencies?.["@bunary/orm"] || pkg.devDependencies?.["@bunary/orm"];
+
+	if (!hasOrm) {
+		throw new Error(
+			"Error: Project must have @bunary/orm in dependencies.\n" +
+				"Run: bun add @bunary/orm",
+		);
+	}
+}

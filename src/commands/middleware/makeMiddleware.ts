@@ -9,7 +9,7 @@ import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
-import { isBunaryProject } from "../../utils/validation.js";
+import { ensureBunaryProject } from "../../utils/validation.js";
 
 /**
  * Generate middleware file content. Used by middleware:make and by init --auth.
@@ -51,13 +51,7 @@ export async function generateMiddlewareContent(
  */
 export async function makeMiddleware(middlewareName: string): Promise<void> {
 	const cwd = process.cwd();
-
-	if (!isBunaryProject(cwd)) {
-		throw new Error(
-			"Error: Not in a Bunary project.\n" +
-				"Make sure you're in a directory with package.json containing @bunary/core dependency.",
-		);
-	}
+	ensureBunaryProject(cwd);
 
 	const middlewareDir = join(cwd, "src", "middleware");
 	const middlewarePath = join(middlewareDir, `${middlewareName}.ts`);

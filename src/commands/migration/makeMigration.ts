@@ -7,7 +7,7 @@ import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { loadStub } from "../../utils/stub.js";
-import { isBunaryProject } from "../../utils/validation.js";
+import { ensureOrmDependency } from "../../utils/validation.js";
 
 /**
  * Derive a suggested table name from migration name (e.g. create_users_table -> users).
@@ -30,27 +30,7 @@ function migrationNameToTableName(name: string): string {
  */
 export async function makeMigration(name: string): Promise<void> {
 	const cwd = process.cwd();
-
-	if (!isBunaryProject(cwd)) {
-		throw new Error(
-			"Error: Not in a Bunary project.\n" +
-				"Make sure you're in a directory with package.json containing @bunary/core dependency.",
-		);
-	}
-
-	const pkgPath = join(cwd, "package.json");
-	const pkg = JSON.parse(await Bun.file(pkgPath).text()) as {
-		dependencies?: Record<string, string>;
-		devDependencies?: Record<string, string>;
-	};
-	const hasOrm =
-		pkg.dependencies?.["@bunary/orm"] || pkg.devDependencies?.["@bunary/orm"];
-	if (!hasOrm) {
-		throw new Error(
-			"Error: Project must have @bunary/orm in dependencies.\n" +
-				"Run: bun add @bunary/orm",
-		);
-	}
+	ensureOrmDependency(cwd);
 
 	const timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
 	const fileName = `${timestamp}_${name}.ts`;
