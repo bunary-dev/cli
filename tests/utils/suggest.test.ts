@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import {
-	KNOWN_COMMANDS,
-	levenshtein,
-	suggestCommand,
-} from "../../src/utils/suggest.js";
+import { getCommandNames } from "../../src/registry.js";
+import { levenshtein, suggestCommand } from "../../src/utils/suggest.js";
 
 describe("levenshtein", () => {
 	test("returns 0 for identical strings", () => {
@@ -104,19 +101,20 @@ describe("suggestCommand", () => {
 	});
 });
 
-describe("KNOWN_COMMANDS", () => {
+describe("command names from registry", () => {
 	test("contains all CLI commands", () => {
-		expect(KNOWN_COMMANDS).toContain("init");
-		expect(KNOWN_COMMANDS).toContain("route:make");
-		expect(KNOWN_COMMANDS).toContain("middleware:make");
-		expect(KNOWN_COMMANDS).toContain("model:make");
-		expect(KNOWN_COMMANDS).toContain("migration:make");
-		expect(KNOWN_COMMANDS).toContain("migrate");
-		expect(KNOWN_COMMANDS).toContain("migrate:rollback");
-		expect(KNOWN_COMMANDS).toContain("migrate:status");
+		const names = getCommandNames();
+		expect(names).toContain("init");
+		expect(names).toContain("route:make");
+		expect(names).toContain("middleware:make");
+		expect(names).toContain("model:make");
+		expect(names).toContain("migration:make");
+		expect(names).toContain("migrate");
+		expect(names).toContain("migrate:rollback");
+		expect(names).toContain("migrate:status");
 	});
 
-	test("is a readonly array", () => {
-		expect(Array.isArray(KNOWN_COMMANDS)).toBe(true);
+	test("returns an array", () => {
+		expect(Array.isArray(getCommandNames())).toBe(true);
 	});
 });

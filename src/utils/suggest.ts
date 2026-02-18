@@ -11,17 +11,7 @@
  * ```
  */
 
-/** All known CLI command names. */
-export const KNOWN_COMMANDS: readonly string[] = [
-	"init",
-	"route:make",
-	"middleware:make",
-	"model:make",
-	"migration:make",
-	"migrate",
-	"migrate:rollback",
-	"migrate:status",
-] as const;
+import { getCommandNames } from "../registry.js";
 
 /**
  * Calculate the Levenshtein (edit) distance between two strings.
@@ -87,8 +77,10 @@ export function levenshtein(a: string, b: string): number {
 export function suggestCommand(input: string): string | null {
 	if (input.length === 0) return null;
 
+	const knownCommands = getCommandNames();
+
 	// Check prefix matches first — "ini" → "init"
-	const prefixMatches = KNOWN_COMMANDS.filter((cmd) => cmd.startsWith(input));
+	const prefixMatches = knownCommands.filter((cmd) => cmd.startsWith(input));
 	if (prefixMatches.length === 1) {
 		return prefixMatches[0];
 	}
@@ -97,7 +89,7 @@ export function suggestCommand(input: string): string | null {
 	let bestMatch: string | null = null;
 	let bestDistance = Number.POSITIVE_INFINITY;
 
-	for (const cmd of KNOWN_COMMANDS) {
+	for (const cmd of knownCommands) {
 		const dist = levenshtein(input, cmd);
 		if (dist < bestDistance) {
 			bestDistance = dist;

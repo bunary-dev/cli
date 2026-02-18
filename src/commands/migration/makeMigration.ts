@@ -4,6 +4,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { loadStub } from "../../utils/stub.js";
 import { isBunaryProject } from "../../utils/validation.js";
@@ -73,3 +74,20 @@ export async function makeMigration(name: string): Promise<void> {
 
 	console.log(green(`✅ Created migration: ${cyan(migrationPath)}`));
 }
+
+/** Command definition for the registry. */
+export const command: Command = {
+	name: "migration:make",
+	description: "Create a migration",
+	category: "database",
+	args: [
+		{
+			name: "name",
+			required: true,
+			description: "Migration name (e.g. create_users_table)",
+		},
+	],
+	async run(args) {
+		await makeMigration(args[0]);
+	},
+};

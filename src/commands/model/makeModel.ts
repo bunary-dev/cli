@@ -4,6 +4,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { Command } from "../../types/command.js";
 import { cyan, green } from "../../utils/color.js";
 import { tableNameToModelName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
@@ -61,3 +62,14 @@ export async function makeModel(tableName: string): Promise<void> {
 
 	console.log(green(`✅ Created model: ${cyan(modelPath)}`));
 }
+
+/** Command definition for the registry. */
+export const command: Command = {
+	name: "model:make",
+	description: "Generate an ORM model",
+	category: "scaffold",
+	args: [{ name: "table", required: true, description: "Database table name" }],
+	async run(args) {
+		await makeModel(args[0]);
+	},
+};
