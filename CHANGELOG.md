@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-02-19
+
+### Added
+
+- **Show file tree summary after `bunary init`** (Closes #59)
+  - `bunary init` now displays an ASCII tree of all created files
+  - File count shown at the bottom (e.g. "6 files created")
+  - Tree uses colored output: dim connectors, green filenames, cyan directories
+  - Works without colors when `NO_COLOR` is set
+  - Tree updates correctly when `--auth` adds middleware files (7 files)
+  - New `buildFileTree()` utility in `src/utils/fileTree.ts` with 13 unit tests
+
+### Changed
+
+- **Move config from `bunary.config.ts` to `config/bunary.ts`** (Closes #72)
+  - `bunary init` now scaffolds config in a dedicated `config/` directory
+  - Prepares for additional config files as projects grow
+
 ## [0.1.4] - 2026-02-18
 
 ### Changed
