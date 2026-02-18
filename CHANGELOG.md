@@ -9,13 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Show file tree summary after `bunary init`** (Closes #59)
-  - `bunary init` now displays an ASCII tree of all created files
-  - File count shown at the bottom (e.g. "6 files created")
-  - Tree uses colored output: dim connectors, green filenames, cyan directories
-  - Works without colors when `NO_COLOR` is set
-  - Tree updates correctly when `--auth` adds middleware files (7 files)
-  - New `buildFileTree()` utility in `src/utils/fileTree.ts` with 13 unit tests
+- **Show actionable next steps after `make` commands** (Closes #60)
+  - `route:make` shows import and `registerX(app)` registration code
+  - `middleware:make` shows import and `app.use()` registration code
+  - `model:make` shows import and `Model.all()` usage example
+  - `migration:make` shows `bunary migrate` command
+  - Next steps printed in dim text below the success message
+  - New `nextSteps` utility in `src/utils/nextSteps.ts` with 19 unit tests
 
 ### Changed
 

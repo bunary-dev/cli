@@ -5,8 +5,9 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
-import { cyan, green } from "../../utils/color.js";
+import { cyan, dim, green } from "../../utils/color.js";
 import { routeNameToRegisterFunctionName } from "../../utils/naming.js";
+import { routeNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
 import { ensureBunaryProject } from "../../utils/validation.js";
 
@@ -49,6 +50,7 @@ export async function makeRoute(routeName: string): Promise<void> {
 	await writeFile(routePath, content, "utf-8");
 
 	console.log(green(`✅ Created route: ${cyan(routePath)}`));
+	console.log(dim(routeNextSteps(routeName, functionName)));
 }
 
 /** Command definition for the registry. */
