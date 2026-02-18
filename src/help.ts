@@ -20,14 +20,34 @@ const CATEGORY_LABELS: Record<CommandCategory, string> = {
 /** Ordered list of categories to display. */
 const CATEGORY_ORDER: CommandCategory[] = ["scaffold", "database"];
 
-const globalOptions = [
+/** Built-in global options shown in every help output. */
+const builtinOptions = [
 	{ flags: "--help, -h", description: "Show this help" },
 	{ flags: "--version, -v", description: "Show version" },
-	{
-		flags: "--auth basic|jwt",
-		description: "Auth scaffolding (init only)",
-	},
 ];
+
+/**
+ * Build the Options section from built-in globals + all command flag
+ * definitions in the registry. This removes the need to maintain a
+ * separate hardcoded list — adding a flag to a command definition
+ * automatically updates the help output.
+ */
+function buildGlobalOptions(): { flags: string; description: string }[] {
+	const options = [...builtinOptions];
+
+	for (const cmd of commands) {
+		if (!cmd.flags) continue;
+		for (const flag of cmd.flags) {
+			const valueHint = flag.values ? ` ${flag.values.join("|")}` : "";
+			options.push({
+				flags: `${flag.name}${valueHint}`,
+				description: `${flag.description} (${cmd.name} only)`,
+			});
+		}
+	}
+
+	return options;
+}
 
 function formatCommandLine(cmd: Command): string {
 	const argsStr = cmd.args
@@ -75,6 +95,8 @@ export function showHelp(): void {
 		}
 		lines.push("");
 	}
+
+	const globalOptions = buildGlobalOptions();
 
 	lines.push(`  ${bold("Options")}`);
 	for (const opt of globalOptions) {
