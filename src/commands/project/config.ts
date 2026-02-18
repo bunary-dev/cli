@@ -1,5 +1,5 @@
 /**
- * Generate bunary.config.ts content.
+ * Generate config/bunary.ts content.
  */
 import { loadStub } from "../../utils/stub.js";
 import type { InitOptions } from "./types.js";

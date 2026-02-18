@@ -11,10 +11,10 @@ describe("buildFileTree()", () => {
 	test("renders multiple files at root level", () => {
 		const result = buildFileTree("my-app", [
 			"package.json",
-			"bunary.config.ts",
+			"tsconfig.json",
 		]);
 		expect(result).toContain("├── package.json");
-		expect(result).toContain("└── bunary.config.ts");
+		expect(result).toContain("└── tsconfig.json");
 	});
 
 	test("renders nested directories", () => {
@@ -32,7 +32,7 @@ describe("buildFileTree()", () => {
 	test("renders the default init file list correctly", () => {
 		const files = [
 			"package.json",
-			"bunary.config.ts",
+			"config/bunary.ts",
 			"src/index.ts",
 			"src/routes/index.ts",
 			"src/routes/main.ts",
@@ -43,8 +43,11 @@ describe("buildFileTree()", () => {
 
 		// Root
 		expect(result).toContain("my-app/");
-		// src directory first (dirs before files)
+		// config/ and src/ directories before files
+		expect(result).toContain("├── config/");
 		expect(result).toContain("├── src/");
+		// config/bunary.ts
+		expect(result).toContain("bunary.ts");
 		// routes/ is a dir, comes before index.ts file in src/
 		expect(result).toContain("├── routes/");
 		// route files
@@ -52,15 +55,14 @@ describe("buildFileTree()", () => {
 		expect(result).toContain("└── groupExample.ts");
 		// index.ts is a file so comes after routes/ dir
 		expect(result).toContain("└── index.ts");
-		// Top-level files come after directories
-		expect(result).toContain("├── package.json");
-		expect(result).toContain("└── bunary.config.ts");
+		// Top-level file (package.json) comes after directories
+		expect(result).toContain("└── package.json");
 	});
 
 	test("renders auth scaffold with middleware directory", () => {
 		const files = [
 			"package.json",
-			"bunary.config.ts",
+			"config/bunary.ts",
 			"src/index.ts",
 			"src/middleware/jwt.ts",
 			"src/routes/index.ts",
@@ -78,7 +80,7 @@ describe("buildFileTree()", () => {
 	test("includes file count at the bottom", () => {
 		const files = [
 			"package.json",
-			"bunary.config.ts",
+			"config/bunary.ts",
 			"src/index.ts",
 		];
 
@@ -89,7 +91,7 @@ describe("buildFileTree()", () => {
 	test("file count is correct for auth scaffold (7 files)", () => {
 		const files = [
 			"package.json",
-			"bunary.config.ts",
+			"config/bunary.ts",
 			"src/index.ts",
 			"src/middleware/jwt.ts",
 			"src/routes/index.ts",

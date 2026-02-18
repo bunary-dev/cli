@@ -13,18 +13,19 @@
  * ```ts
  * const tree = buildFileTree("my-app", [
  *   "package.json",
- *   "bunary.config.ts",
+ *   "config/bunary.ts",
  *   "src/index.ts",
  *   "src/routes/main.ts",
  * ]);
  * console.log(tree);
  * // my-app/
- * // ├── package.json
- * // ├── bunary.config.ts
- * // └── src/
- * //     ├── index.ts
- * //     └── routes/
- * //         └── main.ts
+ * // ├── config/
+ * // │   └── bunary.ts
+ * // ├── src/
+ * // │   ├── routes/
+ * // │   │   └── main.ts
+ * // │   └── index.ts
+ * // └── package.json
  * //
  * // 4 files created
  * ```
