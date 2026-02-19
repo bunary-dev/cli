@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-02-20
+
+### Added
+
+- **Discover and run project-level custom commands** (Closes #63)
+  - Projects can define custom CLI commands in `bunary.config.ts` via a `commands` array
+  - Config file lookup: tries `config/bunary.ts` first, then `bunary.config.ts`
+  - Project commands merge into the registry alongside built-in commands
+  - `bunary --help` shows project commands in a dedicated "Project" section
+  - Name collision protection: project commands cannot override built-in commands
+  - Invalid command entries (missing name, description, or run) are silently skipped
+  - New `loadProjectCommands` utility in `src/utils/loadProjectCommands.ts`
+  - New `registerProjectCommands` and `resetRegistry` functions in `src/registry.ts`
+  - Added `"project"` to `CommandCategory` type
+  - 23 new tests across 3 test files (235 total tests passing)
+
 ## [0.1.5] - 2026-02-19
 
 ### Added

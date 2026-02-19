@@ -15,10 +15,11 @@ const CMD_COL = 26;
 const CATEGORY_LABELS: Record<CommandCategory, string> = {
 	scaffold: "Scaffold",
 	database: "Database",
+	project: "Project",
 };
 
 /** Ordered list of categories to display. */
-const CATEGORY_ORDER: CommandCategory[] = ["scaffold", "database"];
+const CATEGORY_ORDER: CommandCategory[] = ["scaffold", "database", "project"];
 
 /** Built-in global options shown in every help output. */
 const builtinOptions = [

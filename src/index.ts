@@ -8,8 +8,9 @@
  */
 
 import { showHelp } from "./help.js";
-import { findCommand } from "./registry.js";
+import { findCommand, registerProjectCommands } from "./registry.js";
 import { dim, red } from "./utils/color.js";
+import { loadProjectCommands } from "./utils/loadProjectCommands.js";
 import { parseFlags, validateFlags } from "./utils/parseFlags.js";
 import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
@@ -17,6 +18,29 @@ import { getVersion } from "./utils/version.js";
 const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
+	// Load project-level commands when inside a Bunary project
+	let projectCommands: Awaited<ReturnType<typeof loadProjectCommands>> = [];
+	try {
+		projectCommands = await loadProjectCommands();
+	} catch (error) {
+		console.error(
+			dim(
+				`Warning: Failed to load project commands — ${error instanceof Error ? error.message : String(error)}`,
+			),
+		);
+	}
+
+	if (projectCommands.length > 0) {
+		try {
+			registerProjectCommands(projectCommands);
+		} catch (error) {
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
+			process.exit(1);
+		}
+	}
+
 	if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
 		showHelp();
 		return;

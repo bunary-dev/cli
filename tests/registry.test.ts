@@ -33,7 +33,11 @@ describe("command registry", () => {
 	});
 
 	test("every command has a valid category", () => {
-		const validCategories: CommandCategory[] = ["scaffold", "database"];
+		const validCategories: CommandCategory[] = [
+			"scaffold",
+			"database",
+			"project",
+		];
 		for (const cmd of commands) {
 			expect(validCategories).toContain(cmd.category);
 		}

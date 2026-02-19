@@ -63,7 +63,7 @@ export interface CommandFlag {
 }
 
 /** Help category for grouped output. */
-export type CommandCategory = "scaffold" | "database";
+export type CommandCategory = "scaffold" | "database" | "project";
 
 /**
  * A CLI command definition.

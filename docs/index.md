@@ -112,3 +112,64 @@ InitOptions: `{ auth?: "basic" | "jwt" }`. Pass to `init`, `generatePackageJson`
 
 - Bun ≥ 1.0.0
 
+## Custom Project Commands
+
+You can add your own CLI commands to any Bunary project. The CLI picks them up automatically when you run `bunary` from that project directory.
+
+### Where to put them
+
+Create a `src/commands/` directory and export one command per file:
+
+```
+my-app/
+  config/
+    bunary.ts          ← register commands here
+  src/
+    commands/
+      seed.ts          ← your custom command
+      deploy.ts
+    routes/
+    index.ts
+```
+
+### Defining a command
+
+Each command is a plain object with `name`, `description`, and an async `run` function:
+
+```typescript
+// src/commands/seed.ts
+export const seedDatabase = {
+  name: "db:seed",
+  description: "Seed the database with test data",
+  category: "project",
+  run: async () => {
+    console.log("Seeding...");
+    // your logic here
+  },
+};
+```
+
+### Registering commands in config
+
+Add a `commands` array to your config file. The CLI looks for `config/bunary.ts` first, then falls back to `bunary.config.ts`:
+
+```typescript
+// config/bunary.ts
+import { defineConfig } from "@bunary/core";
+import { seedDatabase } from "../src/commands/seed.js";
+import { deploy } from "../src/commands/deploy.js";
+
+export default defineConfig({
+  app: { name: "my-app" },
+  commands: [seedDatabase, deploy],
+});
+```
+
+Now `bunary db:seed` and `bunary deploy` work from your project root. They also show up under a "Project" section in `bunary --help`.
+
+### Rules
+
+- Project commands can't override built-in commands (`init`, `migrate`, etc.). The CLI throws if there's a name collision.
+- Commands missing `name`, `description`, or `run` are silently skipped.
+- If `category` is omitted it defaults to `"project"`.
+
