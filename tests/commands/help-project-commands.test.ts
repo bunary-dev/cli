@@ -8,22 +8,18 @@ import type { Command } from "../../src/types/command.js";
 
 describe("help with project commands", () => {
 	let output: string;
+	const origLog = console.log;
 
 	beforeEach(() => {
 		resetRegistry();
 		output = "";
-		// Capture console.log output
-		const origLog = console.log;
 		console.log = (msg: string) => {
 			output += msg;
 		};
-		// Restore after capture
-		afterEach(() => {
-			console.log = origLog;
-		});
 	});
 
 	afterEach(() => {
+		console.log = origLog;
 		resetRegistry();
 	});
 

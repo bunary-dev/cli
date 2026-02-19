@@ -251,6 +251,41 @@ describe("loadProjectCommands", () => {
 		expect(result[0].name).toBe("valid-cmd");
 	});
 
+	test("skips commands with missing description", async () => {
+		await writeFile(
+			join(testDir, "package.json"),
+			JSON.stringify({
+				name: "test-app",
+				dependencies: { "@bunary/core": "^0.2.0" },
+			}),
+		);
+
+		await mkdir(join(testDir, "config"), { recursive: true });
+		await writeFile(
+			join(testDir, "config", "bunary.ts"),
+			`export default {
+				app: { name: "test-app" },
+				commands: [
+					{
+						name: "no-desc",
+						category: "project",
+						run: async () => {},
+					},
+					{
+						name: "valid-cmd",
+						description: "Valid command",
+						category: "project",
+						run: async () => {},
+					},
+				],
+			};`,
+		);
+
+		const result = await loadProjectCommands(testDir);
+		expect(result).toHaveLength(1);
+		expect(result[0].name).toBe("valid-cmd");
+	});
+
 	test("skips commands with missing run function", async () => {
 		await writeFile(
 			join(testDir, "package.json"),

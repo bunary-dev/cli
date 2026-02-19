@@ -19,17 +19,26 @@ const args = process.argv.slice(2);
 
 async function main(): Promise<void> {
 	// Load project-level commands when inside a Bunary project
+	let projectCommands: Awaited<ReturnType<typeof loadProjectCommands>> = [];
 	try {
-		const projectCommands = await loadProjectCommands();
-		if (projectCommands.length > 0) {
-			registerProjectCommands(projectCommands);
-		}
+		projectCommands = await loadProjectCommands();
 	} catch (error) {
 		console.error(
 			dim(
 				`Warning: Failed to load project commands — ${error instanceof Error ? error.message : String(error)}`,
 			),
 		);
+	}
+
+	if (projectCommands.length > 0) {
+		try {
+			registerProjectCommands(projectCommands);
+		} catch (error) {
+			console.error(
+				red(error instanceof Error ? error.message : String(error)),
+			);
+			process.exit(1);
+		}
 	}
 
 	if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
