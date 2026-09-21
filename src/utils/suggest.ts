@@ -44,17 +44,18 @@ export function levenshtein(a: string, b: string): number {
 
 		for (let j = 1; j <= n; j++) {
 			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+			// j and j-1 are in-bounds: row has n + 1 entries
 			const current = Math.min(
-				row[j] + 1, // deletion
-				row[j - 1] + 1, // insertion
+				(row[j] as number) + 1, // deletion
+				(row[j - 1] as number) + 1, // insertion
 				prev + cost, // substitution
 			);
-			prev = row[j];
+			prev = row[j] as number;
 			row[j] = current;
 		}
 	}
 
-	return row[n];
+	return row[n] as number;
 }
 
 /**
@@ -82,7 +83,7 @@ export function suggestCommand(input: string): string | null {
 	// Check prefix matches first — "ini" → "init"
 	const prefixMatches = knownCommands.filter((cmd) => cmd.startsWith(input));
 	if (prefixMatches.length === 1) {
-		return prefixMatches[0];
+		return prefixMatches[0] as string;
 	}
 
 	// Find the closest command by edit distance

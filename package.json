@@ -1,6 +1,6 @@
 {
 	"name": "@bunary/cli",
-	"version": "0.1.6",
+	"version": "0.2.0",
 	"description": "CLI scaffolding tool for Bunary - a Bun-first backend framework inspired by Laravel",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -11,9 +11,11 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
-			"types": "./dist/index.d.ts"
-		}
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
 	},
 	"files": [
 		"dist",
@@ -21,11 +23,12 @@
 		"CHANGELOG.md"
 	],
 	"scripts": {
-		"build": "bun build ./src/index.ts --outdir ./dist --target bun && bunx tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r stubs/* dist/stubs/",
+		"build": "bun build ./src/index.ts --outdir ./dist --target bun && tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r stubs/* dist/stubs/",
+		"typecheck": "tsc --noEmit",
 		"test": "bun test",
-		"lint": "bunx biome check ./src ./tests",
-		"format": "bunx biome check --write ./src ./tests",
-		"typecheck": "bunx tsc --noEmit"
+		"lint": "biome check ./src ./tests",
+		"format": "biome check --write ./src ./tests",
+		"pack:check": "bun pm pack --dry-run"
 	},
 	"keywords": [
 		"bunary",
@@ -35,7 +38,7 @@
 		"generator",
 		"framework"
 	],
-	"author": "",
+	"author": "Paul Radford",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -45,15 +48,18 @@
 	"bugs": {
 		"url": "https://github.com/bunary-dev/cli/issues"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"engines": {
-		"bun": ">=1.0.0"
+		"bun": ">=1.4.0"
 	},
 	"dependencies": {
 		"@bunary/core": "^0.2.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.15",
-		"@types/bun": "1.3.14",
-		"typescript": "6.0.3"
+		"@biomejs/biome": "2.5.1",
+		"@types/bun": "^1.4.2",
+		"typescript": "^7.0.2"
 	}
 }

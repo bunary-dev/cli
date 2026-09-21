@@ -63,19 +63,19 @@ function buildTreeStructure(files: string[]): TreeNode {
 
 	for (const filePath of files) {
 		const parts = filePath.split("/");
+		// split() always yields at least one segment, so pop() is defined
+		const fileName = parts.pop() as string;
 		let current = root;
 
 		// Walk/create directories for all segments except the last (the file name)
-		for (let i = 0; i < parts.length - 1; i++) {
-			const dirName = parts[i];
+		for (const dirName of parts) {
 			if (!current.dirs.has(dirName)) {
 				current.dirs.set(dirName, { dirs: new Map(), files: [] });
 			}
 			current = current.dirs.get(dirName) as TreeNode;
 		}
 
-		// Last segment is the file name
-		current.files.push(parts[parts.length - 1]);
+		current.files.push(fileName);
 	}
 
 	return root;
@@ -100,8 +100,7 @@ function renderNode(node: TreeNode, prefix: string, lines: string[]): void {
 		entries.push({ name, isDir: false });
 	}
 
-	for (let i = 0; i < entries.length; i++) {
-		const entry = entries[i];
+	for (const [i, entry] of entries.entries()) {
 		const isLast = i === entries.length - 1;
 		const connector = isLast ? "└── " : "├── ";
 		const childPrefix = isLast ? "    " : "│   ";

@@ -63,9 +63,9 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBe("db:seed");
-		expect(result[0].description).toBe("Seed the database");
-		expect(result[0].category).toBe("project");
+		expect(result[0]?.name).toBe("db:seed");
+		expect(result[0]?.description).toBe("Seed the database");
+		expect(result[0]?.category).toBe("project");
 	});
 
 	test("loads commands from bunary.config.ts as fallback", async () => {
@@ -94,7 +94,7 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBe("deploy");
+		expect(result[0]?.name).toBe("deploy");
 	});
 
 	test("prefers config/bunary.ts over bunary.config.ts", async () => {
@@ -139,7 +139,7 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBe("from-config-dir");
+		expect(result[0]?.name).toBe("from-config-dir");
 	});
 
 	test("returns empty array when config has no commands key", async () => {
@@ -248,7 +248,7 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBe("valid-cmd");
+		expect(result[0]?.name).toBe("valid-cmd");
 	});
 
 	test("skips commands with missing description", async () => {
@@ -283,7 +283,7 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBe("valid-cmd");
+		expect(result[0]?.name).toBe("valid-cmd");
 	});
 
 	test("skips commands with missing run function", async () => {
@@ -318,7 +318,7 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].name).toBe("valid-cmd");
+		expect(result[0]?.name).toBe("valid-cmd");
 	});
 
 	test("defaults category to 'project' when not specified", async () => {
@@ -347,7 +347,7 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toHaveLength(1);
-		expect(result[0].category).toBe("project");
+		expect(result[0]?.category).toBe("project");
 	});
 
 	test("returns empty array when config file has syntax error", async () => {

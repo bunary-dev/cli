@@ -51,11 +51,13 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	const command = findCommand(args[0]);
+	// Guarded above: args is non-empty here
+	const commandName = args[0] as string;
+	const command = findCommand(commandName);
 
 	if (!command) {
-		console.error(red(`Unknown command: ${args[0]}`));
-		const suggestion = suggestCommand(args[0]);
+		console.error(red(`Unknown command: ${commandName}`));
+		const suggestion = suggestCommand(commandName);
 		if (suggestion) {
 			console.error(`\n  Did you mean: ${suggestion}?\n`);
 		}
@@ -80,8 +82,7 @@ async function main(): Promise<void> {
 
 	// Validate required args
 	if (command.args) {
-		for (let i = 0; i < command.args.length; i++) {
-			const arg = command.args[i];
+		for (const [i, arg] of command.args.entries()) {
 			if (arg.required && !positional[i]) {
 				console.error(red(`Error: ${arg.description} is required`));
 				const argPlaceholders = command.args

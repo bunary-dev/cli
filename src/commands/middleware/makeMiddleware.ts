@@ -81,6 +81,6 @@ export const command: Command = {
 	category: "scaffold",
 	args: [{ name: "name", required: true, description: "Middleware name" }],
 	async run(args) {
-		await makeMiddleware(args[0]);
+		await makeMiddleware(args[0] as string);
 	},
 };

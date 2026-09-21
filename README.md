@@ -31,7 +31,7 @@ With Basic or JWT auth scaffolding: `bunary init my-app --auth basic` or `--auth
 
 ## Requirements
 
-- Bun ≥ 1.0.0
+- Bun ≥ 1.4.0
 
 ## License
 

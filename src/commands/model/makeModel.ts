@@ -65,6 +65,6 @@ export const command: Command = {
 	category: "scaffold",
 	args: [{ name: "table", required: true, description: "Database table name" }],
 	async run(args) {
-		await makeModel(args[0]);
+		await makeModel(args[0] as string);
 	},
 };

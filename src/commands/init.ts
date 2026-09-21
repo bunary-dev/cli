@@ -126,8 +126,6 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	console.log(`  ${dim("$")} ${cyan("bun run dev")}\n`);
 }
 
-// Re-export generators and commands for programmatic use
-export { generateConfig, generateEntrypoint, generatePackageJson };
 export { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 export { makeModel } from "./model/makeModel.js";
 export {
@@ -135,6 +133,8 @@ export {
 	generateRoutesIndex,
 	generateRoutesMain,
 } from "./project/routes.js";
+// Re-export generators and commands for programmatic use
+export { generateConfig, generateEntrypoint, generatePackageJson };
 
 /** Command definition for the registry. */
 export const command: Command = {
@@ -156,7 +156,7 @@ export const command: Command = {
 		},
 	],
 	async run(args, flags) {
-		const name = args[0];
+		const name = args[0] as string;
 		const authValue = flags.auth;
 		let auth: "basic" | "jwt" | undefined;
 		if (authValue === "basic" || authValue === "jwt") {
