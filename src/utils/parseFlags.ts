@@ -45,22 +45,25 @@ export function parseFlags(
 	const flags: Record<string, string | boolean> = {};
 
 	for (let i = 0; i < argv.length; i++) {
-		if (argv[i].startsWith("--")) {
-			const key = argv[i].slice(2);
+		// In-bounds by the loop condition
+		const arg = argv[i] as string;
+		if (arg.startsWith("--")) {
+			const key = arg.slice(2);
 
 			if (key in flags) {
 				throw new Error(`Duplicate flag: --${key}`);
 			}
 
 			// Boolean flag: last arg or next arg is also a flag
-			if (i + 1 >= argv.length || argv[i + 1].startsWith("--")) {
+			const next = i + 1 < argv.length ? (argv[i + 1] as string) : undefined;
+			if (next === undefined || next.startsWith("--")) {
 				flags[key] = true;
 			} else {
-				flags[key] = argv[i + 1];
+				flags[key] = next;
 				i++; // skip the value
 			}
 		} else {
-			positional.push(argv[i]);
+			positional.push(arg);
 		}
 	}
 

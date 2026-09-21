@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-21
+
+### Changed
+
+- **Requires Bun ≥ 1.4.0** (`engines.bun`); `.bun-version` pins 1.4.2 for CI and contributors (#89)
+- Toolchain: `@types/bun` ^1.4.2, `typescript` ^7.0.2 and `@biomejs/biome` 2.5.1 as devDependencies; `bun.lock` committed (#89)
+- `tsconfig.json` aligned with Bun 1.4 `bun init` defaults (`module: Preserve`, `moduleDetection: force`, `verbatimModuleSyntax`, `noUncheckedIndexedAccess`, `noImplicitOverride`) (#89)
+- Scripts call the local `tsc` / `biome` binaries instead of `bunx`, so the pinned versions are the ones that run; new `pack:check` script (#89)
+- CI: Bun version read from `.bun-version`, `permissions: contents: read`, `actions/checkout@v7`, plus a non-required `bun latest` canary job; build job verifies the publish tarball with `bun pm pack --dry-run` (#89)
+- Coverage settings moved to `bunfig.toml`, with the per-test scratch projects excluded from the report (#89)
+
+### Fixed
+
+- `exports["."]` now lists `types` before `import` so TypeScript resolves the declarations; added `default` condition and `./package.json` subpath (#89)
+- Added `publishConfig.access: public` and the missing `LICENSE` file (MIT), which is now in the published tarball (#89)
+- Internal indexed accesses narrowed for `noUncheckedIndexedAccess`; no behaviour change (#89)
+
 ## [0.1.6] - 2026-02-20
 
 ### Added

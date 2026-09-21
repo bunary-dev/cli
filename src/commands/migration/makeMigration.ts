@@ -16,9 +16,9 @@ import { ensureOrmDependency } from "../../utils/validation.js";
 function migrationNameToTableName(name: string): string {
 	const lower = name.toLowerCase();
 	const createMatch = /^create_(.+)_table$/.exec(lower);
-	if (createMatch) return createMatch[1];
+	if (createMatch) return createMatch[1] as string;
 	const addMatch = /^add_.+_to_(.+)$/.exec(lower);
-	if (addMatch) return addMatch[1];
+	if (addMatch) return addMatch[1] as string;
 	// default: use name with underscores as table name
 	return lower.replace(/-/g, "_");
 }
@@ -70,6 +70,6 @@ export const command: Command = {
 		},
 	],
 	async run(args) {
-		await makeMigration(args[0]);
+		await makeMigration(args[0] as string);
 	},
 };

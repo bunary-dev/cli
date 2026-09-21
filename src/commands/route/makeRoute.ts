@@ -60,6 +60,6 @@ export const command: Command = {
 	category: "scaffold",
 	args: [{ name: "name", required: true, description: "Route name" }],
 	async run(args) {
-		await makeRoute(args[0]);
+		await makeRoute(args[0] as string);
 	},
 };
