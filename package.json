@@ -3,18 +3,10 @@
 	"version": "0.2.0",
 	"description": "CLI scaffolding tool for Bunary - a Bun-first backend framework inspired by Laravel",
 	"type": "module",
-	"main": "./dist/index.js",
-	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
 	"bin": {
 		"bunary": "./dist/index.js"
 	},
 	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"default": "./dist/index.js"
-		},
 		"./package.json": "./package.json"
 	},
 	"files": [
