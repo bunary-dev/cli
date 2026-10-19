@@ -23,11 +23,14 @@ async function ensureMigrateRunner(cwd: string): Promise<string> {
 	).text();
 	await mkdir(scriptsDir, { recursive: true });
 	await Bun.write(runnerPath, runnerStub);
+	console.log("Created scripts/migrate.ts (migration runner)");
 	return runnerPath;
 }
 
 /**
  * Run migrate runner script with given command (up, down, status).
+ *
+ * @throws When the ORM config is missing or the runner exits non-zero
  */
 async function runMigrateScript(
 	cwd: string,
@@ -35,10 +38,15 @@ async function runMigrateScript(
 ): Promise<void> {
 	ensureOrmDependency(cwd);
 
-	await ensureMigrateRunner(cwd);
+	if (!existsSync(join(cwd, "src", "config", "orm.ts"))) {
+		throw new Error(
+			"Error: src/config/orm.ts not found.\n" +
+				"Create it and call setOrmConfig(defineOrmConfig({ database: { ... } })).",
+		);
+	}
 
-	const scriptPath = join(cwd, "scripts", "migrate.ts");
-	const proc = Bun.spawn(["bun", "run", scriptPath, cmd], {
+	const scriptPath = await ensureMigrateRunner(cwd);
+	const proc = Bun.spawn([process.execPath, "run", scriptPath, cmd], {
 		cwd,
 		stdout: "inherit",
 		stderr: "inherit",
@@ -46,20 +54,25 @@ async function runMigrateScript(
 	});
 	const exitCode = await proc.exited;
 	if (exitCode !== 0) {
-		process.exit(exitCode);
+		throw new Error(
+			`Error: migration runner failed (${cmd}) with exit code ${exitCode}.\n` +
+				`Script: ${scriptPath}`,
+		);
 	}
 }
 
-export async function migrateUp(): Promise<void> {
-	await runMigrateScript(process.cwd(), "up");
+export async function migrateUp(cwd: string = process.cwd()): Promise<void> {
+	await runMigrateScript(cwd, "up");
 }
 
-export async function migrateDown(): Promise<void> {
-	await runMigrateScript(process.cwd(), "down");
+export async function migrateDown(cwd: string = process.cwd()): Promise<void> {
+	await runMigrateScript(cwd, "down");
 }
 
-export async function migrateStatus(): Promise<void> {
-	await runMigrateScript(process.cwd(), "status");
+export async function migrateStatus(
+	cwd: string = process.cwd(),
+): Promise<void> {
+	await runMigrateScript(cwd, "status");
 }
 
 /** Command definition for `migrate`. */
