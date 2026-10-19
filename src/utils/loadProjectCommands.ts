@@ -10,7 +10,11 @@
  * - The directory is not a Bunary project
  * - No config file exists
  * - The config has no `commands` key
- * - The config file fails to load
+ * - The config file fails to load (a warning is printed to stderr and the
+ *   error is available via {@link getProjectCommandsLoadError})
+ *
+ * Invalid command entries are skipped with a warning naming the entry index
+ * and the first missing field.
  */
 
 import { existsSync } from "node:fs";
@@ -20,6 +24,34 @@ import { isBunaryProject } from "./validation.js";
 
 /** Config file paths to try, in priority order. */
 const CONFIG_PATHS = ["config/bunary.ts", "bunary.config.ts"] as const;
+
+/** Message of the most recent config load failure, if any. */
+let lastLoadError: string | undefined;
+
+/**
+ * Get the error message from the last {@link loadProjectCommands} call if the
+ * config file failed to load.
+ *
+ * @returns The error message, or `undefined` if loading succeeded
+ */
+export function getProjectCommandsLoadError(): string | undefined {
+	return lastLoadError;
+}
+
+/**
+ * Find the first required field a command entry is missing or has wrong.
+ *
+ * @param entry - The value to inspect
+ * @returns Field name, or `undefined` if the entry is valid
+ */
+function findInvalidField(entry: unknown): string | undefined {
+	if (typeof entry !== "object" || entry === null) return "name";
+	const obj = entry as Record<string, unknown>;
+	if (typeof obj.name !== "string" || obj.name.length === 0) return "name";
+	if (typeof obj.description !== "string") return "description";
+	if (typeof obj.run !== "function") return "run";
+	return undefined;
+}
 
 /**
  * Check whether a value looks like a valid `Command` definition.
@@ -89,6 +121,7 @@ function resolveConfigPath(cwd: string): string | undefined {
 export async function loadProjectCommands(
 	cwd: string = process.cwd(),
 ): Promise<Command[]> {
+	lastLoadError = undefined;
 	if (!isBunaryProject(cwd)) return [];
 
 	const configPath = resolveConfigPath(cwd);
@@ -98,7 +131,11 @@ export async function loadProjectCommands(
 	try {
 		const mod = await import(configPath);
 		config = mod.default ?? mod;
-	} catch {
+	} catch (error) {
+		lastLoadError = error instanceof Error ? error.message : String(error);
+		console.error(
+			`Warning: Failed to load ${configPath}: ${lastLoadError}. Project commands are unavailable.`,
+		);
 		return [];
 	}
 
@@ -106,8 +143,13 @@ export async function loadProjectCommands(
 	if (!Array.isArray(raw) || raw.length === 0) return [];
 
 	const validated: Command[] = [];
-	for (const entry of raw) {
-		if (!isValidCommand(entry)) continue;
+	for (const [index, entry] of raw.entries()) {
+		if (!isValidCommand(entry)) {
+			console.error(
+				`Warning: Skipping commands[${index}] in ${configPath}: missing or invalid "${findInvalidField(entry)}"`,
+			);
+			continue;
+		}
 		validated.push({
 			...entry,
 			category: entry.category ?? "project",
