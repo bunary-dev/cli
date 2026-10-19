@@ -91,6 +91,8 @@ describe("make commands reject unsafe names", () => {
 
 	for (const [label, fn] of cmds) {
 		for (const bad of ["../../x", "a/b", "foo.bar", "foo bar", "$&", "$1"]) {
+			// migration:make normalises whitespace to underscores (#110)
+			if (label === "migration" && bad === "foo bar") continue;
 			it(`${label}:make rejects ${bad}`, async () => {
 				await expect(fn(bad)).rejects.toThrow(/Invalid/);
 				expect(existsSync(join(testDir, "..", "x.ts"))).toBe(false);

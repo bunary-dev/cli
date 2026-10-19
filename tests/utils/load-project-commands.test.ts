@@ -1,11 +1,14 @@
 /**
  * Tests for project command loading from user config files.
  */
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadProjectCommands } from "../../src/utils/loadProjectCommands.js";
+import {
+	getProjectCommandsLoadError,
+	loadProjectCommands,
+} from "../../src/utils/loadProjectCommands.js";
 
 describe("loadProjectCommands", () => {
 	let testDir: string;
@@ -367,5 +370,69 @@ describe("loadProjectCommands", () => {
 
 		const result = await loadProjectCommands(testDir);
 		expect(result).toEqual([]);
+	});
+
+	describe("warnings", () => {
+		const pkg = JSON.stringify({
+			name: "test-app",
+			dependencies: { "@bunary/core": "^0.2.0" },
+		});
+
+		test("warns on stderr with the error message when config import throws", async () => {
+			await writeFile(join(testDir, "package.json"), pkg);
+			await mkdir(join(testDir, "config"), { recursive: true });
+			await writeFile(
+				join(testDir, "config", "bunary.ts"),
+				`throw new Error("boom from config");`,
+			);
+
+			const spy = spyOn(console, "error").mockImplementation(() => {});
+			try {
+				const result = await loadProjectCommands(testDir);
+				expect(result).toEqual([]);
+				const output = spy.mock.calls.map((c) => String(c[0])).join("\n");
+				expect(output).toContain("boom from config");
+				expect(getProjectCommandsLoadError()).toContain("boom from config");
+			} finally {
+				spy.mockRestore();
+			}
+		});
+
+		test("clears the load error on a later successful load", async () => {
+			await writeFile(join(testDir, "package.json"), pkg);
+			const result = await loadProjectCommands(testDir);
+			expect(result).toEqual([]);
+			expect(getProjectCommandsLoadError()).toBeUndefined();
+		});
+
+		test("warns with index and missing field for invalid entries", async () => {
+			await writeFile(join(testDir, "package.json"), pkg);
+			await mkdir(join(testDir, "config"), { recursive: true });
+			await writeFile(
+				join(testDir, "config", "bunary.ts"),
+				`export default {
+					commands: [
+						{ name: "ok", description: "ok", run: async () => {} },
+						{ description: "no name", run: async () => {} },
+						{ name: "no-run", description: "x" },
+					],
+				};`,
+			);
+
+			const spy = spyOn(console, "error").mockImplementation(() => {});
+			try {
+				const result = await loadProjectCommands(testDir);
+				expect(result.map((c) => c.name)).toEqual(["ok"]);
+				const output = spy.mock.calls.map((c) => String(c[0]));
+				expect(
+					output.some((l) => l.includes("[1]") && l.includes('"name"')),
+				).toBe(true);
+				expect(
+					output.some((l) => l.includes("[2]") && l.includes('"run"')),
+				).toBe(true);
+			} finally {
+				spy.mockRestore();
+			}
+		});
 	});
 });

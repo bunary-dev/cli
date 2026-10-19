@@ -1,7 +1,7 @@
 /**
  * migration:make command - create a new migration file (Laravel-inspired)
  */
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
@@ -11,20 +11,60 @@ import { loadStub } from "../../utils/stub.js";
 import {
 	assertInsideDir,
 	ensureOrmDependency,
-	validateMakeName,
 } from "../../utils/validation.js";
 
 /**
- * Derive a suggested table name from migration name (e.g. create_users_table -> users).
+ * Normalise a migration name to snake_case [a-z0-9_].
+ * Spaces and hyphens become underscores; path separators and any other
+ * characters are rejected.
+ *
+ * @throws Error if the name is empty or contains invalid characters
  */
-function migrationNameToTableName(name: string): string {
+export function normalizeMigrationName(name: string): string {
+	const normalized = name
+		.trim()
+		.toLowerCase()
+		.replace(/[\s-]+/g, "_");
+	if (!/^[a-z0-9_]+$/.test(normalized)) {
+		throw new Error(
+			`Error: Invalid migration name "${name}". Use only letters, numbers and underscores (e.g. create_users_table).`,
+		);
+	}
+	return normalized;
+}
+
+/**
+ * Derive a suggested table name from migration name (e.g. create_users_table -> users).
+ * The result is always a valid identifier.
+ */
+export function migrationNameToTableName(name: string): string {
 	const lower = name.toLowerCase();
 	const createMatch = /^create_(.+)_table$/.exec(lower);
-	if (createMatch) return createMatch[1] as string;
 	const addMatch = /^add_.+_to_(.+)$/.exec(lower);
-	if (addMatch) return addMatch[1] as string;
-	// default: use name with underscores as table name
-	return lower.replace(/-/g, "_");
+	const raw = (createMatch?.[1] ?? addMatch?.[1] ?? lower)
+		.replace(/[^a-z0-9_]+/g, "_")
+		.replace(/^_+|_+$/g, "");
+	if (raw === "") return "migrations";
+	return /^[a-z_]/.test(raw) ? raw : `_${raw}`;
+}
+
+const TIMESTAMP_RE = /^(\d{14})_(.+)\.ts$/;
+
+function formatTimestamp(date: Date): string {
+	return date.toISOString().replace(/[-:T]/g, "").slice(0, 14);
+}
+
+function parseTimestamp(ts: string): Date {
+	return new Date(
+		Date.UTC(
+			+ts.slice(0, 4),
+			+ts.slice(4, 6) - 1,
+			+ts.slice(6, 8),
+			+ts.slice(8, 10),
+			+ts.slice(10, 12),
+			+ts.slice(12, 14),
+		),
+	);
 }
 
 /**
@@ -37,20 +77,33 @@ export async function makeMigration(name: string): Promise<void> {
 	const cwd = process.cwd();
 	ensureOrmDependency(cwd);
 
-	validateMakeName(name, "migration");
-
-	const timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
-	const fileName = `${timestamp}_${name}.ts`;
+	name = normalizeMigrationName(name);
 	const migrationsDir = join(cwd, "migrations");
-	const migrationPath = join(migrationsDir, fileName);
 
-	assertInsideDir(migrationsDir, migrationPath);
+	let latest = "";
+	if (existsSync(migrationsDir)) {
+		for (const file of readdirSync(migrationsDir)) {
+			const match = TIMESTAMP_RE.exec(file);
+			if (!match) continue;
+			if (match[2] === name) {
+				throw new Error(
+					`Error: Migration ${name} already exists at ${join(migrationsDir, file)}\nDelete the existing file if you want to regenerate it.`,
+				);
+			}
+			if ((match[1] as string) > latest) latest = match[1] as string;
+		}
+	}
 
-	if (existsSync(migrationPath)) {
-		throw new Error(
-			`Error: Migration ${name} already exists at ${migrationPath}\nDelete the existing file if you want to regenerate it.`,
+	// One-second resolution: bump past the latest existing migration so
+	// creation order always matches sort order.
+	let timestamp = formatTimestamp(new Date());
+	if (latest !== "" && timestamp <= latest) {
+		timestamp = formatTimestamp(
+			new Date(parseTimestamp(latest).getTime() + 1000),
 		);
 	}
+	const migrationPath = join(migrationsDir, `${timestamp}_${name}.ts`);
+	assertInsideDir(migrationsDir, migrationPath);
 
 	await mkdir(migrationsDir, { recursive: true });
 

@@ -5,4 +5,6 @@
 /** Options for `bunary init` (e.g. auth scaffolding). */
 export interface InitOptions {
 	auth?: "basic" | "jwt";
+	/** Overwrite existing files instead of aborting. */
+	force?: boolean;
 }

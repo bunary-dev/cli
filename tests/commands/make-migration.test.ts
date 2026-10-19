@@ -6,7 +6,11 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { makeMigration } from "../../src/commands/migration/makeMigration.js";
+import {
+	makeMigration,
+	migrationNameToTableName,
+	normalizeMigrationName,
+} from "../../src/commands/migration/makeMigration.js";
 
 describe("migration:make command", () => {
 	let testDir: string;
@@ -151,5 +155,68 @@ describe("migration:make command", () => {
 			f.endsWith(".ts"),
 		);
 		expect(files.length).toBe(1);
+	});
+
+	it("should normalise names to snake_case", async () => {
+		await makeMigration("Add-Slug to Posts");
+		const files = readdirSync(join(testDir, "migrations"));
+		expect(files[0]).toMatch(/^\d{14}_add_slug_to_posts\.ts$/);
+	});
+
+	it("should reject path separators and invalid characters", async () => {
+		for (const bad of ["../evil", "a/b", "a\\b", "x.ts", "", "   ", "naïve"]) {
+			await expect(makeMigration(bad)).rejects.toThrow(
+				/Invalid migration name/,
+			);
+		}
+		expect(readdirSync(join(testDir, "migrations"))).toEqual([]);
+		expect(normalizeMigrationName("ok_name")).toBe("ok_name");
+	});
+
+	it("should create unique, ordered files in the same second", async () => {
+		await makeMigration("create_a_table");
+		await makeMigration("create_b_table");
+		await makeMigration("create_c_table");
+		const files = readdirSync(join(testDir, "migrations")).sort();
+		expect(files.length).toBe(3);
+		expect(new Set(files.map((f) => f.slice(0, 14))).size).toBe(3);
+		expect(files.map((f) => f.slice(15))).toEqual([
+			"create_a_table.ts",
+			"create_b_table.ts",
+			"create_c_table.ts",
+		]);
+	});
+
+	it("should sort after an existing future-dated migration", async () => {
+		await writeFile(
+			join(testDir, "migrations", "20991231235959_create_old_table.ts"),
+			"// old",
+		);
+		await makeMigration("create_new_table");
+		const files = readdirSync(join(testDir, "migrations")).sort();
+		expect(files[1]).toBe("21000101000000_create_new_table.ts");
+	});
+
+	it("should reject a duplicate name even with a different timestamp", async () => {
+		await writeFile(
+			join(testDir, "migrations", "20200101000000_create_users_table.ts"),
+			"// old",
+		);
+		await expect(makeMigration("create_users_table")).rejects.toThrow(
+			/already exists/,
+		);
+	});
+
+	it("table name fallback always yields a valid identifier", () => {
+		expect(migrationNameToTableName("add slug")).toBe("add_slug");
+		expect(migrationNameToTableName("Add-Slug")).toBe("add_slug");
+		expect(migrationNameToTableName("123")).toBe("_123");
+		expect(migrationNameToTableName("a/b c")).toBe("a_b_c");
+		expect(migrationNameToTableName("")).toBe("migrations");
+		expect(migrationNameToTableName("create_users_table")).toBe("users");
+		expect(migrationNameToTableName("add_slug_to_posts")).toBe("posts");
+		for (const n of ["x y", "9a", "-", "../.."]) {
+			expect(migrationNameToTableName(n)).toMatch(/^[a-z_][a-z0-9_]*$/);
+		}
 	});
 });
