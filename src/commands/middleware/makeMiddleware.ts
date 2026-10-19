@@ -10,7 +10,11 @@ import { cyan, dim, green } from "../../utils/color.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { middlewareNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
-import { ensureBunaryProject } from "../../utils/validation.js";
+import {
+	assertInsideDir,
+	ensureBunaryProject,
+	validateMakeName,
+} from "../../utils/validation.js";
 
 /**
  * Generate middleware file content. Used by middleware:make and by init --auth.
@@ -54,8 +58,12 @@ export async function makeMiddleware(middlewareName: string): Promise<void> {
 	const cwd = process.cwd();
 	ensureBunaryProject(cwd);
 
+	validateMakeName(middlewareName, "middleware");
+
 	const middlewareDir = join(cwd, "src", "middleware");
 	const middlewarePath = join(middlewareDir, `${middlewareName}.ts`);
+
+	assertInsideDir(middlewareDir, middlewarePath);
 
 	if (existsSync(middlewarePath)) {
 		throw new Error(

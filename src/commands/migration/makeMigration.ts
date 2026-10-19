@@ -8,7 +8,10 @@ import type { Command } from "../../types/command.js";
 import { cyan, dim, green } from "../../utils/color.js";
 import { migrationNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
-import { ensureOrmDependency } from "../../utils/validation.js";
+import {
+	assertInsideDir,
+	ensureOrmDependency,
+} from "../../utils/validation.js";
 
 /**
  * Normalise a migration name to snake_case [a-z0-9_].
@@ -100,6 +103,7 @@ export async function makeMigration(name: string): Promise<void> {
 		);
 	}
 	const migrationPath = join(migrationsDir, `${timestamp}_${name}.ts`);
+	assertInsideDir(migrationsDir, migrationPath);
 
 	await mkdir(migrationsDir, { recursive: true });
 

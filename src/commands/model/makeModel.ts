@@ -9,7 +9,11 @@ import { cyan, dim, green } from "../../utils/color.js";
 import { tableNameToModelName } from "../../utils/naming.js";
 import { modelNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
-import { ensureBunaryProject } from "../../utils/validation.js";
+import {
+	assertInsideDir,
+	ensureBunaryProject,
+	validateMakeName,
+} from "../../utils/validation.js";
 
 /**
  * Generate a model file for the ORM
@@ -30,10 +34,14 @@ export async function makeModel(tableName: string): Promise<void> {
 	const cwd = process.cwd();
 	ensureBunaryProject(cwd);
 
+	validateMakeName(tableName, "table");
+
 	// Convert table name to model name
 	const modelName = tableNameToModelName(tableName);
 	const modelsDir = join(cwd, "src", "models");
 	const modelPath = join(modelsDir, `${modelName}.ts`);
+
+	assertInsideDir(modelsDir, modelPath);
 
 	// Check if file already exists
 	if (existsSync(modelPath)) {

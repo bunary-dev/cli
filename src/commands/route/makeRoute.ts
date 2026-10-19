@@ -9,7 +9,11 @@ import { cyan, dim, green } from "../../utils/color.js";
 import { routeNameToRegisterFunctionName } from "../../utils/naming.js";
 import { routeNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
-import { ensureBunaryProject } from "../../utils/validation.js";
+import {
+	assertInsideDir,
+	ensureBunaryProject,
+	validateMakeName,
+} from "../../utils/validation.js";
 
 /**
  * Generate a route module file in src/routes/.
@@ -30,9 +34,13 @@ export async function makeRoute(routeName: string): Promise<void> {
 	const cwd = process.cwd();
 	ensureBunaryProject(cwd);
 
+	validateMakeName(routeName, "route");
+
 	const functionName = routeNameToRegisterFunctionName(routeName);
 	const routesDir = join(cwd, "src", "routes");
 	const routePath = join(routesDir, `${routeName}.ts`);
+
+	assertInsideDir(routesDir, routePath);
 
 	if (existsSync(routePath)) {
 		throw new Error(
