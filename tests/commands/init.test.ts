@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -28,6 +28,47 @@ describe("init command", () => {
 		if (existsSync(TEST_DIR)) {
 			await rm(TEST_DIR, { recursive: true, force: true });
 		}
+	});
+
+	describe("init() existing files", () => {
+		test("init . aborts and leaves existing files unchanged", async () => {
+			await writeFile(join(TEST_DIR, "package.json"), "ORIGINAL");
+			process.chdir(TEST_DIR);
+			await expect(init(".")).rejects.toThrow(/package\.json/);
+			expect(await readFile(join(TEST_DIR, "package.json"), "utf8")).toBe(
+				"ORIGINAL",
+			);
+			expect(existsSync(join(TEST_DIR, "src"))).toBe(false);
+			expect(existsSync(join(TEST_DIR, "config"))).toBe(false);
+		});
+
+		test("init <existing-dir> aborts and writes nothing", async () => {
+			const dir = join(TEST_DIR, "app");
+			await mkdir(join(dir, "src"), { recursive: true });
+			await writeFile(join(dir, "src", "index.ts"), "ORIGINAL");
+			process.chdir(TEST_DIR);
+			await expect(init("app")).rejects.toThrow(/src\/index\.ts/);
+			expect(await readFile(join(dir, "src", "index.ts"), "utf8")).toBe(
+				"ORIGINAL",
+			);
+			expect(existsSync(join(dir, "package.json"))).toBe(false);
+		});
+
+		test("init into an existing empty dir succeeds", async () => {
+			await mkdir(join(TEST_DIR, "empty"));
+			process.chdir(TEST_DIR);
+			await init("empty");
+			expect(existsSync(join(TEST_DIR, "empty", "package.json"))).toBe(true);
+		});
+
+		test("--force overwrites existing files", async () => {
+			await writeFile(join(TEST_DIR, "package.json"), "ORIGINAL");
+			process.chdir(TEST_DIR);
+			await init(".", { force: true });
+			expect(await readFile(join(TEST_DIR, "package.json"), "utf8")).not.toBe(
+				"ORIGINAL",
+			);
+		});
 	});
 
 	describe("init()", () => {

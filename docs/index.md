@@ -18,7 +18,7 @@ bunx @bunary/cli --help
 
 | Command | Description |
 |--------|-------------|
-| `bunary init [name] [--auth basic\|jwt]` | Create a new Bunary project |
+| `bunary init [name] [--auth basic\|jwt] [--force]` | Create a new Bunary project |
 | `bunary model:make <table-name>` | Generate ORM model in `src/models/` |
 | `bunary middleware:make <name>` | Generate middleware in `src/middleware/` |
 | `bunary migration:make <name>` | Create migration in `./migrations/` |
@@ -28,7 +28,7 @@ bunx @bunary/cli --help
 | `bunary route:make <name>` | Generate route module in `src/routes/` |
 | `bunary --help`, `bunary --version` | Help and version |
 
-### bunary init [name] [--auth basic|jwt]
+### bunary init [name] [--auth basic|jwt] [--force]
 
 Creates a new Bunary project. You can pass a directory name or `.` for the current directory. With `--auth basic` or `--auth jwt` you get auth middleware stubs (same as running `middleware:make basic` or `jwt` after init).
 
@@ -37,6 +37,8 @@ bunary init my-app
 bunary init my-app --auth jwt
 bunary init .
 ```
+
+`init` aborts without writing anything if any file it would create already exists; pass `--force` to overwrite.
 
 The command creates `package.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`.
 

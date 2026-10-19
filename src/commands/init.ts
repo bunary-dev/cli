@@ -1,6 +1,7 @@
 /**
  * Bunary init command - scaffolds a new project
  */
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import type { Command } from "../types/command.js";
@@ -36,6 +37,29 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		? process.cwd()
 		: resolve(process.cwd(), name);
 	const projectName = isCurrentDir ? basename(projectDir) : name;
+
+	// Abort before writing anything if a target file already exists
+	if (!options?.force) {
+		const targets = [
+			"package.json",
+			"config/bunary.ts",
+			"src/index.ts",
+			"src/routes/main.ts",
+			"src/routes/groupExample.ts",
+			"src/routes/index.ts",
+		];
+		if (options?.auth === "basic" || options?.auth === "jwt") {
+			targets.push(`src/middleware/${options.auth}.ts`);
+		}
+		const existing = targets.filter((f) => existsSync(join(projectDir, f)));
+		if (existing.length > 0) {
+			throw new Error(
+				`Refusing to overwrite existing files in ${projectDir}:\n${existing
+					.map((f) => `  - ${f}`)
+					.join("\n")}\nUse --force to overwrite.`,
+			);
+		}
+	}
 
 	// Create project directory if not current dir
 	if (!isCurrentDir) {
@@ -154,6 +178,10 @@ export const command: Command = {
 			description: "Auth scaffolding type",
 			values: ["basic", "jwt"],
 		},
+		{
+			name: "--force",
+			description: "Overwrite existing files",
+		},
 	],
 	async run(args, flags) {
 		const name = args[0] as string;
@@ -162,6 +190,6 @@ export const command: Command = {
 		if (authValue === "basic" || authValue === "jwt") {
 			auth = authValue;
 		}
-		await init(name, { auth });
+		await init(name, { auth, force: flags.force === true });
 	},
 };
