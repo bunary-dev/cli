@@ -27,7 +27,7 @@ bun install
 bun run dev
 ```
 
-With Basic or JWT auth scaffolding: `bunary init my-app --auth basic` or `--auth jwt`. For all commands, options, generated file examples, and the programmatic API, see [docs/index.md](./docs/index.md).
+With Basic or JWT auth scaffolding: `bunary init my-app --auth basic` or `--auth jwt`. `init` refuses to overwrite existing files (use `--force` to override). For all commands, options, generated file examples, and the programmatic API, see [docs/index.md](./docs/index.md).
 
 ## Requirements
 
