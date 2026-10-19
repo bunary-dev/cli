@@ -18,12 +18,16 @@ const EXPECTED_AUTH_VERSION = "^0.1.0";
 let TEST_DIR: string;
 
 describe("init command", () => {
+	let originalCwd: string;
+
 	beforeEach(async () => {
+		originalCwd = process.cwd();
 		// Create a unique test directory for each test run
 		TEST_DIR = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
 	});
 
 	afterEach(async () => {
+		process.chdir(originalCwd);
 		// Clean up test directory after each test
 		if (existsSync(TEST_DIR)) {
 			await rm(TEST_DIR, { recursive: true, force: true });
