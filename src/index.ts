@@ -10,7 +10,10 @@
 import { showHelp } from "./help.js";
 import { findCommand, registerProjectCommands } from "./registry.js";
 import { dim, red } from "./utils/color.js";
-import { loadProjectCommands } from "./utils/loadProjectCommands.js";
+import {
+	getProjectCommandsLoadError,
+	loadProjectCommands,
+} from "./utils/loadProjectCommands.js";
 import { parseFlags, validateFlags } from "./utils/parseFlags.js";
 import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
@@ -60,6 +63,14 @@ async function main(): Promise<void> {
 		const suggestion = suggestCommand(commandName);
 		if (suggestion) {
 			console.error(`\n  Did you mean: ${suggestion}?\n`);
+		}
+		const loadError = getProjectCommandsLoadError();
+		if (loadError) {
+			console.error(
+				dim(
+					`Your project config failed to load, so project commands are unavailable: ${loadError}`,
+				),
+			);
 		}
 		console.error(dim("Run bunary --help for all commands."));
 		process.exit(1);
