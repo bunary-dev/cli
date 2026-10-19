@@ -8,7 +8,11 @@ import type { Command } from "../../types/command.js";
 import { cyan, dim, green } from "../../utils/color.js";
 import { migrationNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
-import { ensureOrmDependency } from "../../utils/validation.js";
+import {
+	assertInsideDir,
+	ensureOrmDependency,
+	validateMakeName,
+} from "../../utils/validation.js";
 
 /**
  * Derive a suggested table name from migration name (e.g. create_users_table -> users).
@@ -33,10 +37,14 @@ export async function makeMigration(name: string): Promise<void> {
 	const cwd = process.cwd();
 	ensureOrmDependency(cwd);
 
+	validateMakeName(name, "migration");
+
 	const timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
 	const fileName = `${timestamp}_${name}.ts`;
 	const migrationsDir = join(cwd, "migrations");
 	const migrationPath = join(migrationsDir, fileName);
+
+	assertInsideDir(migrationsDir, migrationPath);
 
 	if (existsSync(migrationPath)) {
 		throw new Error(

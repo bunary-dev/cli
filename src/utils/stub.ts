@@ -63,7 +63,7 @@ export async function loadStub(
 		// Replace all placeholders in the format {{key}}
 		for (const [key, value] of Object.entries(replacements)) {
 			const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, "g");
-			content = content.replace(placeholder, value);
+			content = content.replace(placeholder, () => value);
 		}
 
 		return content;

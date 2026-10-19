@@ -3,7 +3,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 
 /**
  * Check if current directory is a Bunary project
@@ -103,5 +103,36 @@ export function ensureOrmDependency(cwd: string = process.cwd()): void {
 			"Error: Project must have @bunary/orm in dependencies.\n" +
 				"Run: bun add @bunary/orm",
 		);
+	}
+}
+
+/**
+ * Throw if `name` cannot be safely used as a file name and identifier base.
+ * Must start with a letter and contain only letters, digits, `_` or `-`.
+ *
+ * @param name - User-supplied name
+ * @param label - Human-readable kind used in the message (e.g. "route")
+ * @throws When the name is invalid
+ */
+export function validateMakeName(name: string, label: string): void {
+	if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name ?? "")) {
+		throw new Error(
+			`Error: Invalid ${label} name "${name}".\n` +
+				"Names must start with a letter and contain only letters, digits, underscores and hyphens (no path separators, dots or whitespace).",
+		);
+	}
+}
+
+/**
+ * Throw if `target` resolves to a location outside `dir`.
+ *
+ * @param dir - Directory the file must stay within
+ * @param target - Resolved output path
+ * @throws When the path escapes the directory
+ */
+export function assertInsideDir(dir: string, target: string): void {
+	const rel = relative(resolve(dir), resolve(target));
+	if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+		throw new Error(`Error: Refusing to write outside ${dir}: ${target}`);
 	}
 }
