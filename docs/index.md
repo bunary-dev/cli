@@ -40,6 +40,8 @@ bunary init .
 
 `init` aborts without writing anything if any file it would create already exists; pass `--force` to overwrite.
 
+All scaffolding commands (`init`, `route:make`, `middleware:make`, `model:make`, `migration:make`) accept `--dry-run` to print the files that would be created without writing anything (exit code 0); add `--verbose` to also print file contents. The flag may come before the command: `bunary --dry-run init my-app`.
+
 The command creates `package.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`.
 
 ### bunary model:make \<table-name\>

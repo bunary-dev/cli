@@ -7,6 +7,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { cyan, dim, green } from "../../utils/color.js";
+import {
+	type DryRunOptions,
+	dryRunFlags,
+	dryRunOptionsFromFlags,
+	reportDryRun,
+} from "../../utils/dryRun.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { middlewareNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
@@ -54,7 +60,10 @@ export async function generateMiddlewareContent(
  * await makeMiddleware("jwt");  // same stub as init --auth jwt
  * ```
  */
-export async function makeMiddleware(middlewareName: string): Promise<void> {
+export async function makeMiddleware(
+	middlewareName: string,
+	options: DryRunOptions = {},
+): Promise<void> {
 	const cwd = process.cwd();
 	ensureBunaryProject(cwd);
 
@@ -71,9 +80,14 @@ export async function makeMiddleware(middlewareName: string): Promise<void> {
 		);
 	}
 
-	await mkdir(middlewareDir, { recursive: true });
-
 	const content = await generateMiddlewareContent(middlewareName);
+
+	if (options.dryRun) {
+		reportDryRun([{ path: middlewarePath, content }], cwd, options.verbose);
+		return;
+	}
+
+	await mkdir(middlewareDir, { recursive: true });
 
 	await writeFile(middlewarePath, content, "utf-8");
 
@@ -88,7 +102,8 @@ export const command: Command = {
 	description: "Generate a middleware",
 	category: "scaffold",
 	args: [{ name: "name", required: true, description: "Middleware name" }],
-	async run(args) {
-		await makeMiddleware(args[0] as string);
+	flags: dryRunFlags,
+	async run(args, flags) {
+		await makeMiddleware(args[0] as string, dryRunOptionsFromFlags(flags));
 	},
 };
