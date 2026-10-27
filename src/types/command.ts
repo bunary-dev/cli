@@ -60,6 +60,8 @@ export interface CommandFlag {
 	description: string;
 	/** Allowed values, if restricted (e.g. ["basic", "jwt"]) */
 	values?: string[];
+	/** Whether the flag requires a value (implied when `values` is set) */
+	takesValue?: boolean;
 }
 
 /** Help category for grouped output. */

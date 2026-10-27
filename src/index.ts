@@ -7,7 +7,7 @@
  * and src/registry.ts for the full list.
  */
 
-import { showHelp } from "./help.js";
+import { showCommandHelp, showHelp } from "./help.js";
 import { findCommand, registerProjectCommands } from "./registry.js";
 import { dim, red } from "./utils/color.js";
 import {
@@ -76,8 +76,24 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
+	// Per-command help, before flag validation (stop at a bare `--`)
+	const rest = args.slice(1);
+	const dashIdx = rest.indexOf("--");
+	const optionArgs = dashIdx === -1 ? rest : rest.slice(0, dashIdx);
+	if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
+		showCommandHelp(command.name);
+		return;
+	}
+
 	// Parse positional args and flags from remaining argv
-	const [positional, flags] = parseFlags(args.slice(1));
+	let positional: string[];
+	let flags: Record<string, string | boolean>;
+	try {
+		[positional, flags] = parseFlags(rest, command.flags);
+	} catch (error) {
+		console.error(red(error instanceof Error ? error.message : String(error)));
+		process.exit(1);
+	}
 
 	// Validate flags against command definitions
 	if (command.flags) {
