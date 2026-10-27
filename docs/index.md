@@ -40,6 +40,8 @@ bunary init .
 
 `init` aborts without writing anything if any file it would create already exists; pass `--force` to overwrite.
 
+All scaffolding commands (`init`, `route:make`, `middleware:make`, `model:make`, `migration:make`) accept `--dry-run` to print the files that would be created without writing anything (exit code 0); add `--verbose` to also print file contents. The flag may come before the command: `bunary --dry-run init my-app`.
+
 The command creates `package.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`.
 
 ### bunary model:make \<table-name\>
@@ -79,36 +81,6 @@ What init and the generators produce.
 **middleware:make output (generic):** A single export, e.g. `ensureAuthMiddleware`, of type `Middleware` from `@bunary/http`, with `(ctx, next)` and `return next()`.
 
 **route:make output:** A file that exports e.g. `registerUsers(app: BunaryApp)`; you wire it in `src/routes/index.ts`.
-
-## Programmatic API
-
-You can call init and the project generators from code. All of them are async.
-
-```typescript
-import {
-  init,
-  generatePackageJson,
-  generateConfig,
-  generateEntrypoint,
-  generateRoutesMain,
-  generateRoutesIndex,
-  generateRoutesGroupExample,
-  generateMiddlewareContent,
-  makeModel,
-} from "@bunary/cli";
-import type { InitOptions } from "@bunary/cli";
-
-await init("my-app");
-await init("my-app", { auth: "jwt" });
-
-const packageJson = await generatePackageJson("my-app");
-const config = await generateConfig("my-app");
-const entrypoint = await generateEntrypoint({ auth: "basic" });
-
-await makeModel("user_profile");  // run from a Bunary project directory
-```
-
-InitOptions: `{ auth?: "basic" | "jwt" }`. Pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and the route generators when you want auth scaffolding. Commands like `middleware:make`, `migration:make`, `route:make`, and `migrate` are CLI-only; there is no programmatic API for those.
 
 ## Requirements
 

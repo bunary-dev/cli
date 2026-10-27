@@ -7,7 +7,7 @@
  * and src/registry.ts for the full list.
  */
 
-import { showHelp } from "./help.js";
+import { showCommandHelp, showHelp } from "./help.js";
 import { findCommand, registerProjectCommands } from "./registry.js";
 import { dim, red } from "./utils/color.js";
 import {
@@ -18,7 +18,14 @@ import { parseFlags, validateFlags } from "./utils/parseFlags.js";
 import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+
+// Allow global switches before the command: `bunary --dry-run init my-app`
+const leading: string[] = [];
+while (rawArgs[0] === "--dry-run" || rawArgs[0] === "--verbose") {
+	leading.push(rawArgs.shift() as string);
+}
+const args = [...rawArgs, ...leading];
 
 async function main(): Promise<void> {
 	// Load project-level commands when inside a Bunary project
@@ -76,8 +83,24 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
+	// Per-command help, before flag validation (stop at a bare `--`)
+	const rest = args.slice(1);
+	const dashIdx = rest.indexOf("--");
+	const optionArgs = dashIdx === -1 ? rest : rest.slice(0, dashIdx);
+	if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
+		showCommandHelp(command.name);
+		return;
+	}
+
 	// Parse positional args and flags from remaining argv
-	const [positional, flags] = parseFlags(args.slice(1));
+	let positional: string[];
+	let flags: Record<string, string | boolean>;
+	try {
+		[positional, flags] = parseFlags(rest, command.flags);
+	} catch (error) {
+		console.error(red(error instanceof Error ? error.message : String(error)));
+		process.exit(1);
+	}
 
 	// Validate flags against command definitions
 	if (command.flags) {

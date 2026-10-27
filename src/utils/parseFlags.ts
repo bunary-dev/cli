@@ -25,7 +25,12 @@ import type { CommandFlag } from "../types/command.js";
  * - It is the last argument, or
  * - The next argument also starts with `--`
  *
+ * Also supports `--key=value`, and a bare `--` ends flag parsing. When
+ * `flagDefs` is given, flags without `takesValue`/`values` never consume
+ * the following argument.
+ *
  * @param argv - Raw CLI arguments after the command name
+ * @param flagDefs - Optional flag definitions of the command
  * @returns Tuple of [positional args, parsed flags]
  * @throws When a flag is specified more than once
  *
@@ -40,6 +45,7 @@ import type { CommandFlag } from "../types/command.js";
  */
 export function parseFlags(
 	argv: string[],
+	flagDefs?: CommandFlag[],
 ): [string[], Record<string, string | boolean>] {
 	const positional: string[] = [];
 	const flags: Record<string, string | boolean> = {};
@@ -47,27 +53,55 @@ export function parseFlags(
 	for (let i = 0; i < argv.length; i++) {
 		// In-bounds by the loop condition
 		const arg = argv[i] as string;
-		if (arg.startsWith("--")) {
-			const key = arg.slice(2);
 
-			if (key in flags) {
-				throw new Error(`Duplicate flag: --${key}`);
-			}
+		// Bare `--` ends flag parsing; everything after is positional
+		if (arg === "--") {
+			positional.push(...argv.slice(i + 1));
+			break;
+		}
 
-			// Boolean flag: last arg or next arg is also a flag
-			const next = i + 1 < argv.length ? (argv[i + 1] as string) : undefined;
-			if (next === undefined || next.startsWith("--")) {
-				flags[key] = true;
-			} else {
-				flags[key] = next;
-				i++; // skip the value
-			}
-		} else {
+		if (!arg.startsWith("--")) {
 			positional.push(arg);
+			continue;
+		}
+
+		const body = arg.slice(2);
+		const eq = body.indexOf("=");
+		const key = eq === -1 ? body : body.slice(0, eq);
+
+		if (key in flags) {
+			throw new Error(`Duplicate flag: --${key}`);
+		}
+
+		if (eq !== -1) {
+			flags[key] = body.slice(eq + 1);
+			continue;
+		}
+
+		// When definitions are known, boolean flags never consume a value
+		const def = flagDefs?.find((f) => f.name === `--${key}`);
+		if (def && !flagTakesValue(def)) {
+			flags[key] = true;
+			continue;
+		}
+
+		// Boolean flag: last arg or next arg is also a flag
+		const next = i + 1 < argv.length ? (argv[i + 1] as string) : undefined;
+		if (next === undefined || next.startsWith("--")) {
+			flags[key] = true;
+		} else {
+			flags[key] = next;
+			i++; // skip the value
 		}
 	}
 
 	return [positional, flags];
+}
+
+/** Whether a flag expects a value (explicit `takesValue` or restricted `values`). */
+function flagTakesValue(def: CommandFlag): boolean {
+	if (def.boolean) return false;
+	return def.takesValue === true || def.values !== undefined;
 }
 
 /**
@@ -105,6 +139,9 @@ export function validateFlags(
 		}
 
 		const def = flagDefs.find((f) => f.name === `--${key}`);
+		if (def && flagTakesValue(def) && typeof value !== "string") {
+			throw new Error(`--${key} requires a value`);
+		}
 		if (
 			def?.values &&
 			typeof value === "string" &&

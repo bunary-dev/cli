@@ -129,7 +129,17 @@ export function showCommandHelp(commandName: string): void {
 		const usage = argsStr
 			? `bunary ${cyan(cmd.name)} ${dim(argsStr)}`
 			: `bunary ${cyan(cmd.name)}`;
-		console.log(`\n  ${bold("Usage:")} ${usage}\n\n  ${cmd.description}\n`);
+		const lines = [`\n  ${bold("Usage:")} ${usage}\n\n  ${cmd.description}\n`];
+		if (cmd.flags?.length) {
+			lines.push(`  ${bold("Options")}`);
+			for (const flag of cmd.flags) {
+				const label = `${flag.name}${flag.values ? ` ${flag.values.join("|")}` : ""}`;
+				const padding = " ".repeat(Math.max(1, CMD_COL - label.length));
+				lines.push(`    ${dim(label)}${padding}${flag.description}`);
+			}
+			lines.push("");
+		}
+		console.log(lines.join("\n"));
 	} else {
 		console.error(`Unknown command: ${commandName}`);
 		showHelp();
