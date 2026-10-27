@@ -105,7 +105,7 @@ describe("--dry-run", () => {
 	it("parseFlags treats declared boolean flags as switches", () => {
 		const [pos, flags] = parseFlags(
 			["--dry-run", "my-app"],
-			new Set(["dry-run"]),
+			[{ name: "--dry-run", description: "d", boolean: true }],
 		);
 		expect(pos).toEqual(["my-app"]);
 		expect(flags).toEqual({ "dry-run": true });
