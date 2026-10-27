@@ -6,6 +6,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { cyan, dim, green } from "../../utils/color.js";
+import {
+	type DryRunOptions,
+	dryRunFlags,
+	dryRunOptionsFromFlags,
+	reportDryRun,
+} from "../../utils/dryRun.js";
 import { tableNameToModelName } from "../../utils/naming.js";
 import { modelNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
@@ -30,7 +36,10 @@ import {
  * // Creates src/models/UserProfile.ts
  * ```
  */
-export async function makeModel(tableName: string): Promise<void> {
+export async function makeModel(
+	tableName: string,
+	options: DryRunOptions = {},
+): Promise<void> {
 	const cwd = process.cwd();
 	ensureBunaryProject(cwd);
 
@@ -50,14 +59,19 @@ export async function makeModel(tableName: string): Promise<void> {
 		);
 	}
 
-	// Create models directory if it doesn't exist
-	await mkdir(modelsDir, { recursive: true });
-
 	// Generate model content from stub
 	const content = await loadStub("model/make.ts", {
 		modelName,
 		tableName,
 	});
+
+	if (options.dryRun) {
+		reportDryRun([{ path: modelPath, content }], cwd, options.verbose);
+		return;
+	}
+
+	// Create models directory if it doesn't exist
+	await mkdir(modelsDir, { recursive: true });
 
 	// Write model file
 	await writeFile(modelPath, content, "utf-8");
@@ -72,7 +86,8 @@ export const command: Command = {
 	description: "Generate an ORM model",
 	category: "scaffold",
 	args: [{ name: "table", required: true, description: "Database table name" }],
-	async run(args) {
-		await makeModel(args[0] as string);
+	flags: dryRunFlags,
+	async run(args, flags) {
+		await makeModel(args[0] as string, dryRunOptionsFromFlags(flags));
 	},
 };

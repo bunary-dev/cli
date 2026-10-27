@@ -6,6 +6,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { cyan, dim, green } from "../../utils/color.js";
+import {
+	type DryRunOptions,
+	dryRunFlags,
+	dryRunOptionsFromFlags,
+	reportDryRun,
+} from "../../utils/dryRun.js";
 import { routeNameToRegisterFunctionName } from "../../utils/naming.js";
 import { routeNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
@@ -30,7 +36,10 @@ import {
  * // Creates src/routes/users.ts with registerUsers(app)
  * ```
  */
-export async function makeRoute(routeName: string): Promise<void> {
+export async function makeRoute(
+	routeName: string,
+	options: DryRunOptions = {},
+): Promise<void> {
 	const cwd = process.cwd();
 	ensureBunaryProject(cwd);
 
@@ -48,12 +57,17 @@ export async function makeRoute(routeName: string): Promise<void> {
 		);
 	}
 
-	await mkdir(routesDir, { recursive: true });
-
 	const content = await loadStub("route/make.ts", {
 		routeName,
 		functionName,
 	});
+
+	if (options.dryRun) {
+		reportDryRun([{ path: routePath, content }], cwd, options.verbose);
+		return;
+	}
+
+	await mkdir(routesDir, { recursive: true });
 
 	await writeFile(routePath, content, "utf-8");
 
@@ -67,7 +81,8 @@ export const command: Command = {
 	description: "Generate a route module",
 	category: "scaffold",
 	args: [{ name: "name", required: true, description: "Route name" }],
-	async run(args) {
-		await makeRoute(args[0] as string);
+	flags: dryRunFlags,
+	async run(args, flags) {
+		await makeRoute(args[0] as string, dryRunOptionsFromFlags(flags));
 	},
 };

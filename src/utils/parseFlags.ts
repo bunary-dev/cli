@@ -100,6 +100,7 @@ export function parseFlags(
 
 /** Whether a flag expects a value (explicit `takesValue` or restricted `values`). */
 function flagTakesValue(def: CommandFlag): boolean {
+	if (def.boolean) return false;
 	return def.takesValue === true || def.values !== undefined;
 }
 

@@ -6,6 +6,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { cyan, dim, green } from "../../utils/color.js";
+import {
+	type DryRunOptions,
+	dryRunFlags,
+	dryRunOptionsFromFlags,
+	reportDryRun,
+} from "../../utils/dryRun.js";
 import { migrationNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
 import {
@@ -73,7 +79,10 @@ function parseTimestamp(ts: string): Date {
  * @param name - Migration name (e.g. create_users_table, add_slug_to_posts)
  * @throws Error if not in a Bunary project, project missing @bunary/orm, or file exists
  */
-export async function makeMigration(name: string): Promise<void> {
+export async function makeMigration(
+	name: string,
+	options: DryRunOptions = {},
+): Promise<void> {
 	const cwd = process.cwd();
 	ensureOrmDependency(cwd);
 
@@ -105,12 +114,17 @@ export async function makeMigration(name: string): Promise<void> {
 	const migrationPath = join(migrationsDir, `${timestamp}_${name}.ts`);
 	assertInsideDir(migrationsDir, migrationPath);
 
-	await mkdir(migrationsDir, { recursive: true });
-
 	const tableName = migrationNameToTableName(name);
 	const content = await loadStub("migration/make.ts", {
 		tableName,
 	});
+
+	if (options.dryRun) {
+		reportDryRun([{ path: migrationPath, content }], cwd, options.verbose);
+		return;
+	}
+
+	await mkdir(migrationsDir, { recursive: true });
 
 	await writeFile(migrationPath, content, "utf-8");
 
@@ -130,7 +144,8 @@ export const command: Command = {
 			description: "Migration name (e.g. create_users_table)",
 		},
 	],
-	async run(args) {
-		await makeMigration(args[0] as string);
+	flags: dryRunFlags,
+	async run(args, flags) {
+		await makeMigration(args[0] as string, dryRunOptionsFromFlags(flags));
 	},
 };

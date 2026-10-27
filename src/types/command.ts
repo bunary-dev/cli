@@ -62,6 +62,8 @@ export interface CommandFlag {
 	values?: string[];
 	/** Whether the flag requires a value (implied when `values` is set) */
 	takesValue?: boolean;
+	/** Switch that never takes a value (e.g. "--dry-run") */
+	boolean?: boolean;
 }
 
 /** Help category for grouped output. */

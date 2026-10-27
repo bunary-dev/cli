@@ -3,9 +3,14 @@
  */
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import type { Command } from "../types/command.js";
 import { bold, cyan, dim, green } from "../utils/color.js";
+import {
+	dryRunFlags,
+	dryRunOptionsFromFlags,
+	reportDryRun,
+} from "../utils/dryRun.js";
 import { buildFileTree } from "../utils/fileTree.js";
 import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
@@ -61,66 +66,47 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		}
 	}
 
-	// Create project directory if not current dir
-	if (!isCurrentDir) {
-		await mkdir(projectDir, { recursive: true });
-	}
-
-	// Create src, src/routes, config/, and (when auth) src/middleware directories
-	await mkdir(join(projectDir, "config"), { recursive: true });
-	await mkdir(join(projectDir, "src"), { recursive: true });
-	await mkdir(join(projectDir, "src", "routes"), { recursive: true });
-	if (options?.auth === "basic" || options?.auth === "jwt") {
-		await mkdir(join(projectDir, "src", "middleware"), { recursive: true });
-	}
-
-	// Track created files for tree display
-	const createdFiles: string[] = [];
-
-	// Write files
-	await writeFile(
-		join(projectDir, "package.json"),
-		await generatePackageJson(projectName, options),
-	);
-	createdFiles.push("package.json");
-
-	await writeFile(
-		join(projectDir, "config", "bunary.ts"),
-		await generateConfig(projectName, options),
-	);
-	createdFiles.push("config/bunary.ts");
-
-	await writeFile(
-		join(projectDir, "src", "index.ts"),
-		await generateEntrypoint(options),
-	);
-	createdFiles.push("src/index.ts");
-
+	// Plan files (relative path, content) before touching the disk
+	const planned: Array<[string, string]> = [
+		["package.json", await generatePackageJson(projectName, options)],
+		["config/bunary.ts", await generateConfig(projectName, options)],
+		["src/index.ts", await generateEntrypoint(options)],
+	];
 	// init --auth basic|jwt is a shortcut to middleware:make basic|jwt (same content, no double-up)
 	if (options?.auth === "basic" || options?.auth === "jwt") {
-		await writeFile(
-			join(projectDir, "src", "middleware", `${options.auth}.ts`),
+		planned.push([
+			`src/middleware/${options.auth}.ts`,
 			await generateMiddlewareContent(options.auth),
-		);
-		createdFiles.push(`src/middleware/${options.auth}.ts`);
+		]);
 	}
-	await writeFile(
-		join(projectDir, "src", "routes", "main.ts"),
-		await generateRoutesMain(options),
+	planned.push(
+		["src/routes/main.ts", await generateRoutesMain(options)],
+		["src/routes/groupExample.ts", await generateRoutesGroupExample(options)],
+		["src/routes/index.ts", await generateRoutesIndex(options)],
 	);
-	createdFiles.push("src/routes/main.ts");
 
-	await writeFile(
-		join(projectDir, "src", "routes", "groupExample.ts"),
-		await generateRoutesGroupExample(options),
-	);
-	createdFiles.push("src/routes/groupExample.ts");
+	if (options?.dryRun) {
+		reportDryRun(
+			planned.map(([f, content]) => ({ path: join(projectDir, f), content })),
+			isCurrentDir ? projectDir : dirname(projectDir),
+			options.verbose,
+		);
+		return;
+	}
 
-	await writeFile(
-		join(projectDir, "src", "routes", "index.ts"),
-		await generateRoutesIndex(options),
-	);
-	createdFiles.push("src/routes/index.ts");
+	// Create project directory and parent directories of all files
+	for (const dir of new Set(
+		planned.map(([f]) => dirname(join(projectDir, f))),
+	)) {
+		await mkdir(dir, { recursive: true });
+	}
+
+	// Write files
+	const createdFiles: string[] = [];
+	for (const [f, content] of planned) {
+		await writeFile(join(projectDir, f), content);
+		createdFiles.push(f);
+	}
 
 	console.log(
 		`\n${green(`✨ Created Bunary project: ${cyan(projectName)}`)}\n`,
@@ -182,6 +168,7 @@ export const command: Command = {
 			name: "--force",
 			description: "Overwrite existing files",
 		},
+		...dryRunFlags,
 	],
 	async run(args, flags) {
 		const name = args[0] as string;
@@ -190,6 +177,10 @@ export const command: Command = {
 		if (authValue === "basic" || authValue === "jwt") {
 			auth = authValue;
 		}
-		await init(name, { auth, force: flags.force === true });
+		await init(name, {
+			auth,
+			force: flags.force === true,
+			...dryRunOptionsFromFlags(flags),
+		});
 	},
 };
