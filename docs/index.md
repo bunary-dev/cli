@@ -82,36 +82,6 @@ What init and the generators produce.
 
 **route:make output:** A file that exports e.g. `registerUsers(app: BunaryApp)`; you wire it in `src/routes/index.ts`.
 
-## Programmatic API
-
-You can call init and the project generators from code. All of them are async.
-
-```typescript
-import {
-  init,
-  generatePackageJson,
-  generateConfig,
-  generateEntrypoint,
-  generateRoutesMain,
-  generateRoutesIndex,
-  generateRoutesGroupExample,
-  generateMiddlewareContent,
-  makeModel,
-} from "@bunary/cli";
-import type { InitOptions } from "@bunary/cli";
-
-await init("my-app");
-await init("my-app", { auth: "jwt" });
-
-const packageJson = await generatePackageJson("my-app");
-const config = await generateConfig("my-app");
-const entrypoint = await generateEntrypoint({ auth: "basic" });
-
-await makeModel("user_profile");  // run from a Bunary project directory
-```
-
-InitOptions: `{ auth?: "basic" | "jwt" }`. Pass to `init`, `generatePackageJson`, `generateConfig`, `generateEntrypoint`, and the route generators when you want auth scaffolding. Commands like `middleware:make`, `migration:make`, `route:make`, and `migrate` are CLI-only; there is no programmatic API for those.
-
 ## Requirements
 
 - Bun ≥ 1.4.0
