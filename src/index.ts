@@ -18,7 +18,14 @@ import { parseFlags, validateFlags } from "./utils/parseFlags.js";
 import { suggestCommand } from "./utils/suggest.js";
 import { getVersion } from "./utils/version.js";
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+
+// Allow global switches before the command: `bunary --dry-run init my-app`
+const leading: string[] = [];
+while (rawArgs[0] === "--dry-run" || rawArgs[0] === "--verbose") {
+	leading.push(rawArgs.shift() as string);
+}
+const args = [...rawArgs, ...leading];
 
 async function main(): Promise<void> {
 	// Load project-level commands when inside a Bunary project
@@ -77,7 +84,14 @@ async function main(): Promise<void> {
 	}
 
 	// Parse positional args and flags from remaining argv
-	const [positional, flags] = parseFlags(args.slice(1));
+	const [positional, flags] = parseFlags(
+		args.slice(1),
+		new Set(
+			(command.flags ?? [])
+				.filter((f) => f.boolean)
+				.map((f) => f.name.replace(/^--/, "")),
+		),
+	);
 
 	// Validate flags against command definitions
 	if (command.flags) {

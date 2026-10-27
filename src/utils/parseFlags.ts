@@ -26,6 +26,7 @@ import type { CommandFlag } from "../types/command.js";
  * - The next argument also starts with `--`
  *
  * @param argv - Raw CLI arguments after the command name
+ * @param booleanFlags - Names (without dashes) that never take a value
  * @returns Tuple of [positional args, parsed flags]
  * @throws When a flag is specified more than once
  *
@@ -40,6 +41,7 @@ import type { CommandFlag } from "../types/command.js";
  */
 export function parseFlags(
 	argv: string[],
+	booleanFlags: ReadonlySet<string> = new Set(),
 ): [string[], Record<string, string | boolean>] {
 	const positional: string[] = [];
 	const flags: Record<string, string | boolean> = {};
@@ -56,7 +58,11 @@ export function parseFlags(
 
 			// Boolean flag: last arg or next arg is also a flag
 			const next = i + 1 < argv.length ? (argv[i + 1] as string) : undefined;
-			if (next === undefined || next.startsWith("--")) {
+			if (
+				booleanFlags.has(key) ||
+				next === undefined ||
+				next.startsWith("--")
+			) {
 				flags[key] = true;
 			} else {
 				flags[key] = next;

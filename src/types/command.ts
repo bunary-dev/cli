@@ -60,6 +60,8 @@ export interface CommandFlag {
 	description: string;
 	/** Allowed values, if restricted (e.g. ["basic", "jwt"]) */
 	values?: string[];
+	/** Switch that never takes a value (e.g. "--dry-run") */
+	boolean?: boolean;
 }
 
 /** Help category for grouped output. */
