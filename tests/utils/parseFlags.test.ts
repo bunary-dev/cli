@@ -205,3 +205,72 @@ describe("validateFlags", () => {
 		}).not.toThrow();
 	});
 });
+
+describe("parseFlags --key=value and --", () => {
+	test("parses --key=value", () => {
+		const [positional, flags] = parseFlags(["app", "--auth=jwt"]);
+		expect(positional).toEqual(["app"]);
+		expect(flags).toEqual({ auth: "jwt" });
+	});
+
+	test("keeps '=' inside the value", () => {
+		const [, flags] = parseFlags(["--name=a=b"]);
+		expect(flags).toEqual({ name: "a=b" });
+	});
+
+	test("detects duplicates across forms", () => {
+		expect(() => parseFlags(["--auth=jwt", "--auth", "basic"])).toThrow(
+			"Duplicate flag: --auth",
+		);
+	});
+
+	test("bare -- ends flag parsing", () => {
+		const [positional, flags] = parseFlags(["--force", "--", "--weird", "x"]);
+		expect(positional).toEqual(["--weird", "x"]);
+		expect(flags).toEqual({ force: true });
+	});
+
+	test("trailing -- does not create an empty flag", () => {
+		const [positional, flags] = parseFlags(["app", "--"]);
+		expect(positional).toEqual(["app"]);
+		expect(flags).toEqual({});
+	});
+
+	test("with defs, boolean flags do not consume the next arg", () => {
+		const defs: CommandFlag[] = [{ name: "--force", description: "f" }];
+		const [positional, flags] = parseFlags(["--force", "app"], defs);
+		expect(positional).toEqual(["app"]);
+		expect(flags).toEqual({ force: true });
+	});
+
+	test("with defs, value flags consume the next arg", () => {
+		const defs: CommandFlag[] = [
+			{ name: "--auth", description: "a", takesValue: true },
+		];
+		const [, flags] = parseFlags(["--auth", "jwt"], defs);
+		expect(flags).toEqual({ auth: "jwt" });
+	});
+});
+
+describe("validateFlags value-taking flags", () => {
+	const defs: CommandFlag[] = [
+		{ name: "--auth", description: "a", values: ["basic", "jwt"] },
+		{ name: "--out", description: "o", takesValue: true },
+	];
+
+	test("rejects bare value flag with allowed values", () => {
+		expect(() => validateFlags({ auth: true }, defs)).toThrow(
+			"--auth requires a value",
+		);
+	});
+
+	test("rejects bare takesValue flag", () => {
+		expect(() => validateFlags({ out: true }, defs)).toThrow(
+			"--out requires a value",
+		);
+	});
+
+	test("accepts provided value", () => {
+		expect(() => validateFlags({ out: "x" }, defs)).not.toThrow();
+	});
+});
