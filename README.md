@@ -27,7 +27,7 @@ bun install
 bun run dev
 ```
 
-With Basic or JWT auth scaffolding: `bunary init my-app --auth basic` or `--auth jwt`. `init` refuses to overwrite existing files (use `--force` to override), and every scaffolding command accepts `--dry-run`. For all commands, options, and generated file examples, see [docs/index.md](./docs/index.md).
+Run `bunary init` with no name (or with `-i`) in a terminal to be prompted for the name and auth type. With Basic or JWT auth scaffolding: `bunary init my-app --auth basic` or `--auth jwt`. `init` refuses to overwrite existing files (use `--force` to override), and every scaffolding command accepts `--dry-run`. For all commands, options, and generated file examples, see [docs/index.md](./docs/index.md).
 
 ## Database
 
