@@ -9,11 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 - Docs: removed the "Programmatic API" section; the package is bin-only and exports no library API (#94)
 
 ## [0.2.0] - 2026-09-21
 
 ### Changed
+
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 
 - **Requires Bun ≥ 1.4.0** (`engines.bun`); `.bun-version` pins 1.4.2 for CI and contributors (#89)
 - Toolchain: `@types/bun` ^1.4.2, `typescript` ^7.0.2 and `@biomejs/biome` 2.5.1 as devDependencies; `bun.lock` committed (#89)
@@ -58,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
+
 - **Move config from `bunary.config.ts` to `config/bunary.ts`** (Closes #72)
   - `bunary init` now scaffolds config in a dedicated `config/` directory
   - Prepares for additional config files as projects grow
@@ -65,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.4] - 2026-02-18
 
 ### Changed
+
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 
 - **Harden flag parsing infrastructure**
   - Extract `parseFlags()` and `validateFlags()` into `src/utils/parseFlags.ts` with full test coverage (27 tests)
@@ -80,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2026-02-18
 
 ### Changed
+
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 
 - **Refactor to command registry pattern** (Closes #62)
   - `src/types/command.ts` — `Command`, `CommandArg`, `CommandFlag`, `CommandCategory` interfaces
@@ -126,6 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
+
 - Bumped `@bunary/core` dependency to ^0.1.0
 
 ## [0.0.13] - 2026-01-29
@@ -165,6 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
+
 - **Auth scaffolding** uses the same code path as `middleware:make`: auth stubs moved to `stubs/middleware/auth-basic.ts` and `auth-jwt.ts`; `init --auth basic|jwt` creates `src/middleware/basic.ts` or `jwt.ts` (same content as `bunary middleware:make basic|jwt`). Entrypoint imports `basicMiddleware`/`jwtMiddleware` from `./middleware/basic.js` or `./middleware/jwt.js`. Removed duplicate `project/auth.ts` and `stubs/project/auth-*.ts`.
 
 ## [0.0.9] - 2026-01-29
@@ -179,6 +192,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.8] - 2026-01-29
 
 ### Changed
+
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 
 - **Init template aligned with @bunary/http API** (Closes #16)
   - Entrypoint stub uses `app.listen({ port: 3000 })` instead of `app.listen(3000)`
@@ -208,6 +223,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
+
 - Renamed `make:model` command to `model:make` (following object:task pattern)
   - Updated all documentation and help text
   - Command now follows Laravel-style naming convention
@@ -222,6 +239,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.4] - 2026-01-26
 
 ### Changed
+
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 
 - Refactored template system to use stub files with placeholder syntax
   - Templates moved from inline strings to `stubs/` directory
@@ -255,6 +274,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.2] - 2026-01-26
 
 ### Changed
+
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 
 - Updated `@bunary/core` dependency to `^0.0.5`
 

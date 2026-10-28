@@ -145,6 +145,7 @@ describe("validateFlags", () => {
 		{
 			name: "--port",
 			description: "Server port",
+			takesValue: true,
 		},
 	];
 
@@ -272,5 +273,26 @@ describe("validateFlags value-taking flags", () => {
 
 	test("accepts provided value", () => {
 		expect(() => validateFlags({ out: "x" }, defs)).not.toThrow();
+	});
+});
+
+describe("validateFlags boolean flags", () => {
+	const defs: CommandFlag[] = [
+		{ name: "--force", description: "f" },
+		{ name: "--dry-run", description: "d", boolean: true },
+		{ name: "--out", description: "o", takesValue: true },
+	];
+
+	test("rejects --bool=value for declared boolean flags", () => {
+		expect(() => validateFlags({ force: "yes" }, defs)).toThrow(
+			"--force does not take a value",
+		);
+		expect(() => validateFlags({ "dry-run": "1" }, defs)).toThrow(
+			"--dry-run does not take a value",
+		);
+	});
+
+	test("accepts bare boolean flags and value flags", () => {
+		expect(() => validateFlags({ force: true, out: "x" }, defs)).not.toThrow();
 	});
 });
