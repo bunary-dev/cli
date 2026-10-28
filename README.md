@@ -37,6 +37,10 @@ Flags in a `CommandFlag` definition that accept a value must set `takesValue: tr
 
 - Bun ≥ 1.4.0
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## License
 
 MIT
