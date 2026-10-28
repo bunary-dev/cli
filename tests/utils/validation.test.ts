@@ -2,11 +2,11 @@
  * Validation utilities tests
  */
 import { beforeEach, describe, expect, it } from "bun:test";
-import { writeFile } from "node:fs/promises";
+import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+	assertInsideProject,
 	ensureBunaryProject,
-	ensureOrmDependency,
 	isBunaryProject,
 } from "../../src/utils/validation.js";
 import { makeTempDir } from "../helpers/temp-dir.js";
@@ -92,45 +92,69 @@ describe("ensureBunaryProject", () => {
 	});
 });
 
-describe("ensureOrmDependency", () => {
-	let testDir: string;
+describe("assertInsideProject", () => {
+	let root: string;
 
 	beforeEach(async () => {
-		testDir = await makeTempDir("bunary-cli-test-");
+		root = await makeTempDir("bunary-cli-test-");
 	});
 
-	it("should throw when not in a Bunary project", () => {
-		expect(() => ensureOrmDependency(testDir)).toThrow(
-			"Not in a Bunary project",
-		);
+	it("allows files below the project root", () => {
+		expect(() =>
+			assertInsideProject(root, join(root, "src", "routes", "users.ts")),
+		).not.toThrow();
 	});
 
-	it("should throw when @bunary/orm is missing", async () => {
-		await writeFile(
-			join(testDir, "package.json"),
-			JSON.stringify({ dependencies: { "@bunary/core": "^0.2.0" } }),
-		);
-		expect(() => ensureOrmDependency(testDir)).toThrow("@bunary/orm");
+	it("rejects the root itself and paths that escape it", () => {
+		for (const target of [
+			root,
+			join(root, ".."),
+			join(root, "..", "evil.ts"),
+			join(root, "src", "..", "..", "evil.ts"),
+			"/etc/passwd",
+		]) {
+			expect(() => assertInsideProject(root, target)).toThrow(
+				/outside the project/,
+			);
+		}
 	});
 
-	it("should not throw when @bunary/orm is in dependencies", async () => {
-		await writeFile(
-			join(testDir, "package.json"),
-			JSON.stringify({
-				dependencies: { "@bunary/core": "^0.2.0", "@bunary/orm": "^0.1.0" },
-			}),
-		);
-		expect(() => ensureOrmDependency(testDir)).not.toThrow();
+	it("rejects a target whose directory is a symlink leading outside", async () => {
+		const outside = await makeTempDir("bunary-cli-test-");
+		await mkdir(join(root, "src"), { recursive: true });
+		await symlink(outside, join(root, "src", "routes"));
+		expect(() =>
+			assertInsideProject(root, join(root, "src", "routes", "users.ts")),
+		).toThrow(/outside the project/);
 	});
 
-	it("should not throw when @bunary/orm is in devDependencies", async () => {
-		await writeFile(
-			join(testDir, "package.json"),
-			JSON.stringify({
-				dependencies: { "@bunary/core": "^0.2.0" },
-				devDependencies: { "@bunary/orm": "^0.1.0" },
-			}),
+	it("rejects a target that is itself a symlink leading outside", async () => {
+		const outside = await makeTempDir("bunary-cli-test-");
+		await mkdir(join(root, "src", "routes"), { recursive: true });
+		await symlink(
+			join(outside, "x.ts"),
+			join(root, "src", "routes", "users.ts"),
 		);
-		expect(() => ensureOrmDependency(testDir)).not.toThrow();
+		expect(() =>
+			assertInsideProject(root, join(root, "src", "routes", "users.ts")),
+		).toThrow(/outside the project/);
+	});
+
+	it("allows symlinks that stay inside the project", async () => {
+		await mkdir(join(root, "lib", "routes"), { recursive: true });
+		await mkdir(join(root, "src"), { recursive: true });
+		await symlink(join(root, "lib", "routes"), join(root, "src", "routes"));
+		expect(() =>
+			assertInsideProject(root, join(root, "src", "routes", "users.ts")),
+		).not.toThrow();
+	});
+
+	it("works when the project root is reached through a symlink", async () => {
+		const parent = await makeTempDir("bunary-cli-test-");
+		const link = join(parent, "link");
+		await symlink(root, link);
+		expect(() =>
+			assertInsideProject(link, join(link, "src", "routes", "users.ts")),
+		).not.toThrow();
 	});
 });

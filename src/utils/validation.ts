@@ -2,8 +2,8 @@
  * Validation utilities for CLI commands
  */
 
-import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 /**
  * Check if current directory is a Bunary project
@@ -73,40 +73,6 @@ export function ensureBunaryProject(cwd: string = process.cwd()): void {
 }
 
 /**
- * Throw if the project at `cwd` does not depend on `@bunary/orm`.
- *
- * Reads `package.json` and checks both `dependencies` and
- * `devDependencies`. Also calls {@link ensureBunaryProject} first,
- * so callers don't need two separate guards.
- *
- * @param cwd - Directory to check (defaults to process.cwd())
- * @throws When the project is missing `@bunary/orm`
- *
- * @example
- * ```ts
- * ensureOrmDependency();  // throws if @bunary/orm not installed
- * ```
- */
-export function ensureOrmDependency(cwd: string = process.cwd()): void {
-	ensureBunaryProject(cwd);
-
-	const pkgPath = join(cwd, "package.json");
-	const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as {
-		dependencies?: Record<string, string>;
-		devDependencies?: Record<string, string>;
-	};
-	const hasOrm =
-		pkg.dependencies?.["@bunary/orm"] || pkg.devDependencies?.["@bunary/orm"];
-
-	if (!hasOrm) {
-		throw new Error(
-			"Error: Project must have @bunary/orm in dependencies.\n" +
-				"Run: bun add @bunary/orm",
-		);
-	}
-}
-
-/**
  * Throw if `name` cannot be safely used as a file name and identifier base.
  * Must start with a letter and contain only letters, digits, `_` or `-`.
  *
@@ -123,16 +89,64 @@ export function validateMakeName(name: string, label: string): void {
 	}
 }
 
-/**
- * Throw if `target` resolves to a location outside `dir`.
- *
- * @param dir - Directory the file must stay within
- * @param target - Resolved output path
- * @throws When the path escapes the directory
- */
-export function assertInsideDir(dir: string, target: string): void {
-	const rel = relative(resolve(dir), resolve(target));
-	if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
-		throw new Error(`Error: Refusing to write outside ${dir}: ${target}`);
+/** Whether `target` is strictly below `dir` (both absolute). */
+function isStrictlyInside(dir: string, target: string): boolean {
+	const rel = relative(dir, target);
+	return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+}
+
+/** Whether something (even a dangling symlink) exists at `path`. */
+function lexists(path: string): boolean {
+	try {
+		lstatSync(path);
+		return true;
+	} catch {
+		return false;
 	}
+}
+
+/**
+ * Throw if writing `target` would land outside the project at `root`.
+ *
+ * Checks the path as written, then again with symlinks resolved: the
+ * deepest part of `target` that already exists is passed through
+ * `realpath`, so a `src/routes` symlink (or a dangling symlink at the
+ * target itself) pointing out of the project is refused as well.
+ *
+ * @param root - Project root directory
+ * @param target - Absolute path of the file about to be written
+ * @throws When the path, or the location it resolves to, escapes `root`
+ *
+ * @example
+ * ```ts
+ * assertInsideProject(cwd, join(cwd, "src", "routes", "users.ts")); // ok
+ * assertInsideProject(cwd, join(cwd, "..", "users.ts")); // throws
+ * ```
+ */
+export function assertInsideProject(root: string, target: string): void {
+	const absRoot = resolve(root);
+	const absTarget = resolve(target);
+	const refuse = (): never => {
+		throw new Error(
+			`Error: Refusing to write outside the project (${absRoot}): ${absTarget}`,
+		);
+	};
+
+	if (!isStrictlyInside(absRoot, absTarget)) refuse();
+
+	let existing = absTarget;
+	while (!lexists(existing)) existing = dirname(existing);
+
+	let realExisting: string | undefined;
+	try {
+		realExisting = realpathSync(existing);
+	} catch {
+		// Dangling symlink: writing would follow it to an unknown location
+	}
+	if (realExisting === undefined) refuse();
+	const realTarget = join(
+		realExisting as string,
+		relative(existing, absTarget),
+	);
+	if (!isStrictlyInside(realpathSync(absRoot), realTarget)) refuse();
 }

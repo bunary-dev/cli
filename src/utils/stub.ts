@@ -38,15 +38,15 @@ export function getStubsDir(): string {
 /**
  * Load a stub file and replace placeholders with provided values
  *
- * @param stubPath - Relative path to stub file (e.g., "model/make.ts")
+ * @param stubPath - Relative path to stub file (e.g., "route/make.ts")
  * @param replacements - Object with placeholder keys and replacement values
  * @returns Processed stub content with placeholders replaced
  *
  * @example
  * ```ts
- * const content = await loadStub("model/make.ts", {
- *   modelName: "User",
- *   tableName: "users"
+ * const content = await loadStub("route/make.ts", {
+ *   routeName: "users",
+ *   functionName: "registerUsers",
  * });
  * ```
  */

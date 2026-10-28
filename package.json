@@ -1,12 +1,19 @@
 {
 	"name": "@bunary/cli",
 	"version": "0.2.0",
-	"description": "CLI scaffolding tool for Bunary - a Bun-first backend framework inspired by Laravel",
+	"description": "Bunary CLI: project scaffolding, make:* generators and a runner for app and package commands",
 	"type": "module",
 	"bin": {
-		"bunary": "./dist/index.js"
+		"bunary": "./dist/bin.js"
 	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"files": [
@@ -16,7 +23,7 @@
 		"CHANGELOG.md"
 	],
 	"scripts": {
-		"build": "bun build ./src/index.ts --outdir ./dist --target bun && tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r stubs/* dist/stubs/",
+		"build": "bun build ./src/bin.ts ./src/index.ts --outdir ./dist --target bun && tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r stubs/* dist/stubs/",
 		"prepublishOnly": "bun run build",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",

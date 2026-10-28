@@ -50,20 +50,16 @@ describe("suggestCommand", () => {
 		expect(suggestCommand("ini")).toBe("init");
 	});
 
-	test("suggests correct command for route:make typo", () => {
-		expect(suggestCommand("route:mak")).toBe("route:make");
+	test("suggests correct command for make:route typo", () => {
+		expect(suggestCommand("make:rout")).toBe("make:route");
 	});
 
 	test("suggests correct command for transposed characters", () => {
-		expect(suggestCommand("mirgrate")).toBe("migrate");
+		expect(suggestCommand("make:roteu")).toBe("make:route");
 	});
 
-	test("suggests migrate:rollback for close typo", () => {
-		expect(suggestCommand("migrate:rolback")).toBe("migrate:rollback");
-	});
-
-	test("suggests model:make for close typo", () => {
-		expect(suggestCommand("model:mak")).toBe("model:make");
+	test("suggests make:provider for close typo", () => {
+		expect(suggestCommand("make:provder")).toBe("make:provider");
 	});
 
 	test("returns null when nothing is close (distance > 2)", () => {
@@ -78,26 +74,22 @@ describe("suggestCommand", () => {
 		expect(suggestCommand("")).toBeNull();
 	});
 
-	test("suggests middleware:make for close typo", () => {
-		expect(suggestCommand("middleware:mak")).toBe("middleware:make");
+	test("suggests make:middleware for close typo", () => {
+		expect(suggestCommand("make:middlewar")).toBe("make:middleware");
 	});
 
-	test("suggests migration:make for close typo", () => {
-		expect(suggestCommand("migration:mak")).toBe("migration:make");
-	});
-
-	test("suggests migrate:status for close typo", () => {
-		expect(suggestCommand("migrate:statu")).toBe("migrate:status");
+	test("suggests make:command for close typo", () => {
+		expect(suggestCommand("make:comand")).toBe("make:command");
 	});
 
 	test("returns null when prefix matches multiple commands", () => {
-		// "migr" is a prefix of migrate, migrate:rollback, migrate:status, migration:make
-		expect(suggestCommand("migr")).toBeNull();
+		// "make:" is a prefix of every make:* command
+		expect(suggestCommand("make:")).toBeNull();
 	});
 
 	test("suggests when prefix matches exactly one command", () => {
-		// "route" is a prefix of only "route:make"
-		expect(suggestCommand("route")).toBe("route:make");
+		// "make:r" is a prefix of only "make:route"
+		expect(suggestCommand("make:r")).toBe("make:route");
 	});
 });
 
@@ -105,13 +97,10 @@ describe("command names from registry", () => {
 	test("contains all CLI commands", () => {
 		const names = getCommandNames();
 		expect(names).toContain("init");
-		expect(names).toContain("route:make");
-		expect(names).toContain("middleware:make");
-		expect(names).toContain("model:make");
-		expect(names).toContain("migration:make");
-		expect(names).toContain("migrate");
-		expect(names).toContain("migrate:rollback");
-		expect(names).toContain("migrate:status");
+		expect(names).toContain("make:route");
+		expect(names).toContain("make:middleware");
+		expect(names).toContain("make:command");
+		expect(names).toContain("make:provider");
 	});
 
 	test("returns an array", () => {

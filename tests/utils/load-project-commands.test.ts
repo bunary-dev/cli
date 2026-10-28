@@ -431,4 +431,29 @@ describe("loadProjectCommands", () => {
 			}
 		});
 	});
+
+	test("normalizes core-shaped flags (no dashes) to CLI flags", async () => {
+		await writeFile(
+			join(testDir, "package.json"),
+			JSON.stringify({ dependencies: { "@bunary/core": "^1.0.0" } }),
+		);
+		await writeFile(
+			join(testDir, "bunary.config.ts"),
+			`export default {
+				app: { name: "t" },
+				commands: [{
+					name: "deploy",
+					description: "Deploy",
+					usage: "bunary deploy",
+					category: "ops",
+					flags: [{ name: "env", alias: "e", description: "Env", values: ["prod"] }],
+					run: async () => {},
+				}],
+			};`,
+		);
+		const [cmd] = await loadProjectCommands(testDir);
+		expect(cmd?.category).toBe("ops");
+		expect(cmd?.usage).toBe("bunary deploy");
+		expect(cmd?.flags?.[0]).toMatchObject({ name: "--env", alias: "-e" });
+	});
 });

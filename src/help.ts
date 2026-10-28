@@ -3,7 +3,7 @@
  */
 
 import { commands } from "./registry.js";
-import type { Command, CommandCategory } from "./types/command.js";
+import type { Command, CommandCategory, CommandFlag } from "./types/command.js";
 import { bold, cyan, dim } from "./utils/color.js";
 
 const CLI_DESCRIPTION = "Bun-first backend platform inspired by Laravel";
@@ -11,15 +11,37 @@ const CLI_DESCRIPTION = "Bun-first backend platform inspired by Laravel";
 /** Column width for command names — keeps descriptions aligned. */
 const CMD_COL = 26;
 
-/** Display order for help sections. */
+/** Labels for the well-known help sections. */
 const CATEGORY_LABELS: Record<CommandCategory, string> = {
 	scaffold: "Scaffold",
 	database: "Database",
 	project: "Project",
 };
 
-/** Ordered list of categories to display. */
-const CATEGORY_ORDER: CommandCategory[] = ["scaffold", "database", "project"];
+/**
+ * Section order: built-in scaffolding first, the app's own commands last,
+ * and any package-defined categories in between, in registration order.
+ */
+function categoryOrder(): string[] {
+	const middle = [...new Set(commands.map((c) => c.category))].filter(
+		(c) => c !== "scaffold" && c !== "project",
+	);
+	return ["scaffold", ...middle, "project"];
+}
+
+function categoryLabel(category: string): string {
+	return (
+		CATEGORY_LABELS[category as CommandCategory] ??
+		category.charAt(0).toUpperCase() + category.slice(1)
+	);
+}
+
+/** Flag label for help output, e.g. "-p, --port" or "--auth basic|jwt". */
+function flagLabel(flag: CommandFlag): string {
+	const values = flag.values ? ` ${flag.values.join("|")}` : "";
+	const alias = flag.alias ? `${flag.alias}, ` : "";
+	return `${alias}${flag.name}${values}`;
+}
 
 /** Built-in global options shown in every help output. */
 const builtinOptions = [
@@ -34,20 +56,33 @@ const builtinOptions = [
  * automatically updates the help output.
  */
 function buildGlobalOptions(): { flags: string; description: string }[] {
-	const options = [...builtinOptions];
-
+	// Identical flags shared by several commands (e.g. --dry-run) get one row
+	const shared = new Map<
+		string,
+		{ flags: string; description: string; on: string[] }
+	>();
 	for (const cmd of commands) {
 		if (!cmd.flags) continue;
 		for (const flag of cmd.flags) {
-			const valueHint = flag.values ? ` ${flag.values.join("|")}` : "";
-			options.push({
-				flags: `${flag.name}${valueHint}`,
-				description: `${flag.description} (${cmd.name} only)`,
-			});
+			const label = flagLabel(flag);
+			const key = `${label}\0${flag.description}`;
+			const entry = shared.get(key) ?? {
+				flags: label,
+				description: flag.description,
+				on: [],
+			};
+			entry.on.push(cmd.name);
+			shared.set(key, entry);
 		}
 	}
 
-	return options;
+	return [
+		...builtinOptions,
+		...[...shared.values()].map(({ flags, description, on }) => ({
+			flags,
+			description: `${description} (${on.join(", ")})`,
+		})),
+	];
 }
 
 function formatCommandLine(cmd: Command): string {
@@ -86,11 +121,11 @@ export function showHelp(): void {
 		"",
 	];
 
-	for (const category of CATEGORY_ORDER) {
+	for (const category of categoryOrder()) {
 		const sectionCommands = commands.filter((c) => c.category === category);
 		if (sectionCommands.length === 0) continue;
 
-		lines.push(`  ${bold(CATEGORY_LABELS[category])}`);
+		lines.push(`  ${bold(categoryLabel(category))}`);
 		for (const cmd of sectionCommands) {
 			lines.push(formatCommandLine(cmd));
 		}
@@ -115,7 +150,7 @@ export function showHelp(): void {
  * @param commandName - The command name to show help for
  * @example
  * ```ts
- * showCommandHelp("route:make");
+ * showCommandHelp("make:route");
  * ```
  */
 export function showCommandHelp(commandName: string): void {
@@ -126,14 +161,16 @@ export function showCommandHelp(commandName: string): void {
 					.map((a) => (a.required ? `<${a.name}>` : `[${a.name}]`))
 					.join(" ")
 			: undefined;
-		const usage = argsStr
-			? `bunary ${cyan(cmd.name)} ${dim(argsStr)}`
-			: `bunary ${cyan(cmd.name)}`;
+		const usage = cmd.usage
+			? cmd.usage
+			: argsStr
+				? `bunary ${cyan(cmd.name)} ${dim(argsStr)}`
+				: `bunary ${cyan(cmd.name)}`;
 		const lines = [`\n  ${bold("Usage:")} ${usage}\n\n  ${cmd.description}\n`];
 		if (cmd.flags?.length) {
 			lines.push(`  ${bold("Options")}`);
 			for (const flag of cmd.flags) {
-				const label = `${flag.name}${flag.values ? ` ${flag.values.join("|")}` : ""}`;
+				const label = flagLabel(flag);
 				const padding = " ".repeat(Math.max(1, CMD_COL - label.length));
 				lines.push(`    ${dim(label)}${padding}${flag.description}`);
 			}

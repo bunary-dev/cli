@@ -27,7 +27,8 @@ import type { CommandFlag } from "../types/command.js";
  *
  * Also supports `--key=value`, and a bare `--` ends flag parsing. When
  * `flagDefs` is given, flags without `takesValue`/`values` never consume
- * the following argument.
+ * the following argument, and a declared short alias (`-f`) stands for its
+ * flag. Other single-dash arguments stay positional.
  *
  * @param argv - Raw CLI arguments after the command name
  * @param flagDefs - Optional flag definitions of the command
@@ -52,12 +53,18 @@ export function parseFlags(
 
 	for (let i = 0; i < argv.length; i++) {
 		// In-bounds by the loop condition
-		const arg = argv[i] as string;
+		let arg = argv[i] as string;
 
 		// Bare `--` ends flag parsing; everything after is positional
 		if (arg === "--") {
 			positional.push(...argv.slice(i + 1));
 			break;
+		}
+
+		// Short alias (e.g. `-f`) of a declared flag
+		if (/^-[^-]$/.test(arg)) {
+			const aliased = flagDefs?.find((f) => f.alias === arg);
+			if (aliased) arg = aliased.name;
 		}
 
 		if (!arg.startsWith("--")) {

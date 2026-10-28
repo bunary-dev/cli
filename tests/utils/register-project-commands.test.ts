@@ -66,13 +66,10 @@ describe("registerProjectCommands", () => {
 
 		const builtInNames = [
 			"init",
-			"route:make",
-			"middleware:make",
-			"model:make",
-			"migration:make",
-			"migrate",
-			"migrate:rollback",
-			"migrate:status",
+			"make:route",
+			"make:middleware",
+			"make:command",
+			"make:provider",
 		];
 		for (const name of builtInNames) {
 			expect(findCommand(name)).toBeDefined();

@@ -1,29 +1,21 @@
 /**
- * middleware:make command - scaffold middleware files (Laravel-inspired)
+ * make:middleware command - scaffold middleware files (Laravel-inspired)
  * init --auth basic|jwt is a shortcut that uses this same content generator.
  */
-import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import type { Command } from "../../types/command.js";
-import { cyan, dim, green } from "../../utils/color.js";
+import { dim } from "../../utils/color.js";
 import {
 	type DryRunOptions,
 	dryRunFlags,
 	dryRunOptionsFromFlags,
-	reportDryRun,
 } from "../../utils/dryRun.js";
+import { generateFile } from "../../utils/generate.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { middlewareNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
-import {
-	assertInsideDir,
-	ensureBunaryProject,
-	validateMakeName,
-} from "../../utils/validation.js";
 
 /**
- * Generate middleware file content. Used by middleware:make and by init --auth.
+ * Generate middleware file content. Used by make:middleware and by init --auth.
  * For "basic" and "jwt" uses auth stubs; for other names uses the generic middleware stub.
  *
  * @param middlewareName - e.g. "basic", "jwt", "ensure-auth", "log-request"
@@ -49,10 +41,11 @@ export async function generateMiddlewareContent(
 
 /**
  * Generate a middleware file in src/middleware/.
- * init --auth basic|jwt is equivalent to running middleware:make basic|jwt after init.
+ * init --auth basic|jwt is equivalent to running make:middleware basic|jwt after init.
  *
  * @param middlewareName - Middleware name (e.g. "basic", "jwt", "ensure-auth")
- * @throws Error if not in a Bunary project or file already exists
+ * @throws Error if not in a Bunary project, the name is invalid or the
+ *   file already exists
  *
  * @example
  * ```ts
@@ -64,41 +57,24 @@ export async function makeMiddleware(
 	middlewareName: string,
 	options: DryRunOptions = {},
 ): Promise<void> {
-	const cwd = process.cwd();
-	ensureBunaryProject(cwd);
-
-	validateMakeName(middlewareName, "middleware");
-
-	const middlewareDir = join(cwd, "src", "middleware");
-	const middlewarePath = join(middlewareDir, `${middlewareName}.ts`);
-
-	assertInsideDir(middlewareDir, middlewarePath);
-
-	if (existsSync(middlewarePath)) {
-		throw new Error(
-			`Error: Middleware ${middlewareName} already exists at ${middlewarePath}\nDelete the existing file if you want to regenerate it.`,
-		);
+	const written = await generateFile(
+		{
+			label: "middleware",
+			name: middlewareName,
+			dir: ["src", "middleware"],
+			render: () => generateMiddlewareContent(middlewareName),
+		},
+		options,
+	);
+	if (written) {
+		const functionName = middlewareNameToFunctionName(middlewareName);
+		console.log(dim(middlewareNextSteps(middlewareName, functionName)));
 	}
-
-	const content = await generateMiddlewareContent(middlewareName);
-
-	if (options.dryRun) {
-		reportDryRun([{ path: middlewarePath, content }], cwd, options.verbose);
-		return;
-	}
-
-	await mkdir(middlewareDir, { recursive: true });
-
-	await writeFile(middlewarePath, content, "utf-8");
-
-	const functionName = middlewareNameToFunctionName(middlewareName);
-	console.log(green(`✅ Created middleware: ${cyan(middlewarePath)}`));
-	console.log(dim(middlewareNextSteps(middlewareName, functionName)));
 }
 
 /** Command definition for the registry. */
 export const command: Command = {
-	name: "middleware:make",
+	name: "make:middleware",
 	description: "Generate a middleware",
 	category: "scaffold",
 	args: [{ name: "name", required: true, description: "Middleware name" }],

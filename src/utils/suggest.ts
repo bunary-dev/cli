@@ -25,7 +25,7 @@ import { getCommandNames } from "../registry.js";
  * @example
  * ```ts
  * levenshtein("init", "iinit"); // 1
- * levenshtein("migrate", "migarte"); // 2
+ * levenshtein("make:route", "make:rotue"); // 2
  * ```
  */
 export function levenshtein(a: string, b: string): number {
@@ -71,7 +71,7 @@ export function levenshtein(a: string, b: string): number {
  * ```ts
  * suggestCommand("iinit");          // "init"
  * suggestCommand("ini");            // "init"
- * suggestCommand("migrate:rolback"); // "migrate:rollback"
+ * suggestCommand("make:provder"); // "make:provider"
  * suggestCommand("foobar");         // null
  * ```
  */

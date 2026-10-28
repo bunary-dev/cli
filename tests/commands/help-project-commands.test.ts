@@ -2,8 +2,12 @@
  * Tests for project commands appearing in CLI help output.
  */
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { showHelp } from "../../src/help.js";
-import { registerProjectCommands, resetRegistry } from "../../src/registry.js";
+import { showCommandHelp, showHelp } from "../../src/help.js";
+import {
+	registerCommands,
+	registerProjectCommands,
+	resetRegistry,
+} from "../../src/registry.js";
 import type { Command } from "../../src/types/command.js";
 
 describe("help with project commands", () => {
@@ -53,10 +57,66 @@ describe("help with project commands", () => {
 		registerProjectCommands([cmd]);
 		showHelp();
 
-		// Built-in sections still present
+		// Built-in section still present
 		expect(output).toContain("Scaffold");
-		expect(output).toContain("Database");
 		// Project section present
 		expect(output).toContain("Project");
+	});
+
+	test("no Database section without package-contributed commands", () => {
+		showHelp();
+		expect(output).not.toContain("Database");
+		expect(output).not.toContain("migrate");
+	});
+
+	test("package commands with custom categories get their own section", () => {
+		registerCommands(
+			[
+				{
+					name: "db:migrate",
+					description: "Apply migrations",
+					category: "database",
+					run: async () => {},
+				},
+				{
+					name: "queue:work",
+					description: "Process jobs",
+					category: "queue",
+					run: async () => {},
+				},
+			],
+			"@bunary/orm",
+		);
+		showHelp();
+		expect(output).toContain("Database");
+		expect(output).toContain("db:migrate");
+		expect(output).toContain("Queue");
+		expect(output.indexOf("Scaffold")).toBeLessThan(output.indexOf("Database"));
+	});
+
+	test("per-command help prints the declared usage and flag aliases", () => {
+		registerCommands(
+			[
+				{
+					name: "db:studio",
+					description: "Open Drizzle Studio",
+					usage: "bunary db:studio [--port <n>]",
+					category: "database",
+					flags: [
+						{
+							name: "--port",
+							alias: "-p",
+							description: "Port",
+							takesValue: true,
+						},
+					],
+					run: async () => {},
+				},
+			],
+			"@bunary/orm",
+		);
+		showCommandHelp("db:studio");
+		expect(output).toContain("bunary db:studio [--port <n>]");
+		expect(output).toContain("-p, --port");
 	});
 });

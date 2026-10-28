@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { makeCommand } from "../../src/commands/command/makeCommand.js";
 import { makeMiddleware } from "../../src/commands/middleware/makeMiddleware.js";
-import { makeModel } from "../../src/commands/model/makeModel.js";
+import { makeProvider } from "../../src/commands/provider/makeProvider.js";
 import { makeRoute } from "../../src/commands/route/makeRoute.js";
 import { makeTempDir } from "../helpers/temp-dir.js";
 
@@ -48,7 +49,7 @@ describe("make commands show next steps", () => {
 		}
 	});
 
-	it("route:make shows next steps with import and registration", async () => {
+	it("make:route shows next steps with import and registration", async () => {
 		await makeRoute("users");
 		const output = logOutput.join("\n");
 		expect(output).toContain("Next:");
@@ -56,7 +57,7 @@ describe("make commands show next steps", () => {
 		expect(output).toContain("src/routes/index.ts");
 	});
 
-	it("middleware:make shows next steps with import and app.use()", async () => {
+	it("make:middleware shows next steps with import and app.use()", async () => {
 		await makeMiddleware("ensure-auth");
 		const output = logOutput.join("\n");
 		expect(output).toContain("Next:");
@@ -64,11 +65,19 @@ describe("make commands show next steps", () => {
 		expect(output).toContain("app.use(");
 	});
 
-	it("model:make shows next steps with import and usage", async () => {
-		await makeModel("users");
+	it("make:command shows how to register the command", async () => {
+		await makeCommand("send-emails");
 		const output = logOutput.join("\n");
 		expect(output).toContain("Next:");
-		expect(output).toContain("Users");
-		expect(output).toContain("import");
+		expect(output).toContain("sendEmailsCommand");
+		expect(output).toContain("config/bunary.ts");
+	});
+
+	it("make:provider shows how to register the provider", async () => {
+		await makeProvider("cache");
+		const output = logOutput.join("\n");
+		expect(output).toContain("Next:");
+		expect(output).toContain("cacheProvider");
+		expect(output).toContain("providers:");
 	});
 });

@@ -3,9 +3,9 @@
  */
 import { describe, expect, test } from "bun:test";
 import {
+	commandNextSteps,
 	middlewareNextSteps,
-	migrationNextSteps,
-	modelNextSteps,
+	providerNextSteps,
 	routeNextSteps,
 } from "../../src/utils/nextSteps.js";
 
@@ -67,35 +67,24 @@ describe("nextSteps utilities", () => {
 		});
 	});
 
-	describe("modelNextSteps", () => {
-		test("includes import statement with model path", () => {
-			const result = modelNextSteps("users", "Users");
-			expect(result).toContain('import { Users } from "./models/Users.js"');
-		});
-
-		test("shows usage example", () => {
-			const result = modelNextSteps("users", "Users");
-			expect(result).toContain("Users.all()");
-		});
-
-		test("works with multi-word model names", () => {
-			const result = modelNextSteps("user_profile", "UserProfile");
+	describe("commandNextSteps", () => {
+		test("imports the command into config/bunary.ts", () => {
+			const result = commandNextSteps("send-emails", "sendEmailsCommand");
+			expect(result).toContain("config/bunary.ts");
 			expect(result).toContain(
-				'import { UserProfile } from "./models/UserProfile.js"',
+				'import { sendEmailsCommand } from "../src/commands/send-emails.js"',
 			);
-			expect(result).toContain("UserProfile.all()");
+			expect(result).toContain("commands: [sendEmailsCommand]");
 		});
 	});
 
-	describe("migrationNextSteps", () => {
-		test("includes migrate command", () => {
-			const result = migrationNextSteps();
-			expect(result).toContain("bunary migrate");
-		});
-
-		test("includes Next: label", () => {
-			const result = migrationNextSteps();
-			expect(result).toContain("Next:");
+	describe("providerNextSteps", () => {
+		test("adds the provider to createApp", () => {
+			const result = providerNextSteps("cache", "cacheProvider");
+			expect(result).toContain(
+				'import { cacheProvider } from "./providers/cache.js"',
+			);
+			expect(result).toContain("providers: [cacheProvider]");
 		});
 	});
 

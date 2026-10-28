@@ -1,147 +1,143 @@
-import { describe, expect, test } from "bun:test";
-import { commands, findCommand, getCommandNames } from "../src/registry.js";
-import type { CommandCategory } from "../src/types/command.js";
+import { beforeEach, describe, expect, test } from "bun:test";
+import {
+	commands,
+	findCommand,
+	getCommandNames,
+	registerCommands,
+	resetRegistry,
+} from "../src/registry.js";
+import type { Command } from "../src/types/command.js";
+
+const BUILTINS = [
+	"init",
+	"make:route",
+	"make:middleware",
+	"make:command",
+	"make:provider",
+];
+
+function cmd(name: string, overrides: Partial<Command> = {}): Command {
+	return {
+		name,
+		description: `${name} command`,
+		category: "project",
+		run: async () => {},
+		...overrides,
+	};
+}
 
 describe("command registry", () => {
-	test("exports an array of commands", () => {
-		expect(Array.isArray(commands)).toBe(true);
-		expect(commands.length).toBeGreaterThan(0);
+	beforeEach(() => {
+		resetRegistry();
 	});
 
-	test("contains all 8 built-in commands", () => {
-		const names = commands.map((c) => c.name);
-		expect(names).toContain("init");
-		expect(names).toContain("route:make");
-		expect(names).toContain("middleware:make");
-		expect(names).toContain("model:make");
-		expect(names).toContain("migration:make");
-		expect(names).toContain("migrate");
-		expect(names).toContain("migrate:rollback");
-		expect(names).toContain("migrate:status");
-		expect(names).toHaveLength(8);
+	test("contains exactly the built-in scaffolding commands", () => {
+		expect(commands.map((c) => c.name)).toEqual(BUILTINS);
 	});
 
-	test("every command has required properties", () => {
-		for (const cmd of commands) {
-			expect(typeof cmd.name).toBe("string");
-			expect(cmd.name.length).toBeGreaterThan(0);
-			expect(typeof cmd.description).toBe("string");
-			expect(cmd.description.length).toBeGreaterThan(0);
-			expect(typeof cmd.category).toBe("string");
-			expect(typeof cmd.run).toBe("function");
-		}
-	});
-
-	test("every command has a valid category", () => {
-		const validCategories: CommandCategory[] = [
-			"scaffold",
-			"database",
-			"project",
-		];
-		for (const cmd of commands) {
-			expect(validCategories).toContain(cmd.category);
-		}
-	});
-
-	test("scaffold commands have correct category", () => {
-		const scaffoldNames = [
-			"init",
-			"route:make",
-			"middleware:make",
-			"model:make",
-		];
-		for (const name of scaffoldNames) {
-			const cmd = commands.find((c) => c.name === name);
-			expect(cmd).toBeDefined();
-			expect(cmd?.category).toBe("scaffold");
-		}
-	});
-
-	test("database commands have correct category", () => {
-		const dbNames = [
-			"migration:make",
+	test("ships no migration or model commands", () => {
+		for (const name of [
 			"migrate",
 			"migrate:rollback",
 			"migrate:status",
-		];
-		for (const name of dbNames) {
-			const cmd = commands.find((c) => c.name === name);
-			expect(cmd).toBeDefined();
-			expect(cmd?.category).toBe("database");
+			"migration:make",
+			"make:migration",
+			"model:make",
+			"make:model",
+			"db:migrate",
+		]) {
+			expect(findCommand(name)).toBeUndefined();
+		}
+	});
+
+	test("every command has required properties", () => {
+		for (const c of commands) {
+			expect(c.name.length).toBeGreaterThan(0);
+			expect(c.description.length).toBeGreaterThan(0);
+			expect(c.category).toBe("scaffold");
+			expect(typeof c.run).toBe("function");
 		}
 	});
 
 	test("commands with required args declare them", () => {
-		const expectedArgs: Record<string, string[]> = {
-			init: ["name"],
-			"route:make": ["name"],
-			"middleware:make": ["name"],
-			"model:make": ["table"],
-			"migration:make": ["name"],
-		};
-
-		for (const [cmdName, argNames] of Object.entries(expectedArgs)) {
-			const cmd = commands.find((c) => c.name === cmdName);
-			expect(cmd).toBeDefined();
-			expect(cmd?.args).toBeDefined();
-			expect(cmd?.args?.map((a) => a.name)).toEqual(argNames);
-			for (const arg of cmd?.args ?? []) {
-				expect(arg.required).toBe(true);
-			}
+		for (const name of BUILTINS) {
+			const c = findCommand(name);
+			expect(c?.args?.map((a) => a.name)).toEqual(["name"]);
+			expect(c?.args?.[0]?.required).toBe(true);
 		}
 	});
 
-	test("commands without args do not declare them", () => {
-		const noArgs = ["migrate", "migrate:rollback", "migrate:status"];
-		for (const name of noArgs) {
-			const cmd = commands.find((c) => c.name === name);
-			expect(cmd).toBeDefined();
-			expect(cmd?.args).toBeUndefined();
+	test("init command declares --auth, --force and --dry-run", () => {
+		const flags = findCommand("init")?.flags?.map((f) => f.name);
+		expect(flags).toContain("--auth");
+		expect(flags).toContain("--force");
+		expect(flags).toContain("--dry-run");
+		const auth = findCommand("init")?.flags?.find((f) => f.name === "--auth");
+		expect(auth?.values).toEqual(["basic", "jwt"]);
+	});
+
+	test("every make:* command supports --dry-run", () => {
+		for (const name of BUILTINS.filter((n) => n.startsWith("make:"))) {
+			const flags = findCommand(name)?.flags?.map((f) => f.name);
+			expect(flags).toContain("--dry-run");
 		}
 	});
+});
 
-	test("init command declares --auth flag", () => {
-		const initCmd = commands.find((c) => c.name === "init");
-		expect(initCmd).toBeDefined();
-		expect(initCmd?.flags).toBeDefined();
-		const authFlag = initCmd?.flags?.find((f) => f.name === "--auth");
-		expect(authFlag).toBeDefined();
-		expect(authFlag?.values).toEqual(["basic", "jwt"]);
+describe("registerCommands", () => {
+	beforeEach(() => {
+		resetRegistry();
 	});
 
-	test("no duplicate command names", () => {
-		const names = commands.map((c) => c.name);
-		const unique = new Set(names);
-		expect(unique.size).toBe(names.length);
+	test("adds commands from a source", () => {
+		registerCommands([cmd("db:migrate")], "@bunary/orm");
+		expect(findCommand("db:migrate")).toBeDefined();
+		expect(getCommandNames()).toContain("db:migrate");
+	});
+
+	test("rejects a built-in name and names the source", () => {
+		expect(() => registerCommands([cmd("make:route")], "@bunary/orm")).toThrow(
+			/cannot override built-in command "make:route".*@bunary\/orm/i,
+		);
+		expect(findCommand("make:route")?.category).toBe("scaffold");
+	});
+
+	test("rejects a name already registered by another source", () => {
+		registerCommands([cmd("db:migrate")], "@bunary/orm");
+		expect(() =>
+			registerCommands([cmd("db:migrate")], "config/bunary.ts"),
+		).toThrow(/"db:migrate".*config\/bunary\.ts.*@bunary\/orm/);
+	});
+
+	test("rejects duplicates within one source", () => {
+		expect(() =>
+			registerCommands([cmd("dup"), cmd("dup")], "@bunary/orm"),
+		).toThrow(/duplicate command name "dup"/i);
+	});
+
+	test("registers nothing from a batch that has a collision", () => {
+		expect(() =>
+			registerCommands([cmd("ok:one"), cmd("init")], "@bunary/orm"),
+		).toThrow();
+		expect(findCommand("ok:one")).toBeUndefined();
 	});
 });
 
 describe("findCommand", () => {
 	test("finds a command by exact name", () => {
-		const cmd = findCommand("init");
-		expect(cmd).toBeDefined();
-		expect(cmd?.name).toBe("init");
+		expect(findCommand("init")?.name).toBe("init");
 	});
 
 	test("returns undefined for unknown command", () => {
-		const cmd = findCommand("nonexistent");
-		expect(cmd).toBeUndefined();
+		expect(findCommand("nonexistent")).toBeUndefined();
 	});
 
 	test("is case-sensitive", () => {
-		const cmd = findCommand("Init");
-		expect(cmd).toBeUndefined();
+		expect(findCommand("Init")).toBeUndefined();
 	});
 });
 
 describe("getCommandNames", () => {
-	test("returns all command names as strings", () => {
-		const names = getCommandNames();
-		expect(names).toContain("init");
-		expect(names).toContain("migrate");
-		expect(names).toHaveLength(8);
-	});
-
 	test("returns a new array each call", () => {
 		const a = getCommandNames();
 		const b = getCommandNames();

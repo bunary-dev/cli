@@ -6,7 +6,7 @@
  */
 
 /**
- * Next steps after `route:make`.
+ * Next steps after `make:route`.
  *
  * @param routeName - Route file name (e.g. "users")
  * @param functionName - Register function name (e.g. "registerUsers")
@@ -36,7 +36,7 @@ export function routeNextSteps(
 }
 
 /**
- * Next steps after `middleware:make`.
+ * Next steps after `make:middleware`.
  *
  * @param middlewareName - Middleware file name (e.g. "ensure-auth")
  * @param functionName - Exported function name (e.g. "ensureAuthMiddleware")
@@ -66,48 +66,58 @@ export function middlewareNextSteps(
 }
 
 /**
- * Next steps after `model:make`.
+ * Next steps after `make:command`.
  *
- * @param _tableName - Database table name (e.g. "users")
- * @param modelName - PascalCase model class name (e.g. "Users")
+ * @param fileName - Command file name (e.g. "send-emails")
+ * @param exportName - Exported command constant (e.g. "sendEmailsCommand")
  * @returns Formatted hint string
  *
  * @example
  * ```ts
- * modelNextSteps("users", "Users")
+ * commandNextSteps("send-emails", "sendEmailsCommand")
  * // =>
- * //   Next: Import where needed:
+ * //   Next: Register in config/bunary.ts:
  * //
- * //     import { Users } from "./models/Users.js";
- * //     const records = await Users.all();
+ * //     import { sendEmailsCommand } from "../src/commands/send-emails.js";
+ * //     commands: [sendEmailsCommand],
  * ```
  */
-export function modelNextSteps(_tableName: string, modelName: string): string {
+export function commandNextSteps(fileName: string, exportName: string): string {
 	return [
 		"",
-		`  Next: Import where needed:`,
+		`  Next: Register in config/bunary.ts:`,
 		"",
-		`    import { ${modelName} } from "./models/${modelName}.js";`,
-		`    const records = await ${modelName}.all();`,
+		`    import { ${exportName} } from "../src/commands/${fileName}.js";`,
+		`    commands: [${exportName}],`,
 	].join("\n");
 }
 
 /**
- * Next steps after `migration:make`.
+ * Next steps after `make:provider`.
  *
+ * @param fileName - Provider file name (e.g. "cache")
+ * @param exportName - Exported provider constant (e.g. "cacheProvider")
  * @returns Formatted hint string
  *
  * @example
  * ```ts
- * migrationNextSteps()
+ * providerNextSteps("cache", "cacheProvider")
  * // =>
- * //   Next: Run the migration:
+ * //   Next: Add to createApp in src/index.ts:
  * //
- * //     bunary migrate
+ * //     import { cacheProvider } from "./providers/cache.js";
+ * //     providers: [cacheProvider],
  * ```
  */
-export function migrationNextSteps(): string {
-	return ["", `  Next: Run the migration:`, "", `    bunary migrate`].join(
-		"\n",
-	);
+export function providerNextSteps(
+	fileName: string,
+	exportName: string,
+): string {
+	return [
+		"",
+		`  Next: Add to createApp in src/index.ts:`,
+		"",
+		`    import { ${exportName} } from "./providers/${fileName}.js";`,
+		`    providers: [${exportName}],`,
+	].join("\n");
 }
