@@ -1,11 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
-// We need to re-import after changing env, so we use dynamic imports.
+// color.ts reads NO_COLOR and isTTY on every call, so one shared import
+// sees each test's environment.
 async function loadColor() {
-	// Bust the module cache so each test gets a fresh `enabled` evaluation
-	const path = "../../src/utils/color.js";
-	const mod = await import(`${path}?t=${Date.now()}-${Math.random()}`);
-	return mod;
+	return import("../../src/utils/color.js");
 }
 
 describe("color utilities", () => {
