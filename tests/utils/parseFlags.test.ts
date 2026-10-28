@@ -296,3 +296,31 @@ describe("validateFlags boolean flags", () => {
 		expect(() => validateFlags({ force: true, out: "x" }, defs)).not.toThrow();
 	});
 });
+
+describe("parseFlags short aliases", () => {
+	const defs: CommandFlag[] = [
+		{ name: "--force", alias: "-f", description: "f", boolean: true },
+		{ name: "--out", alias: "-o", description: "o", takesValue: true },
+	];
+
+	test("maps a boolean alias to its flag", () => {
+		expect(parseFlags(["-f", "x"], defs)).toEqual([["x"], { force: true }]);
+	});
+
+	test("maps a value alias and consumes the value", () => {
+		expect(parseFlags(["-o", "dist", "x"], defs)).toEqual([
+			["x"],
+			{ out: "dist" },
+		]);
+	});
+
+	test("rejects a flag given both as alias and long form", () => {
+		expect(() => parseFlags(["-f", "--force"], defs)).toThrow(
+			"Duplicate flag: --force",
+		);
+	});
+
+	test("leaves unknown single-dash args positional", () => {
+		expect(parseFlags(["-x"], defs)).toEqual([["-x"], {}]);
+	});
+});

@@ -1,5 +1,5 @@
 /**
- * route:make command tests
+ * make:route command tests
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { makeRoute } from "../../src/commands/route/makeRoute.js";
 import { makeTempDir } from "../helpers/temp-dir.js";
 
-describe("route:make command", () => {
+describe("make:route command", () => {
 	let testDir: string;
 	let originalCwd: string;
 

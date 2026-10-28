@@ -1,142 +1,19 @@
-#!/usr/bin/env bun
 /**
- * @bunary/cli - CLI scaffolding tool for Bunary
+ * @bunary/cli library entry. Importing it has no side effects: the
+ * executable is `bin.ts`, which calls {@link run}.
  *
- * Dispatches commands via the command registry. Each command is a
- * self-contained module — see src/types/command.ts for the interface
- * and src/registry.ts for the full list.
+ * @example
+ * ```ts
+ * import { run } from "@bunary/cli";
+ *
+ * const code = await run(["make:route", "users", "--dry-run"]);
+ * ```
  */
 
-import { showCommandHelp, showHelp } from "./help.js";
-import { findCommand, registerProjectCommands } from "./registry.js";
-import { dim, red } from "./utils/color.js";
-import {
-	getProjectCommandsLoadError,
-	loadProjectCommands,
-} from "./utils/loadProjectCommands.js";
-import { parseFlags, validateFlags } from "./utils/parseFlags.js";
-import { suggestCommand } from "./utils/suggest.js";
-import { getVersion } from "./utils/version.js";
-
-const rawArgs = process.argv.slice(2);
-
-// Allow global switches before the command: `bunary --dry-run init my-app`
-const leading: string[] = [];
-while (rawArgs[0] === "--dry-run" || rawArgs[0] === "--verbose") {
-	leading.push(rawArgs.shift() as string);
-}
-const args = [...rawArgs, ...leading];
-
-async function main(): Promise<void> {
-	// Load project-level commands when inside a Bunary project
-	let projectCommands: Awaited<ReturnType<typeof loadProjectCommands>> = [];
-	try {
-		projectCommands = await loadProjectCommands();
-	} catch (error) {
-		console.error(
-			dim(
-				`Warning: Failed to load project commands — ${error instanceof Error ? error.message : String(error)}`,
-			),
-		);
-	}
-
-	if (projectCommands.length > 0) {
-		try {
-			registerProjectCommands(projectCommands);
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-	}
-
-	if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
-		showHelp();
-		return;
-	}
-
-	if (args[0] === "--version" || args[0] === "-v") {
-		console.log(`@bunary/cli v${getVersion()}`);
-		return;
-	}
-
-	// Guarded above: args is non-empty here
-	const commandName = args[0] as string;
-	const command = findCommand(commandName);
-
-	if (!command) {
-		console.error(red(`Unknown command: ${commandName}`));
-		const suggestion = suggestCommand(commandName);
-		if (suggestion) {
-			console.error(`\n  Did you mean: ${suggestion}?\n`);
-		}
-		const loadError = getProjectCommandsLoadError();
-		if (loadError) {
-			console.error(
-				dim(
-					`Your project config failed to load, so project commands are unavailable: ${loadError}`,
-				),
-			);
-		}
-		console.error(dim("Run bunary --help for all commands."));
-		process.exit(1);
-	}
-
-	// Per-command help, before flag validation (stop at a bare `--`)
-	const rest = args.slice(1);
-	const dashIdx = rest.indexOf("--");
-	const optionArgs = dashIdx === -1 ? rest : rest.slice(0, dashIdx);
-	if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
-		showCommandHelp(command.name);
-		return;
-	}
-
-	// Parse positional args and flags from remaining argv
-	let positional: string[];
-	let flags: Record<string, string | boolean>;
-	try {
-		[positional, flags] = parseFlags(rest, command.flags);
-	} catch (error) {
-		console.error(red(error instanceof Error ? error.message : String(error)));
-		process.exit(1);
-	}
-
-	// Validate flags against command definitions
-	if (command.flags) {
-		try {
-			validateFlags(flags, command.flags);
-		} catch (error) {
-			console.error(
-				red(error instanceof Error ? error.message : String(error)),
-			);
-			process.exit(1);
-		}
-	}
-
-	// Validate required args
-	if (command.args) {
-		for (const [i, arg] of command.args.entries()) {
-			if (arg.required && !positional[i]) {
-				console.error(red(`Error: ${arg.description} is required`));
-				const argPlaceholders = command.args
-					.map((a) => (a.required ? `<${a.name}>` : `[${a.name}]`))
-					.join(" ");
-				console.error(dim(`Usage: bunary ${command.name} ${argPlaceholders}`));
-				process.exit(1);
-			}
-		}
-	}
-
-	try {
-		await command.run(positional, flags);
-	} catch (error) {
-		console.error(red(error instanceof Error ? error.message : String(error)));
-		process.exit(1);
-	}
-}
-
-main().catch((error) => {
-	console.error(red(error instanceof Error ? error.message : String(error)));
-	process.exit(1);
-});
+export { run } from "./cli.js";
+export type {
+	Command,
+	CommandArg,
+	CommandCategory,
+	CommandFlag,
+} from "./types/command.js";

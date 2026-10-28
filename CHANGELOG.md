@@ -7,8 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The CLI is reduced to project scaffolding, `make:*` generators and a command runner; migrations move to drizzle-kit (#96).
+
+### Breaking
+
+- Generators renamed to `make:*`: `route:make` → `make:route`, `middleware:make` → `make:middleware`. The old names print the new one (#96)
+- Removed `migrate`, `migrate:rollback`, `migrate:status`, `migration:make` and `model:make`, the migration runner (`scripts/migrate.ts` stub) and the `@bunary/orm` dependency check. Use drizzle-kit, or `@bunary/orm`'s `make:model` / `db:*` commands once it ships them. The old names print where to go instead (#96)
+- The `bin` entry is now `dist/bin.js`; `dist/index.js` is a side-effect-free library entry exporting `run(argv)` and the command types (#84, #96)
+
+### Added
+
+- `make:command <name> [--name <cli-name>]`: generates an app command typed with `Command` from `@bunary/core` (#96)
+- `make:provider <name>`: generates a `defineProvider` service provider (#96)
+- Package-contributed commands: a direct `@bunary/*` dependency that declares `"bunary": { "commands": "./dist/cli.js" }` in its `package.json` has its commands registered at startup and listed in `--help`. Collisions with built-ins are rejected (#96)
+- App and package commands may use `@bunary/core`'s `Command` shape (`usage`, any `category`, flag names without dashes); flags may declare a short `alias` (#96)
+- Per-command `usage` and flag aliases shown in `bunary <command> --help` (#85, #96)
+
 ### Changed
 
+- Generated paths are checked against the project root with symlinks resolved, so a `src/routes` (or `src`) symlink leading out of the project is refused (#83, #96)
+- `bunary --help` groups flags shared by several commands (e.g. `--dry-run`) into one row
 - `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 - Docs: removed the "Programmatic API" section; the package is bin-only and exports no library API (#94)
 

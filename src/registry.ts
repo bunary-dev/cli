@@ -1,10 +1,10 @@
 /**
  * Command registry — single source of truth for all CLI commands.
  *
- * Collects command definitions from each command module and provides
- * lookup helpers used by the dispatcher, help output, and suggestions.
- * Project-level commands can be merged in at runtime via
- * {@link registerProjectCommands}.
+ * Holds the built-in scaffolding commands, plus commands registered at
+ * startup from installed `@bunary/*` packages and from the app's config
+ * (see {@link registerCommands}). Provides lookup helpers used by the
+ * dispatcher, help output, and suggestions.
  *
  * @example
  * ```ts
@@ -15,15 +15,10 @@
  * ```
  */
 
+import { command as makeCommandCommand } from "./commands/command/makeCommand.js";
 import { command as initCommand } from "./commands/init.js";
 import { command as middlewareMakeCommand } from "./commands/middleware/makeMiddleware.js";
-import { command as migrationMakeCommand } from "./commands/migration/makeMigration.js";
-import {
-	migrateCommand,
-	migrateRollbackCommand,
-	migrateStatusCommand,
-} from "./commands/migration/runMigrations.js";
-import { command as modelMakeCommand } from "./commands/model/makeModel.js";
+import { command as providerMakeCommand } from "./commands/provider/makeProvider.js";
 import { command as routeMakeCommand } from "./commands/route/makeRoute.js";
 import type { Command } from "./types/command.js";
 
@@ -32,25 +27,66 @@ const builtinCommands: readonly Command[] = [
 	initCommand,
 	routeMakeCommand,
 	middlewareMakeCommand,
-	modelMakeCommand,
-	migrationMakeCommand,
-	migrateCommand,
-	migrateRollbackCommand,
-	migrateStatusCommand,
+	makeCommandCommand,
+	providerMakeCommand,
 ];
 
-/** All registered CLI commands (built-in + project). */
+/** All registered CLI commands (built-in, package, project). */
 export let commands: readonly Command[] = [...builtinCommands];
 
+/** Where each non-built-in command came from, for collision messages. */
+const origins = new Map<string, string>();
+
 /**
- * Register project-level commands into the registry.
+ * Register commands from one source (a package name or a config file).
  *
- * Validates that no project command name collides with a built-in
- * command or another project command in the same batch.
+ * The whole batch is rejected, and nothing from it registered, when any
+ * name collides with a built-in, with a command from another source, or
+ * with another command in the same batch.
+ *
+ * @param newCommands - Commands to add
+ * @param origin - Where they come from, e.g. "@bunary/orm" or "config/bunary.ts"
+ * @throws When a name collides
+ *
+ * @example
+ * ```ts
+ * registerCommands(ormCommands, "@bunary/orm");
+ * ```
+ */
+export function registerCommands(newCommands: Command[], origin: string): void {
+	const builtinNames = new Set(builtinCommands.map((c) => c.name));
+	const seen = new Set<string>();
+
+	for (const cmd of newCommands) {
+		if (builtinNames.has(cmd.name)) {
+			throw new Error(
+				`Cannot override built-in command "${cmd.name}" (from ${origin}). Choose a different name.`,
+			);
+		}
+		const other = origins.get(cmd.name);
+		if (other !== undefined) {
+			throw new Error(
+				`Command "${cmd.name}" from ${origin} conflicts with the one from ${other}. Choose a different name.`,
+			);
+		}
+		if (seen.has(cmd.name)) {
+			throw new Error(
+				`Duplicate command name "${cmd.name}" in ${origin}. Each command must have a unique name.`,
+			);
+		}
+		seen.add(cmd.name);
+	}
+
+	for (const cmd of newCommands) origins.set(cmd.name, origin);
+	commands = [...commands, ...newCommands];
+}
+
+/**
+ * Register the app's own commands (from its Bunary config).
  *
  * @param projectCommands - Array of project command definitions
- * @throws When a project command name collides with a built-in command
- * @throws When duplicate names exist in the project commands
+ * @param origin - Config file they come from (for error messages)
+ * @throws When a project command name collides with an existing command
  *
  * @example
  * ```ts
@@ -59,34 +95,15 @@ export let commands: readonly Command[] = [...builtinCommands];
  * ]);
  * ```
  */
-export function registerProjectCommands(projectCommands: Command[]): void {
-	if (projectCommands.length === 0) return;
-
-	const builtinNames = new Set(builtinCommands.map((c) => c.name));
-	const seen = new Set<string>();
-
-	for (const cmd of projectCommands) {
-		if (builtinNames.has(cmd.name)) {
-			throw new Error(
-				`Cannot override built-in command "${cmd.name}". Choose a different name for your project command.`,
-			);
-		}
-		if (seen.has(cmd.name)) {
-			throw new Error(
-				`Duplicate command name "${cmd.name}" in project commands. Each command must have a unique name.`,
-			);
-		}
-		seen.add(cmd.name);
-	}
-
-	commands = [...commands, ...projectCommands];
+export function registerProjectCommands(
+	projectCommands: Command[],
+	origin = "project commands",
+): void {
+	registerCommands(projectCommands, origin);
 }
 
 /**
  * Reset the registry to only built-in commands.
- *
- * Removes any project commands that were registered via
- * {@link registerProjectCommands}. Useful for testing.
  *
  * @example
  * ```ts
@@ -95,12 +112,13 @@ export function registerProjectCommands(projectCommands: Command[]): void {
  */
 export function resetRegistry(): void {
 	commands = [...builtinCommands];
+	origins.clear();
 }
 
 /**
  * Find a command by exact name.
  *
- * @param name - The command name to look up (e.g. "route:make")
+ * @param name - The command name to look up (e.g. "make:route")
  * @returns The matching command, or `undefined` if not found
  * @example
  * ```ts
@@ -121,7 +139,7 @@ export function findCommand(name: string): Command | undefined {
  * @example
  * ```ts
  * const names = getCommandNames();
- * // ["init", "route:make", "middleware:make", ...]
+ * // ["init", "make:route", "make:middleware", ...]
  * ```
  */
 export function getCommandNames(): string[] {

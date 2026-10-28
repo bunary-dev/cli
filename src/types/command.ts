@@ -6,12 +6,18 @@
  * collects these definitions to power dispatch, help output, and
  * "Did you mean?" suggestions from a single source of truth.
  *
+ * The shape mirrors the `Command` contract in `@bunary/core`, which is what
+ * apps and packages implement so they never depend on the CLI. Commands from
+ * outside the CLI are normalized on load (see `utils/normalizeCommand.ts`):
+ * core flag names without dashes (`"dry-run"`, alias `"d"`) become
+ * `"--dry-run"` / `"-d"` here.
+ *
  * @example
  * ```ts
  * import type { Command } from "../types/command.js";
  *
  * export const command: Command = {
- *   name: "route:make",
+ *   name: "make:route",
  *   description: "Generate a route module",
  *   category: "scaffold",
  *   args: [{ name: "name", required: true, description: "Route name" }],
@@ -54,7 +60,7 @@ export interface CommandArg {
 export interface CommandFlag {
 	/** Flag name including dashes (e.g. "--auth") */
 	name: string;
-	/** Optional short alias (e.g. "-a") */
+	/** Optional single-character alias (e.g. "-a") */
 	alias?: string;
 	/** Short description for help output */
 	description: string;
@@ -72,7 +78,10 @@ export interface CommandFlag {
 	boolean?: boolean;
 }
 
-/** Help category for grouped output. */
+/**
+ * Help category for grouped output. Built-ins use `"scaffold"`; app
+ * commands default to `"project"`; packages may use any label.
+ */
 export type CommandCategory = "scaffold" | "database" | "project";
 
 /**
@@ -84,22 +93,25 @@ export type CommandCategory = "scaffold" | "database" | "project";
  * @example
  * ```ts
  * export const command: Command = {
- *   name: "migrate",
- *   description: "Run pending migrations",
- *   category: "database",
- *   run: async () => {
- *     await migrateUp();
+ *   name: "make:route",
+ *   description: "Generate a route module",
+ *   category: "scaffold",
+ *   args: [{ name: "name", required: true, description: "Route name" }],
+ *   run: async (args) => {
+ *     await makeRoute(args[0] as string);
  *   },
  * };
  * ```
  */
 export interface Command {
-	/** The command name used on the CLI (e.g. "route:make") */
+	/** The command name used on the CLI (e.g. "make:route") */
 	name: string;
 	/** Short description for help output */
 	description: string;
+	/** Full usage line for per-command help (e.g. "bunary make:route <name>") */
+	usage?: string;
 	/** Category for grouped help output */
-	category: CommandCategory;
+	category: CommandCategory | (string & {});
 	/** Required positional arguments */
 	args?: CommandArg[];
 	/** Supported flags */

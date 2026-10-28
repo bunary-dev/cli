@@ -31,10 +31,9 @@ describe("getStubsDir", () => {
 		expect(getStubsDir()).toBe(join(import.meta.dir, "../../stubs"));
 	});
 });
-
 describe("loadStub replacement", () => {
 	test("does not expand $ patterns in values", async () => {
-		const out = await loadStub("migration/make.ts", { tableName: "a$&b$'c" });
+		const out = await loadStub("route/make.ts", { routeName: "a$&b$'c" });
 		expect(out).toContain("a$&b$'c");
 	});
 });

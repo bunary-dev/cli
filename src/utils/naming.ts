@@ -1,9 +1,9 @@
 /**
- * Naming utilities for converting table names to model names
+ * Naming utilities for turning generator names into identifiers
  */
 
 /**
- * Convert a table name to a PascalCase model name
+ * Convert a name to PascalCase
  *
  * Handles:
  * - snake_case: user_profile → UserProfile
@@ -11,23 +11,23 @@
  * - kebab-case: user-profile → UserProfile
  * - Already PascalCase: UserProfile → UserProfile
  *
- * @param tableName - The database table name
- * @returns PascalCase model name
+ * @param name - The name to convert
+ * @returns PascalCase name
  *
  * @example
  * ```ts
- * tableNameToModelName("user_profile") // "UserProfile"
- * tableNameToModelName("user") // "User"
- * tableNameToModelName("user-profile") // "UserProfile"
+ * toPascalCase("user_profile") // "UserProfile"
+ * toPascalCase("user") // "User"
+ * toPascalCase("user-profile") // "UserProfile"
  * ```
  */
-export function tableNameToModelName(tableName: string): string {
-	if (!tableName || tableName.length === 0) {
-		throw new Error("Table name cannot be empty");
+export function toPascalCase(name: string): string {
+	if (!name || name.length === 0) {
+		throw new Error("Name cannot be empty");
 	}
 
 	// Split by underscore, hyphen, or capitalize on word boundaries
-	const words = tableName
+	const words = name
 		.split(/[_-]|(?=[A-Z])/)
 		.filter((word) => word.length > 0)
 		.map((word) => {
@@ -55,13 +55,13 @@ export function routeNameToRegisterFunctionName(routeName: string): string {
 	if (!routeName || routeName.length === 0) {
 		throw new Error("Route name cannot be empty");
 	}
-	const pascal = tableNameToModelName(routeName);
+	const pascal = toPascalCase(routeName);
 	return `register${pascal}`;
 }
 
 /**
  * Convert a middleware name to its export function name (camelCase + "Middleware").
- * Laravel-inspired: middleware:make ensure-auth → ensureAuthMiddleware.
+ * Laravel-inspired: make:middleware ensure-auth → ensureAuthMiddleware.
  *
  * @param middlewareName - The middleware name (e.g. "ensure-auth", "log-request")
  * @returns The middleware function name (e.g. "ensureAuthMiddleware", "logRequestMiddleware")
@@ -76,6 +76,22 @@ export function middlewareNameToFunctionName(middlewareName: string): string {
 	if (!middlewareName || middlewareName.length === 0) {
 		throw new Error("Middleware name cannot be empty");
 	}
-	const pascal = tableNameToModelName(middlewareName);
-	return `${pascal.charAt(0).toLowerCase()}${pascal.slice(1)}Middleware`;
+	return `${toCamelCase(middlewareName)}Middleware`;
+}
+
+/**
+ * Convert a name to camelCase.
+ *
+ * @param name - The name to convert (e.g. "send-emails")
+ * @returns camelCase name (e.g. "sendEmails")
+ *
+ * @example
+ * ```ts
+ * toCamelCase("send-emails") // "sendEmails"
+ * toCamelCase("event_bus") // "eventBus"
+ * ```
+ */
+export function toCamelCase(name: string): string {
+	const pascal = toPascalCase(name);
+	return `${pascal.charAt(0).toLowerCase()}${pascal.slice(1)}`;
 }

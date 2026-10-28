@@ -3,8 +3,10 @@
  *
  * Searches for a config file at `config/bunary.ts` (preferred) or
  * `bunary.config.ts` (fallback), dynamically imports it, and extracts
- * the `commands` array. Each entry is validated for required fields
- * (`name`, `description`, `run`) and defaults `category` to `"project"`.
+ * the `commands` array (`BunaryConfig.commands` in `@bunary/core`). Each
+ * entry is validated for required fields (`name`, `description`, `run`),
+ * `category` defaults to `"project"` and core-style flag names are
+ * normalized (see `normalizeCommand.ts`).
  *
  * Returns an empty array when:
  * - The directory is not a Bunary project
@@ -20,6 +22,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Command } from "../types/command.js";
+import { findInvalidField, normalizeCommand } from "./normalizeCommand.js";
 import { isBunaryProject } from "./validation.js";
 
 /** Config file paths to try, in priority order. */
@@ -39,47 +42,6 @@ export function getProjectCommandsLoadError(): string | undefined {
 }
 
 /**
- * Find the first required field a command entry is missing or has wrong.
- *
- * @param entry - The value to inspect
- * @returns Field name, or `undefined` if the entry is valid
- */
-function findInvalidField(entry: unknown): string | undefined {
-	if (typeof entry !== "object" || entry === null) return "name";
-	const obj = entry as Record<string, unknown>;
-	if (typeof obj.name !== "string" || obj.name.length === 0) return "name";
-	if (typeof obj.description !== "string") return "description";
-	if (typeof obj.run !== "function") return "run";
-	return undefined;
-}
-
-/**
- * Check whether a value looks like a valid `Command` definition.
- *
- * A command must have at minimum a string `name`, string `description`,
- * and a `run` function.
- *
- * @param entry - The value to validate
- * @returns `true` if the entry has the required command shape
- *
- * @example
- * ```ts
- * isValidCommand({ name: "seed", description: "Seed DB", run: async () => {} }); // true
- * isValidCommand({ description: "No name" }); // false
- * ```
- */
-function isValidCommand(entry: unknown): entry is Command {
-	if (typeof entry !== "object" || entry === null) return false;
-	const obj = entry as Record<string, unknown>;
-	return (
-		typeof obj.name === "string" &&
-		obj.name.length > 0 &&
-		typeof obj.description === "string" &&
-		typeof obj.run === "function"
-	);
-}
-
-/**
  * Resolve the config file path inside a project directory.
  *
  * Tries `config/bunary.ts` first, then `bunary.config.ts`.
@@ -93,7 +55,7 @@ function isValidCommand(entry: unknown): entry is Command {
  * // "/my/project/config/bunary.ts" or undefined
  * ```
  */
-function resolveConfigPath(cwd: string): string | undefined {
+export function resolveConfigPath(cwd: string): string | undefined {
 	for (const relative of CONFIG_PATHS) {
 		const absolute = join(cwd, relative);
 		if (existsSync(absolute)) return absolute;
@@ -144,16 +106,14 @@ export async function loadProjectCommands(
 
 	const validated: Command[] = [];
 	for (const [index, entry] of raw.entries()) {
-		if (!isValidCommand(entry)) {
+		const invalid = findInvalidField(entry);
+		if (invalid) {
 			console.error(
-				`Warning: Skipping commands[${index}] in ${configPath}: missing or invalid "${findInvalidField(entry)}"`,
+				`Warning: Skipping commands[${index}] in ${configPath}: missing or invalid "${invalid}"`,
 			);
 			continue;
 		}
-		validated.push({
-			...entry,
-			category: entry.category ?? "project",
-		});
+		validated.push(normalizeCommand(entry as Command, "project"));
 	}
 
 	return validated;

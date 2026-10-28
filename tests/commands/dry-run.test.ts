@@ -5,10 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { makeCommand } from "../../src/commands/command/makeCommand.js";
 import { init } from "../../src/commands/init.js";
 import { makeMiddleware } from "../../src/commands/middleware/makeMiddleware.js";
-import { makeMigration } from "../../src/commands/migration/makeMigration.js";
-import { makeModel } from "../../src/commands/model/makeModel.js";
+import { makeProvider } from "../../src/commands/provider/makeProvider.js";
 import { makeRoute } from "../../src/commands/route/makeRoute.js";
 import { parseFlags } from "../../src/utils/parseFlags.js";
 import { makeTempDir } from "../helpers/temp-dir.js";
@@ -27,7 +27,7 @@ describe("--dry-run", () => {
 			join(testDir, "package.json"),
 			JSON.stringify({
 				name: "t",
-				dependencies: { "@bunary/core": "^0.0.5", "@bunary/orm": "^0.0.1" },
+				dependencies: { "@bunary/core": "^0.0.5" },
 			}),
 		);
 		await writeFile(join(testDir, "bunary.config.ts"), "export default {};");
@@ -68,29 +68,29 @@ describe("--dry-run", () => {
 		expect(output).toContain('"name": "my-app"');
 	});
 
-	it("route:make", async () => {
+	it("make:route", async () => {
 		await makeRoute("users", { dryRun: true });
 		expect(existsSync(join(testDir, "src"))).toBe(false);
 		expect(output).toContain("src/routes/users.ts");
 		expect(output).toContain("1 file (dry run)");
 	});
 
-	it("middleware:make", async () => {
+	it("make:middleware", async () => {
 		await makeMiddleware("ensure-auth", { dryRun: true });
 		expect(existsSync(join(testDir, "src"))).toBe(false);
 		expect(output).toContain("src/middleware/ensure-auth.ts");
 	});
 
-	it("model:make", async () => {
-		await makeModel("user_profile", { dryRun: true });
+	it("make:command", async () => {
+		await makeCommand("send-emails", { dryRun: true });
 		expect(existsSync(join(testDir, "src"))).toBe(false);
-		expect(output).toContain("src/models/UserProfile.ts");
+		expect(output).toContain("src/commands/send-emails.ts");
 	});
 
-	it("migration:make", async () => {
-		await makeMigration("create_users_table", { dryRun: true });
-		expect(existsSync(join(testDir, "migrations"))).toBe(false);
-		expect(output).toMatch(/migrations\/\d{14}_create_users_table\.ts/);
+	it("make:provider", async () => {
+		await makeProvider("cache", { dryRun: true });
+		expect(existsSync(join(testDir, "src"))).toBe(false);
+		expect(output).toContain("src/providers/cache.ts");
 	});
 
 	it("still rejects existing files", async () => {
