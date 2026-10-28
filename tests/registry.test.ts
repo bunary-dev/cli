@@ -63,8 +63,15 @@ describe("command registry", () => {
 		for (const name of BUILTINS) {
 			const c = findCommand(name);
 			expect(c?.args?.map((a) => a.name)).toEqual(["name"]);
-			expect(c?.args?.[0]?.required).toBe(true);
+			// init prompts for a missing name in a terminal
+			expect(c?.args?.[0]?.required).toBe(name !== "init");
 		}
+	});
+
+	test("init command declares --interactive (-i) and --no-interactive", () => {
+		const flags = findCommand("init")?.flags ?? [];
+		expect(flags.find((f) => f.name === "--interactive")?.alias).toBe("-i");
+		expect(flags.map((f) => f.name)).toContain("--no-interactive");
 	});
 
 	test("init command declares --auth, --force and --dry-run", () => {

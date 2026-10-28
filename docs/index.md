@@ -18,7 +18,7 @@ bunx @bunary/cli --help
 
 | Command | Description |
 |--------|-------------|
-| `bunary init <name> [--auth basic\|jwt] [--force]` | Create a new Bunary project |
+| `bunary init [name] [--auth basic\|jwt] [--force] [-i]` | Create a new Bunary project |
 | `bunary make:route <name>` | Generate route module in `src/routes/` |
 | `bunary make:middleware <name>` | Generate middleware in `src/middleware/` |
 | `bunary make:command <name> [--name <cli-name>]` | Generate an app command in `src/commands/` |
@@ -30,7 +30,7 @@ Commands contributed by installed packages (e.g. `make:model` and `db:*` from `@
 
 Flags accept `--key value` and `--key=value`; a bare `--` ends flag parsing. Flags declaring a short `alias` also accept it (e.g. `-p 4000`).
 
-### bunary init \<name\> [--auth basic|jwt] [--force]
+### bunary init [name] [--auth basic|jwt] [--force] [--interactive]
 
 Creates a new Bunary project. You can pass a directory name or `.` for the current directory. With `--auth basic` or `--auth jwt` you get auth middleware stubs (same as running `make:middleware basic` or `jwt` after init).
 
@@ -39,6 +39,8 @@ bunary init my-app
 bunary init my-app --auth jwt
 bunary init .
 ```
+
+Run `bunary init` with no name in a terminal and it walks you through the setup instead: it asks for the project name, shows the target directory, and lets you pick the auth scaffolding with the arrow keys (or by typing its number). Pass `--interactive` (`-i`) to get the prompts even when you give a name; anything given upfront becomes the default. Without a TTY (CI, piped stdin) or with `--no-interactive`, `init` never prompts and fails if the name is missing, so scripts keep working unchanged.
 
 `init` aborts without writing anything if any file it would create already exists; pass `--force` to overwrite.
 

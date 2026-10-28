@@ -12,6 +12,12 @@ import {
 	reportDryRun,
 } from "../utils/dryRun.js";
 import { buildFileTree } from "../utils/fileTree.js";
+import {
+	ask,
+	isInteractive,
+	type PromptOptions,
+	select,
+} from "../utils/prompt.js";
 import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
 import { generateEntrypoint } from "./project/entrypoint.js";
@@ -145,6 +151,57 @@ export {
 // Re-export generators and commands for programmatic use
 export { generateConfig, generateEntrypoint, generatePackageJson };
 
+const AUTH_CHOICES: Array<{ label: string; value: InitOptions["auth"] }> = [
+	{ label: "None", value: undefined },
+	{ label: "Basic Auth", value: "basic" },
+	{ label: "JWT", value: "jwt" },
+];
+
+/**
+ * Walk the user through `bunary init`: project name, then auth type.
+ *
+ * Values passed upfront as arguments or flags become the defaults.
+ *
+ * @param defaults - Name and auth already given on the command line
+ * @param options - Prompt streams, plus `cwd` to resolve the directory
+ * @throws When the user cancels (Ctrl-C / Ctrl-D)
+ *
+ * @example
+ * ```ts
+ * const { name, auth } = await promptInitOptions({});
+ * await init(name, { auth });
+ * ```
+ */
+export async function promptInitOptions(
+	defaults: { name?: string; auth?: InitOptions["auth"] },
+	options: PromptOptions & { cwd?: string } = {},
+): Promise<{ name: string; auth: InitOptions["auth"] }> {
+	const output = options.output ?? process.stdout;
+	const cwd = options.cwd ?? process.cwd();
+	output.write(`\n  🐇 ${bold("Create a new Bunary project")}\n\n`);
+
+	let name = "";
+	while (!name) {
+		name = await ask("Project name:", { ...options, default: defaults.name });
+		if (!name) output.write(`${dim("A project name is required.")}\n`);
+	}
+
+	const where =
+		name === "."
+			? `. ${dim("(current directory)")}`
+			: `./${name} ${dim(existsSync(resolve(cwd, name)) ? "(exists)" : "(will be created)")}`;
+	output.write(`Directory: ${where}\n\n`);
+
+	const defaultAuth = AUTH_CHOICES.findIndex((c) => c.value === defaults.auth);
+	const choice = await select(
+		"Auth scaffolding:",
+		AUTH_CHOICES.map((c) => c.label),
+		{ ...options, default: Math.max(defaultAuth, 0) },
+	);
+	output.write("\n");
+	return { name, auth: AUTH_CHOICES[choice]?.value };
+}
+
 /** Command definition for the registry. */
 export const command: Command = {
 	name: "init",
@@ -153,11 +210,21 @@ export const command: Command = {
 	args: [
 		{
 			name: "name",
-			required: true,
+			// Prompted for in a terminal when omitted
+			required: false,
 			description: "Project name or '.' for current directory",
 		},
 	],
 	flags: [
+		{
+			name: "--interactive",
+			alias: "-i",
+			description: "Prompt for the project name and auth type",
+		},
+		{
+			name: "--no-interactive",
+			description: "Never prompt; fail if the name is missing",
+		},
 		{
 			name: "--auth",
 			description: "Auth scaffolding type",
@@ -170,12 +237,29 @@ export const command: Command = {
 		...dryRunFlags,
 	],
 	async run(args, flags) {
-		const name = args[0] as string;
+		if (flags.interactive && flags["no-interactive"]) {
+			throw new Error("--interactive cannot be combined with --no-interactive");
+		}
+		let name = args[0];
 		const authValue = flags.auth;
 		let auth: "basic" | "jwt" | undefined;
 		if (authValue === "basic" || authValue === "jwt") {
 			auth = authValue;
 		}
+
+		// Prompt when asked to, or when the name is missing; never without a TTY
+		const canPrompt = isInteractive({
+			interactive: flags["no-interactive"] !== true,
+		});
+		if (canPrompt && (flags.interactive === true || !name)) {
+			({ name, auth } = await promptInitOptions({ name, auth }));
+		}
+		if (!name) {
+			throw new Error(
+				"Error: Project name is required\nUsage: bunary init <name> (or run it in a terminal to be prompted)",
+			);
+		}
+
 		await init(name, {
 			auth,
 			force: flags.force === true,

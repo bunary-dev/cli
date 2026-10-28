@@ -17,6 +17,7 @@ The CLI is reduced to project scaffolding, `make:*` generators and a command run
 
 ### Added
 
+- Interactive `bunary init`: with no name in a terminal (or with `--interactive` / `-i`) it prompts for the project name and lets you pick the auth type with the arrow keys or a number. `--no-interactive`, CI and piped stdin never prompt (#57)
 - `make:command <name> [--name <cli-name>]`: generates an app command typed with `Command` from `@bunary/core` (#96)
 - `make:provider <name>`: generates a `defineProvider` service provider (#96)
 - Package-contributed commands: a direct `@bunary/*` dependency that declares `"bunary": { "commands": "./dist/cli.js" }` in its `package.json` has its commands registered at startup and listed in `--help`. Collisions with built-ins are rejected (#96)
