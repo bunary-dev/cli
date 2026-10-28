@@ -3,7 +3,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -11,6 +11,7 @@ import {
 	migrationNameToTableName,
 	normalizeMigrationName,
 } from "../../src/commands/migration/makeMigration.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("migration:make command", () => {
 	let testDir: string;
@@ -18,7 +19,7 @@ describe("migration:make command", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-make-migration-test-"));
+		testDir = await makeTempDir("bunary-cli-make-migration-test-");
 		process.chdir(testDir);
 
 		const packageJson = {
@@ -35,20 +36,13 @@ describe("migration:make command", () => {
 		await mkdir(join(testDir, "migrations"), { recursive: true });
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		try {
 			if (originalCwd && existsSync(originalCwd)) {
 				process.chdir(originalCwd);
 			}
 		} catch {
 			// ignore
-		}
-		if (testDir) {
-			try {
-				await rm(testDir, { recursive: true, force: true });
-			} catch {
-				// ignore
-			}
 		}
 	});
 

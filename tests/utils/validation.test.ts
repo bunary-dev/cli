@@ -1,25 +1,21 @@
 /**
  * Validation utilities tests
  */
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { beforeEach, describe, expect, it } from "bun:test";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
 	ensureBunaryProject,
 	ensureOrmDependency,
 	isBunaryProject,
 } from "../../src/utils/validation.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("isBunaryProject", () => {
 	let testDir: string;
 
 	beforeEach(async () => {
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
-	});
-
-	afterEach(async () => {
-		await rm(testDir, { recursive: true, force: true });
+		testDir = await makeTempDir("bunary-cli-test-");
 	});
 
 	it("should return false when package.json does not exist", () => {
@@ -78,11 +74,7 @@ describe("ensureBunaryProject", () => {
 	let testDir: string;
 
 	beforeEach(async () => {
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
-	});
-
-	afterEach(async () => {
-		await rm(testDir, { recursive: true, force: true });
+		testDir = await makeTempDir("bunary-cli-test-");
 	});
 
 	it("should throw when not in a Bunary project", () => {
@@ -104,11 +96,7 @@ describe("ensureOrmDependency", () => {
 	let testDir: string;
 
 	beforeEach(async () => {
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
-	});
-
-	afterEach(async () => {
-		await rm(testDir, { recursive: true, force: true });
+		testDir = await makeTempDir("bunary-cli-test-");
 	});
 
 	it("should throw when not in a Bunary project", () => {

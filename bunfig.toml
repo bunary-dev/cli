@@ -2,6 +2,10 @@
 coverage = true
 coverageSkipTestFiles = true
 
+# Removes temp dirs made via tests/helpers/temp-dir.ts after every test, even
+# failing ones. See CONTRIBUTING.md.
+preload = ["./tests/setup.ts"]
+
 # The scaffolding tests write throwaway projects to a temp dir and dynamically
 # import their `config/bunary.ts`, so Bun counts those generated files in the
 # coverage report. Exclude them so the numbers describe this package only.

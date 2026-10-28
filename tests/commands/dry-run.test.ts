@@ -3,8 +3,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { init } from "../../src/commands/init.js";
 import { makeMiddleware } from "../../src/commands/middleware/makeMiddleware.js";
@@ -12,6 +11,7 @@ import { makeMigration } from "../../src/commands/migration/makeMigration.js";
 import { makeModel } from "../../src/commands/model/makeModel.js";
 import { makeRoute } from "../../src/commands/route/makeRoute.js";
 import { parseFlags } from "../../src/utils/parseFlags.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("--dry-run", () => {
 	let testDir: string;
@@ -21,7 +21,7 @@ describe("--dry-run", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-dry-run-test-"));
+		testDir = await makeTempDir("bunary-cli-dry-run-test-");
 		process.chdir(testDir);
 		await writeFile(
 			join(testDir, "package.json"),
@@ -37,10 +37,9 @@ describe("--dry-run", () => {
 		});
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		logSpy.mockRestore();
 		process.chdir(originalCwd);
-		await rm(testDir, { recursive: true, force: true });
 	});
 
 	it("init lists files and writes nothing", async () => {

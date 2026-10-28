@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
 	generateConfig,
@@ -9,6 +8,7 @@ import {
 	generatePackageJson,
 	init,
 } from "../../src/commands/init.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 /** Expected dependency versions — update here when packages are released. */
 const EXPECTED_CORE_VERSION = "^0.2.0";
@@ -23,15 +23,11 @@ describe("init command", () => {
 	beforeEach(async () => {
 		originalCwd = process.cwd();
 		// Create a unique test directory for each test run
-		TEST_DIR = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
+		TEST_DIR = await makeTempDir("bunary-cli-test-");
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		process.chdir(originalCwd);
-		// Clean up test directory after each test
-		if (existsSync(TEST_DIR)) {
-			await rm(TEST_DIR, { recursive: true, force: true });
-		}
 	});
 
 	describe("init() existing files", () => {

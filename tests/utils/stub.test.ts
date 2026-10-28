@@ -1,24 +1,18 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { describe, expect, test } from "bun:test";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { findStubsDir, getStubsDir, loadStub } from "../../src/utils/stub.js";
-
-let tmp: string | undefined;
-afterEach(() => {
-	if (tmp) rmSync(tmp, { recursive: true, force: true });
-	tmp = undefined;
-});
+import { makeTempDirSync } from "../helpers/temp-dir.js";
 
 describe("findStubsDir", () => {
 	test("finds stubs next to a renamed bundle", () => {
-		tmp = mkdtempSync(join(tmpdir(), "stub-"));
+		const tmp = makeTempDirSync("bunary-cli-stub-");
 		mkdirSync(join(tmp, "dist", "stubs"), { recursive: true });
 		expect(findStubsDir(join(tmp, "dist"))).toBe(join(tmp, "dist", "stubs"));
 	});
 
 	test("walks up from nested directories", () => {
-		tmp = mkdtempSync(join(tmpdir(), "stub-"));
+		const tmp = makeTempDirSync("bunary-cli-stub-");
 		mkdirSync(join(tmp, "dist", "stubs"), { recursive: true });
 		mkdirSync(join(tmp, "dist", "utils"), { recursive: true });
 		expect(findStubsDir(join(tmp, "dist", "utils"))).toBe(
@@ -27,8 +21,8 @@ describe("findStubsDir", () => {
 	});
 
 	test("throws when no stubs directory exists", () => {
-		tmp = mkdtempSync(join(tmpdir(), "stub-"));
-		expect(() => findStubsDir(tmp as string)).toThrow(/stubs/);
+		const tmp = makeTempDirSync("bunary-cli-stub-");
+		expect(() => findStubsDir(tmp)).toThrow(/stubs/);
 	});
 });
 
