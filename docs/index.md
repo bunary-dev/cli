@@ -147,3 +147,14 @@ Now `bunary db:seed` and `bunary deploy` work from your project root. They also 
 - Commands missing `name`, `description`, or `run` are silently skipped.
 - If `category` is omitted it defaults to `"project"`.
 
+
+### Declaring flags in project commands
+
+Flags that accept a value must set `takesValue: true` (or list `values`) in their `CommandFlag` definition. A flag declaring neither is a boolean switch: it never consumes the next argument, and `--flag=value` is rejected with an error.
+
+```ts
+flags: [
+  { name: "--out", description: "Output directory", takesValue: true },
+  { name: "--force", description: "Overwrite files" },
+],
+```

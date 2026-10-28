@@ -60,7 +60,13 @@ export interface CommandFlag {
 	description: string;
 	/** Allowed values, if restricted (e.g. ["basic", "jwt"]) */
 	values?: string[];
-	/** Whether the flag requires a value (implied when `values` is set) */
+	/**
+	 * Whether the flag requires a value (implied when `values` is set).
+	 * A flag declaring neither `takesValue` nor `values` is treated as a
+	 * boolean switch: it never consumes the next argument, and
+	 * `--flag=value` is rejected. Set `takesValue: true` on every flag that
+	 * accepts a value.
+	 */
 	takesValue?: boolean;
 	/** Switch that never takes a value (e.g. "--dry-run") */
 	boolean?: boolean;

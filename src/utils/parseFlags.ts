@@ -142,6 +142,9 @@ export function validateFlags(
 		if (def && flagTakesValue(def) && typeof value !== "string") {
 			throw new Error(`--${key} requires a value`);
 		}
+		if (def && !flagTakesValue(def) && typeof value === "string") {
+			throw new Error(`--${key} does not take a value`);
+		}
 		if (
 			def?.values &&
 			typeof value === "string" &&

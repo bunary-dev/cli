@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 - Docs: removed the "Programmatic API" section; the package is bin-only and exports no library API (#94)
 
 ## [0.2.0] - 2026-09-21
