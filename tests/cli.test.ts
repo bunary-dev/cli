@@ -113,6 +113,36 @@ describe("cli end-to-end", () => {
 		expect(forced.code).toBe(0);
 	});
 
+	test("init with no args and piped stdin fails without prompting", async () => {
+		const r = await cli("init");
+		expect(r.code).toBe(1);
+		expect(r.stderr).toContain("Project name is required");
+		expect(r.stderr).toContain("Usage: bunary init");
+		expect(readdirSync(r.cwd)).toEqual([]);
+	});
+
+	test("init --no-interactive with no name fails", async () => {
+		const r = await cli("init", "--no-interactive");
+		expect(r.code).toBe(1);
+		expect(r.stderr).toContain("Project name is required");
+	});
+
+	test("init --interactive without a TTY falls back to the flags", async () => {
+		const r = await cli("init", "app", "-i", "--auth", "jwt");
+		expect(r.code).toBe(0);
+		expect(
+			await Bun.file(
+				join(r.cwd, "app", "src", "middleware", "jwt.ts"),
+			).exists(),
+		).toBe(true);
+	});
+
+	test("init rejects --interactive with --no-interactive", async () => {
+		const r = await cli("init", "app", "--interactive", "--no-interactive");
+		expect(r.code).toBe(1);
+		expect(r.stderr).toContain("cannot be combined");
+	});
+
 	test("init --dry-run writes nothing", async () => {
 		const r = await cli("init", "app", "--dry-run");
 		expect(r.code).toBe(0);
