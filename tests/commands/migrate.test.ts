@@ -1,22 +1,22 @@
 /**
  * migrate commands tests (cwd is passed explicitly; process cwd is untouched)
  */
-import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
+import { beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
 	migrateDown,
 	migrateStatus,
 	migrateUp,
 } from "../../src/commands/migration/runMigrations.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("migrate commands", () => {
 	let dir: string;
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "bunary-cli-migrate-test-"));
+		dir = await makeTempDir("bunary-cli-migrate-test-");
 		await writeFile(
 			join(dir, "package.json"),
 			JSON.stringify({
@@ -24,10 +24,6 @@ describe("migrate commands", () => {
 				dependencies: { "@bunary/core": "^0", "@bunary/orm": "^0" },
 			}),
 		);
-	});
-
-	afterEach(async () => {
-		await rm(dir, { recursive: true, force: true });
 	});
 
 	async function writeOrmConfig() {

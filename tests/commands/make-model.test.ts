@@ -3,10 +3,10 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { makeModel } from "../../src/commands/model/makeModel.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("model:make command", () => {
 	let testDir: string;
@@ -15,7 +15,7 @@ describe("model:make command", () => {
 	beforeEach(async () => {
 		// Capture the current working directory at the start of each test
 		originalCwd = process.cwd();
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-make-model-test-"));
+		testDir = await makeTempDir("bunary-cli-make-model-test-");
 		process.chdir(testDir);
 
 		// Create a valid Bunary project structure
@@ -32,7 +32,7 @@ describe("model:make command", () => {
 		await mkdir(join(testDir, "src"), { recursive: true });
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		// Try to change back to original directory, but don't fail if it doesn't exist
 		try {
 			if (originalCwd && existsSync(originalCwd)) {
@@ -40,14 +40,6 @@ describe("model:make command", () => {
 			}
 		} catch (_error) {
 			// Ignore chdir errors - directory might have been cleaned up
-		}
-		// Clean up test directory
-		if (testDir) {
-			try {
-				await rm(testDir, { recursive: true, force: true });
-			} catch (_error) {
-				// Ignore cleanup errors
-			}
 		}
 	});
 

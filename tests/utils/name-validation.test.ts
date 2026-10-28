@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { makeMiddleware } from "../../src/commands/middleware/makeMiddleware.js";
 import { makeMigration } from "../../src/commands/migration/makeMigration.js";
@@ -12,6 +11,7 @@ import {
 	assertInsideDir,
 	validateMakeName,
 } from "../../src/utils/validation.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("validateMakeName", () => {
 	it("accepts valid names", () => {
@@ -65,7 +65,7 @@ describe("make commands reject unsafe names", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-names-test-"));
+		testDir = await makeTempDir("bunary-cli-names-test-");
 		process.chdir(testDir);
 		await writeFile(
 			join(testDir, "package.json"),
@@ -77,9 +77,8 @@ describe("make commands reject unsafe names", () => {
 		await mkdir(join(testDir, "src"), { recursive: true });
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		process.chdir(originalCwd);
-		await rm(testDir, { recursive: true, force: true });
 	});
 
 	const cmds: [string, (n: string) => Promise<void>][] = [

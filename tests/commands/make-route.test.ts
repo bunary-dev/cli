@@ -3,10 +3,10 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { makeRoute } from "../../src/commands/route/makeRoute.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("route:make command", () => {
 	let testDir: string;
@@ -14,7 +14,7 @@ describe("route:make command", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-make-route-test-"));
+		testDir = await makeTempDir("bunary-cli-make-route-test-");
 		process.chdir(testDir);
 
 		const packageJson = {
@@ -30,20 +30,13 @@ describe("route:make command", () => {
 		await mkdir(join(testDir, "src", "routes"), { recursive: true });
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		try {
 			if (originalCwd && existsSync(originalCwd)) {
 				process.chdir(originalCwd);
 			}
 		} catch {
 			// ignore
-		}
-		if (testDir) {
-			try {
-				await rm(testDir, { recursive: true, force: true });
-			} catch {
-				// ignore
-			}
 		}
 	});
 

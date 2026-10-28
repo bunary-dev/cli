@@ -3,12 +3,12 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { makeMiddleware } from "../../src/commands/middleware/makeMiddleware.js";
 import { makeModel } from "../../src/commands/model/makeModel.js";
 import { makeRoute } from "../../src/commands/route/makeRoute.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("make commands show next steps", () => {
 	let testDir: string;
@@ -18,7 +18,7 @@ describe("make commands show next steps", () => {
 
 	beforeEach(async () => {
 		originalCwd = process.cwd();
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-next-steps-test-"));
+		testDir = await makeTempDir("bunary-cli-next-steps-test-");
 		process.chdir(testDir);
 
 		const packageJson = {
@@ -37,7 +37,7 @@ describe("make commands show next steps", () => {
 		};
 	});
 
-	afterEach(async () => {
+	afterEach(() => {
 		console.log = originalLog;
 		try {
 			if (originalCwd && existsSync(originalCwd)) {
@@ -45,13 +45,6 @@ describe("make commands show next steps", () => {
 			}
 		} catch {
 			// ignore
-		}
-		if (testDir) {
-			try {
-				await rm(testDir, { recursive: true, force: true });
-			} catch {
-				// ignore
-			}
 		}
 	});
 

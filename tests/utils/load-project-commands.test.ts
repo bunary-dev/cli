@@ -1,24 +1,20 @@
 /**
  * Tests for project command loading from user config files.
  */
-import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { beforeEach, describe, expect, spyOn, test } from "bun:test";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
 	getProjectCommandsLoadError,
 	loadProjectCommands,
 } from "../../src/utils/loadProjectCommands.js";
+import { makeTempDir } from "../helpers/temp-dir.js";
 
 describe("loadProjectCommands", () => {
 	let testDir: string;
 
 	beforeEach(async () => {
-		testDir = await mkdtemp(join(tmpdir(), "bunary-cli-test-"));
-	});
-
-	afterEach(async () => {
-		await rm(testDir, { recursive: true, force: true });
+		testDir = await makeTempDir("bunary-cli-test-");
 	});
 
 	test("returns empty array when not a Bunary project", async () => {

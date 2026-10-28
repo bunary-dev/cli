@@ -1,12 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { makeTempDirSync } from "./helpers/temp-dir.js";
 
 const entry = join(import.meta.dir, "..", "src", "index.ts");
 
 async function cli(...args: string[]) {
-	const cwd = mkdtempSync(join(tmpdir(), "bunary-cli-"));
+	const cwd = makeTempDirSync("bunary-cli-");
 	const proc = Bun.spawn(["bun", entry, ...args], {
 		cwd,
 		stdout: "pipe",
