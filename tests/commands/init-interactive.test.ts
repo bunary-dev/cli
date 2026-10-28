@@ -1,8 +1,9 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { EventEmitter } from "node:events";
-import { mkdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { promptInitOptions } from "../../src/commands/init.js";
+import { command, promptInitOptions } from "../../src/commands/init.js";
 import type { PromptInput } from "../../src/utils/prompt.js";
 import { makeTempDir } from "../helpers/temp-dir.js";
 
@@ -108,5 +109,55 @@ describe("promptInitOptions", () => {
 		const result = await promptInitOptions({}, { input, output, cwd });
 		expect(result.name).toBe(".");
 		expect(output.text).toContain("current directory");
+	});
+});
+
+describe("init command run()", () => {
+	let originalCwd: string;
+	let cwd: string;
+
+	beforeEach(async () => {
+		originalCwd = process.cwd();
+		cwd = await makeTempDir("bunary-cli-");
+		process.chdir(cwd);
+	});
+
+	afterEach(() => {
+		process.chdir(originalCwd);
+	});
+
+	test("rejects --interactive with --no-interactive", async () => {
+		await expect(
+			command.run(["app"], { interactive: true, "no-interactive": true }),
+		).rejects.toThrow(/cannot be combined/);
+	});
+
+	test("requires a name when prompting is disabled", async () => {
+		await expect(command.run([], { "no-interactive": true })).rejects.toThrow(
+			/Project name is required/,
+		);
+	});
+
+	test("scaffolds the project with the given auth type", async () => {
+		await command.run(["app"], { "no-interactive": true, auth: "jwt" });
+		expect(existsSync(join(cwd, "app", "package.json"))).toBe(true);
+		expect(existsSync(join(cwd, "app", "src", "middleware", "jwt.ts"))).toBe(
+			true,
+		);
+	});
+
+	test("ignores an unknown auth value", async () => {
+		await command.run(["app"], { "no-interactive": true, auth: "oauth" });
+		expect(existsSync(join(cwd, "app", "package.json"))).toBe(true);
+		expect(existsSync(join(cwd, "app", "src", "middleware"))).toBe(false);
+	});
+
+	test("passes --force through to init", async () => {
+		await mkdir(join(cwd, "app"));
+		await writeFile(join(cwd, "app", "package.json"), "ORIGINAL");
+		await command.run(["app"], { "no-interactive": true, force: true });
+		expect(await readFile(join(cwd, "app", "package.json"), "utf8")).not.toBe(
+			"ORIGINAL",
+		);
 	});
 });
