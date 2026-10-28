@@ -11,11 +11,13 @@
 	},
 	"files": [
 		"dist",
+		"stubs",
 		"README.md",
 		"CHANGELOG.md"
 	],
 	"scripts": {
 		"build": "bun build ./src/index.ts --outdir ./dist --target bun && tsc -p tsconfig.build.json && mkdir -p dist/stubs && cp -r stubs/* dist/stubs/",
+		"prepublishOnly": "bun run build",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
 		"lint": "biome check ./src ./tests",

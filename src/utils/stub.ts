@@ -1,8 +1,30 @@
 /**
  * Stub utility functions for loading and processing template files
  */
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/**
+ * Find the stubs directory by walking up from a starting directory.
+ * Works for dev (src/utils -> package root), bundled (dist) and unbundled
+ * (dist/utils) layouts regardless of the bundle's file name.
+ *
+ * @param startDir - Directory to begin searching from
+ * @throws Error if no `stubs` directory exists in startDir or its ancestors
+ */
+export function findStubsDir(startDir: string): string {
+	let dir = startDir;
+	for (;;) {
+		const candidate = join(dir, "stubs");
+		if (existsSync(candidate)) return candidate;
+		const parent = dirname(dir);
+		if (parent === dir) {
+			throw new Error(`Could not locate stubs directory from ${startDir}`);
+		}
+		dir = parent;
+	}
+}
 
 /**
  * Get the directory where stub files are located
@@ -10,28 +32,7 @@ import { fileURLToPath } from "node:url";
  * In production: stubs are copied to dist/stubs/.
  */
 export function getStubsDir(): string {
-	const currentFile = fileURLToPath(import.meta.url);
-	// In development: currentFile is in src/utils/stub.js
-	// In production (bundled): currentFile is in dist/index.js
-	// In production (unbundled): currentFile is in dist/utils/stub.js
-
-	let baseDir: string;
-
-	if (currentFile.endsWith("index.js")) {
-		// Bundled: stubs are in dist/stubs
-		baseDir = dirname(currentFile);
-	} else {
-		const utilsDir = dirname(currentFile);
-		const parent = dirname(utilsDir);
-		// parent is "src" (dev) or "dist" (prod unbundled)
-		if (parent.endsWith("src")) {
-			baseDir = dirname(parent); // package root
-		} else {
-			baseDir = parent; // dist
-		}
-	}
-
-	return join(baseDir, "stubs");
+	return findStubsDir(dirname(fileURLToPath(import.meta.url)));
 }
 
 /**
