@@ -31,6 +31,10 @@ The CLI is reduced to project scaffolding, `make:*` generators and a command run
 - `CommandFlag.takesValue` documented: flags declaring neither `takesValue` nor `values` are boolean switches, and `--flag=value` on them is now rejected (#116)
 - Docs: removed the "Programmatic API" section; the package is bin-only and exports no library API (#94)
 
+### Fixed
+
+- Stubs are embedded in the bundle as text imports, so a `bun build --compile` binary can run `init` and `make:*`; `dist/stubs/` is no longer shipped (#125)
+
 ## [0.2.0] - 2026-09-21
 
 ### Changed
