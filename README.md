@@ -18,6 +18,29 @@ Or use directly with `bunx`:
 bunx @bunary/cli init my-app
 ```
 
+### From source
+
+npm may lag behind `main`. To run the current source:
+
+```bash
+git clone https://github.com/bunary-dev/cli.git && cd cli
+bun install
+bun run build      # writes dist/
+bun link           # puts `bunary` on your PATH (via ~/.bun/bin)
+```
+
+### Standalone binary
+
+A single executable with Bun and the stubs embedded, no `node_modules` needed:
+
+```bash
+bun build ./src/bin.ts --compile --outfile bunary
+mv bunary ~/.local/bin/   # or anywhere on your PATH
+```
+
+If `bunary` still runs an old version, check `which -a bunary`: a global
+`bun add -g @bunary/cli` in `~/.bun/bin` can shadow it.
+
 ## Quick start
 
 ```bash

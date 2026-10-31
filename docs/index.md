@@ -14,6 +14,10 @@ Or use directly with `bunx`:
 bunx @bunary/cli --help
 ```
 
+To run the current source, or a standalone binary with the stubs embedded
+(`bun build ./src/bin.ts --compile`), see
+[Installation in the README](../README.md#from-source).
+
 ## Commands (high level)
 
 | Command | Description |
