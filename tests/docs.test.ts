@@ -43,3 +43,18 @@ describe("docs match the new command set", () => {
 		});
 	}
 });
+
+describe("agent instructions", () => {
+	test("CLAUDE.md requires a version bump on every shipped change", async () => {
+		const text = await Bun.file(join(root, "CLAUDE.md")).text();
+		expect(text).toContain("`package.json` `version`");
+		expect(text).toMatch(/patch/);
+		expect(text).toMatch(/minor/);
+		expect(text).toContain("rc.N+1");
+		expect(text).toMatch(/duplicate tag/);
+		expect(text).toMatch(
+			/[Dd]ocs-only, test-only and CI-only changes do not bump/,
+		);
+		expect(text).toContain("No npm publishing");
+	});
+});
