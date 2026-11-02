@@ -6,4 +6,7 @@ export default defineConfig({
     env: "development",
     debug: true,
   },
+  http: {
+    port: 3000,
+  },
 });

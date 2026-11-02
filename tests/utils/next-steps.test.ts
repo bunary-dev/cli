@@ -18,7 +18,7 @@ describe("nextSteps utilities", () => {
 
 		test("includes registration call", () => {
 			const result = routeNextSteps("users", "registerUsers");
-			expect(result).toContain("registerUsers(app);");
+			expect(result).toContain("registerUsers(router);");
 		});
 
 		test("shows target file path", () => {
@@ -31,7 +31,7 @@ describe("nextSteps utilities", () => {
 			expect(result).toContain(
 				'import { registerUserProfile } from "./user-profile.js"',
 			);
-			expect(result).toContain("registerUserProfile(app);");
+			expect(result).toContain("registerUserProfile(router);");
 		});
 
 		test("includes Next: label", () => {
@@ -48,9 +48,9 @@ describe("nextSteps utilities", () => {
 			);
 		});
 
-		test("includes app.use() registration", () => {
+		test("includes router.use() registration", () => {
 			const result = middlewareNextSteps("ensure-auth", "ensureAuthMiddleware");
-			expect(result).toContain("app.use(ensureAuthMiddleware);");
+			expect(result).toContain("router.use(ensureAuthMiddleware);");
 		});
 
 		test("shows target file path", () => {
@@ -63,7 +63,7 @@ describe("nextSteps utilities", () => {
 			expect(result).toContain(
 				'import { jwtMiddleware } from "./middleware/jwt.js"',
 			);
-			expect(result).toContain("app.use(jwtMiddleware);");
+			expect(result).toContain("router.use(jwtMiddleware);");
 		});
 	});
 

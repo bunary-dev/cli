@@ -6,6 +6,7 @@ import {
 	generateConfig,
 	generateEntrypoint,
 	generatePackageJson,
+	generateTsconfig,
 	init,
 } from "../../src/commands/init.js";
 import { makeTempDir } from "../helpers/temp-dir.js";
@@ -40,6 +41,15 @@ describe("init command", () => {
 			);
 			expect(existsSync(join(TEST_DIR, "src"))).toBe(false);
 			expect(existsSync(join(TEST_DIR, "config"))).toBe(false);
+		});
+
+		test("init . aborts when tsconfig.json exists", async () => {
+			await writeFile(join(TEST_DIR, "tsconfig.json"), "ORIGINAL");
+			process.chdir(TEST_DIR);
+			await expect(init(".")).rejects.toThrow(/tsconfig\.json/);
+			expect(await readFile(join(TEST_DIR, "tsconfig.json"), "utf8")).toBe(
+				"ORIGINAL",
+			);
 		});
 
 		test("init <existing-dir> aborts and writes nothing", async () => {
@@ -88,6 +98,14 @@ describe("init command", () => {
 			expect(existsSync(join(projectDir, "package.json"))).toBe(true);
 		});
 
+		test("creates tsconfig.json in project directory", async () => {
+			const projectDir = join(TEST_DIR, "my-app");
+			process.chdir(TEST_DIR);
+			await init("my-app");
+
+			expect(existsSync(join(projectDir, "tsconfig.json"))).toBe(true);
+		});
+
 		test("creates config/bunary.ts in project directory", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
@@ -129,7 +147,7 @@ describe("init command", () => {
 			const content = await Bun.file(entrypointPath).text();
 			expect(content).toContain("registerRoutes");
 			expect(content).toContain("routes/index");
-			expect(content).not.toContain('app.get("/",');
+			expect(content).not.toContain('router.get("/",');
 		});
 
 		test("works with '.' for current directory", async () => {
@@ -146,7 +164,7 @@ describe("init command", () => {
 			);
 		});
 
-		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as make:middleware basic), and app.use(basicMiddleware)", async () => {
+		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as make:middleware basic), and router.use(basicMiddleware)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "basic" });
@@ -170,11 +188,11 @@ describe("init command", () => {
 				join(projectDir, "src", "index.ts"),
 			).text();
 			expect(entryContent).toContain("basicMiddleware");
-			expect(entryContent).toContain("app.use(basicMiddleware)");
+			expect(entryContent).toContain("router.use(basicMiddleware)");
 			expect(entryContent).toContain("./middleware/basic.js");
 		});
 
-		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as make:middleware jwt), and app.use(jwtMiddleware)", async () => {
+		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as make:middleware jwt), and router.use(jwtMiddleware)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "jwt" });
@@ -198,7 +216,7 @@ describe("init command", () => {
 				join(projectDir, "src", "index.ts"),
 			).text();
 			expect(entryContent).toContain("jwtMiddleware");
-			expect(entryContent).toContain("app.use(jwtMiddleware)");
+			expect(entryContent).toContain("router.use(jwtMiddleware)");
 			expect(entryContent).toContain("./middleware/jwt.js");
 		});
 
@@ -223,8 +241,8 @@ describe("init command", () => {
 			).text();
 			expect(entryContent).not.toContain("basicMiddleware");
 			expect(entryContent).not.toContain("jwtMiddleware");
-			expect(entryContent).not.toContain("app.use(basicMiddleware)");
-			expect(entryContent).not.toContain("app.use(jwtMiddleware)");
+			expect(entryContent).not.toContain("router.use(basicMiddleware)");
+			expect(entryContent).not.toContain("router.use(jwtMiddleware)");
 		});
 
 		test("package.json has @bunary/core and @bunary/http, imports use @bunary/*", async () => {
@@ -252,7 +270,7 @@ describe("init command", () => {
 			expect(mainContent).toContain('from "@bunary/http"');
 		});
 
-		test("entrypoint mentions createApp options (basePath, TLocals, onNotFound)", async () => {
+		test("entrypoint mentions createRouter options (basePath, TLocals, onNotFound)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app");
@@ -353,6 +371,12 @@ describe("init command", () => {
 			expect(config).toContain("development");
 		});
 
+		test("sets the http port 3000 read by serve()", async () => {
+			const config = await generateConfig("test-app");
+			expect(config).toContain("http: {");
+			expect(config).toContain("port: 3000");
+		});
+
 		test("uses @bunary/core", async () => {
 			const config = await generateConfig("test-app");
 			expect(config).toContain('from "@bunary/core"');
@@ -372,27 +396,42 @@ describe("init command", () => {
 			expect(entry).toContain("routes/index");
 		});
 
-		test("includes app.listen()", async () => {
+		test("serves the app through serve() from @bunary/http/provider", async () => {
 			const entry = await generateEntrypoint();
-			expect(entry).toContain(".listen(");
+			expect(entry).toContain(
+				'import { httpProvider, serve } from "@bunary/http/provider"',
+			);
+			expect(entry).toContain("providers: [httpProvider(router)]");
+			expect(entry).toContain("serve(app)");
 		});
 
-		test("includes port 3000", async () => {
+		test("builds a core app from config/bunary.ts with a createRouter router", async () => {
 			const entry = await generateEntrypoint();
-			expect(entry).toContain("3000");
+			expect(entry).toContain('import { createApp } from "@bunary/core"');
+			expect(entry).toContain('import { createRouter } from "@bunary/http"');
+			expect(entry).toContain('import config from "../config/bunary.js"');
+			expect(entry).toContain("const router = createRouter();");
+			expect(entry).toContain("registerRoutes(router);");
+			expect(entry).not.toContain("AuthLocals");
 		});
 
-		test("with auth basic includes basicMiddleware and app.use(basicMiddleware)", async () => {
+		test("with auth types the router with AuthLocals", async () => {
+			const entry = await generateEntrypoint({ auth: "jwt" });
+			expect(entry).toContain('import type { AuthLocals } from "@bunary/auth"');
+			expect(entry).toContain("const router = createRouter<AuthLocals>();");
+		});
+
+		test("with auth basic includes basicMiddleware and router.use(basicMiddleware)", async () => {
 			const entry = await generateEntrypoint({ auth: "basic" });
 			expect(entry).toContain("basicMiddleware");
-			expect(entry).toContain("app.use(basicMiddleware)");
+			expect(entry).toContain("router.use(basicMiddleware)");
 			expect(entry).toContain("./middleware/basic.js");
 		});
 
-		test("with auth jwt includes jwtMiddleware and app.use(jwtMiddleware)", async () => {
+		test("with auth jwt includes jwtMiddleware and router.use(jwtMiddleware)", async () => {
 			const entry = await generateEntrypoint({ auth: "jwt" });
 			expect(entry).toContain("jwtMiddleware");
-			expect(entry).toContain("app.use(jwtMiddleware)");
+			expect(entry).toContain("router.use(jwtMiddleware)");
 			expect(entry).toContain("./middleware/jwt.js");
 		});
 
@@ -406,5 +445,40 @@ describe("init command", () => {
 			const entry = await generateEntrypoint();
 			expect(entry).toContain('from "@bunary/http"');
 		});
+	});
+});
+
+describe("generateTsconfig()", () => {
+	test("is valid JSON with strict, bundler resolution and top-level await support", async () => {
+		const parsed = JSON.parse(await generateTsconfig());
+		expect(parsed.compilerOptions.strict).toBe(true);
+		expect(parsed.compilerOptions.moduleResolution).toBe("bundler");
+		expect(parsed.compilerOptions.module).toBe("Preserve");
+		expect(parsed.compilerOptions.noEmit).toBe(true);
+	});
+});
+
+describe("generated sources use the 0.4.0 APIs (#141)", () => {
+	test("no stub references the removed BunaryApp", async () => {
+		const { listStubs, loadStub } = await import("../../src/utils/stub.js");
+		for (const stub of listStubs()) {
+			expect(await loadStub(stub, {})).not.toContain("BunaryApp");
+		}
+	});
+
+	test("route modules take a Router", async () => {
+		const {
+			generateRoutesIndex,
+			generateRoutesMain,
+			generateRoutesGroupExample,
+		} = await import("../../src/commands/init.js");
+		for (const content of [
+			await generateRoutesIndex(),
+			await generateRoutesMain(),
+			await generateRoutesGroupExample(),
+		]) {
+			expect(content).toContain('import type { Router } from "@bunary/http"');
+			expect(content).toContain("(router: Router): void");
+		}
 	});
 });

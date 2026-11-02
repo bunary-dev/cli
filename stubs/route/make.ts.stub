@@ -1,4 +1,4 @@
-import type { BunaryApp } from "@bunary/http";
+import type { Router } from "@bunary/http";
 
 /**
  * Register {{routeName}} routes.
@@ -6,25 +6,25 @@ import type { BunaryApp } from "@bunary/http";
  * @example
  * ```ts
  * import { {{functionName}} } from "./{{routeName}}.js";
- * {{functionName}}(app);
+ * {{functionName}}(router);
  * ```
  */
-export function {{functionName}}(app: BunaryApp): void {
-	app.get("/{{routeName}}", () => ({
+export function {{functionName}}(router: Router): void {
+	router.get("/{{routeName}}", () => ({
 		data: [],
 	})).name("{{routeName}}.index");
 
-	app.get<{ id: string }>("/{{routeName}}/:id", (ctx) => ({
+	router.get<{ id: string }>("/{{routeName}}/:id", (ctx) => ({
 		id: ctx.params.id,
 	})).name("{{routeName}}.show").whereNumber("id");
 
 	// More routes — see https://github.com/bunary-dev/http#routing
-	// app.post("/{{routeName}}", async (ctx) => {
-	//   const body = await ctx.json();
-	//   return { created: true };
+	// router.post("/{{routeName}}", async (ctx) => {
+	//   const body = await ctx.body.json<{ name: string }>();
+	//   return ctx.json({ created: body.name }, { status: 201 });
 	// }).name("{{routeName}}.create");
 	//
-	// app.delete<{ id: string }>("/{{routeName}}/:id", (ctx) => {
+	// router.delete<{ id: string }>("/{{routeName}}/:id", (ctx) => {
 	//   return { deleted: ctx.params.id };
 	// }).name("{{routeName}}.destroy").whereNumber("id");
 }

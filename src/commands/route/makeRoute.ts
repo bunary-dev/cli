@@ -26,7 +26,7 @@ import { loadStub } from "../../utils/stub.js";
  * @example
  * ```ts
  * await makeRoute("users");
- * // Creates src/routes/users.ts with registerUsers(app)
+ * // Creates src/routes/users.ts with registerUsers(router)
  * ```
  */
 export async function makeRoute(

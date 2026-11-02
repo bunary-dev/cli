@@ -1,15 +1,25 @@
-import { createApp } from "{{bunaryHttp}}";
+import { createApp } from "{{bunaryCore}}";
+import { createRouter } from "{{bunaryHttp}}";
+import { httpProvider, serve } from "{{bunaryHttp}}/provider";
+{{authTypeImport}}import config from "../config/bunary.js";
 import { registerRoutes } from "./routes/index.js";
 {{authImport}}
-// createApp<TLocals>() accepts a generic for typed per-request data:
-//   const app = createApp<{ user: User }>();
+// createRouter<TLocals>() accepts a generic for typed per-request data:
+//   const router = createRouter<{ user: User }>();
 //   ctx.locals.user   // typed in handlers and middleware
 //
 // You can also pass options:
-//   createApp({ basePath: "/api" })    — prefix all routes
-//   createApp({ onNotFound: (ctx) => ... })  — custom 404 handler
-const app = createApp();
-registerRoutes(app);
-{{authUse}}
-const server = app.listen({ port: 3000 });
+//   createRouter({ basePath: "/api" })    — prefix all routes
+//   createRouter({ onNotFound: (ctx) => ... })  — custom 404 handler
+const router = createRouter{{routerLocals}}();
+{{authUse}}registerRoutes(router);
+
+// Providers (make:provider) go in the providers array, after httpProvider.
+const app = await createApp({
+  config,
+  providers: [httpProvider(router)],
+}).boot();
+
+// Port and hostname come from the `http` key in config/bunary.ts.
+const server = serve(app);
 console.log(`🚀 Server running at http://localhost:${server.port}`);

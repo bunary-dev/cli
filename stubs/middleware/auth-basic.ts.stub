@@ -4,6 +4,10 @@ import type { AuthUser } from "@bunary/auth";
 /**
  * Basic Auth guard: verify username/password against env (or replace with DB lookup).
  * Requires BASIC_AUTH_USER and BASIC_AUTH_PASSWORD in env (e.g. in .env).
+ *
+ * Register it with router.use({{functionName}}); handlers then read the
+ * request-scoped auth context from ctx.locals.auth (type the router with
+ * createRouter<AuthLocals>(), AuthLocals from @bunary/auth).
  */
 const envUser = process.env.BASIC_AUTH_USER;
 const envPass = process.env.BASIC_AUTH_PASSWORD;

@@ -58,3 +58,23 @@ describe("agent instructions", () => {
 		expect(text).toContain("No npm publishing");
 	});
 });
+
+describe("generated-code examples match the 0.4.0 stubs (#141)", () => {
+	test("docs/index.md shows createRouter / Router, not the removed BunaryApp", async () => {
+		const text = await Bun.file(join(root, "docs/index.md")).text();
+		const stubs = join(root, "stubs");
+		expect(text).not.toContain("BunaryApp");
+		expect(text).not.toMatch(/app\.(listen|use)\(/);
+		expect(text).toContain("tsconfig.json");
+		for (const [stub, snippet] of [
+			["project/entrypoint.ts.stub", "providers: [httpProvider(router)]"],
+			["project/entrypoint.ts.stub", "const server = serve(app);"],
+			["project/routes/index.ts.stub", "registerRoutes(router: Router)"],
+			["project/config.ts.stub", "port: 3000"],
+			["route/make.ts.stub", '.name("{{routeName}}.show").whereNumber("id")'],
+		] as const) {
+			expect(await Bun.file(join(stubs, stub)).text()).toContain(snippet);
+			expect(text).toContain(snippet.replace("{{routeName}}", "users"));
+		}
+	});
+});

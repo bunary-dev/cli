@@ -57,12 +57,12 @@ describe("make commands show next steps", () => {
 		expect(output).toContain("src/routes/index.ts");
 	});
 
-	it("make:middleware shows next steps with import and app.use()", async () => {
+	it("make:middleware shows next steps with import and router.use()", async () => {
 		await makeMiddleware("ensure-auth");
 		const output = logOutput.join("\n");
 		expect(output).toContain("Next:");
 		expect(output).toContain("ensureAuthMiddleware");
-		expect(output).toContain("app.use(");
+		expect(output).toContain("router.use(");
 	});
 
 	it("make:command shows how to register the command", async () => {

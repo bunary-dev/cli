@@ -19,7 +19,7 @@
  * //   Next: Add to src/routes/index.ts:
  * //
  * //     import { registerUsers } from "./users.js";
- * //     registerUsers(app);
+ * //     registerUsers(router);
  * ```
  */
 export function routeNextSteps(
@@ -31,7 +31,7 @@ export function routeNextSteps(
 		`  Next: Add to src/routes/index.ts:`,
 		"",
 		`    import { ${functionName} } from "./${routeName}.js";`,
-		`    ${functionName}(app);`,
+		`    ${functionName}(router);`,
 	].join("\n");
 }
 
@@ -49,7 +49,7 @@ export function routeNextSteps(
  * //   Next: Register in src/index.ts:
  * //
  * //     import { ensureAuthMiddleware } from "./middleware/ensure-auth.js";
- * //     app.use(ensureAuthMiddleware);
+ * //     router.use(ensureAuthMiddleware);
  * ```
  */
 export function middlewareNextSteps(
@@ -61,7 +61,7 @@ export function middlewareNextSteps(
 		`  Next: Register in src/index.ts:`,
 		"",
 		`    import { ${functionName} } from "./middleware/${middlewareName}.js";`,
-		`    app.use(${functionName});`,
+		`    router.use(${functionName});`,
 	].join("\n");
 }
 
