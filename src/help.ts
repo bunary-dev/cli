@@ -38,7 +38,11 @@ function categoryLabel(category: string): string {
 
 /** Flag label for help output, e.g. "-p, --port" or "--auth basic|jwt". */
 function flagLabel(flag: CommandFlag): string {
-	const values = flag.values ? ` ${flag.values.join("|")}` : "";
+	const values = flag.values
+		? ` ${flag.values.join("|")}`
+		: flag.placeholder
+			? ` <${flag.placeholder}>`
+			: "";
 	const alias = flag.alias ? `${flag.alias}, ` : "";
 	return `${alias}${flag.name}${values}`;
 }

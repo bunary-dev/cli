@@ -35,4 +35,55 @@ describe("normalizeCommand", () => {
 		} satisfies CoreCommand;
 		expect(normalizeCommand(core, "project").category).toBe("project");
 	});
+
+	test("a `<placeholder>` in a core flag name declares a value-taking flag", () => {
+		// Core's CommandFlag has no `takesValue` (#137): the placeholder is the
+		// typed way to declare a free-text flag in an app or package command.
+		const core: CoreCommand = {
+			name: "export",
+			description: "Export",
+			usage: "bunary export",
+			category: "project",
+			flags: [
+				{ name: "out <dir>", alias: "o", description: "Output directory" },
+				{ name: "--to <file>", description: "Target file" },
+				{ name: "force", description: "Overwrite" },
+			],
+			run: async () => {},
+		};
+		const out = normalizeCommand(core, "project");
+		expect(out.flags).toEqual([
+			{
+				name: "--out",
+				alias: "-o",
+				description: "Output directory",
+				takesValue: true,
+				placeholder: "dir",
+			},
+			{
+				name: "--to",
+				description: "Target file",
+				takesValue: true,
+				placeholder: "file",
+			},
+			{ name: "--force", description: "Overwrite" },
+		]);
+	});
+
+	test("keeps `takesValue` set on flags at runtime", () => {
+		const outFlag = { name: "out", description: "Out", takesValue: true };
+		const core: CoreCommand = {
+			name: "export",
+			description: "Export",
+			usage: "bunary export",
+			category: "project",
+			flags: [outFlag],
+			run: async () => {},
+		};
+		expect(normalizeCommand(core, "project").flags?.[0]).toEqual({
+			name: "--out",
+			description: "Out",
+			takesValue: true,
+		});
+	});
 });

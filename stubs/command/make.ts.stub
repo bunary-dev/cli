@@ -20,7 +20,10 @@ export const {{exportName}}: Command = {
 	usage: "bunary {{commandName}}",
 	category: "project",
 	// args: [{ name: "name", required: true, description: "..." }],
-	// flags: [{ name: "force", alias: "f", description: "..." }],
+	// flags: [
+	// 	{ name: "force", alias: "f", description: "..." },
+	// 	{ name: "out <dir>", description: "A flag that takes a value" },
+	// ],
 	async run(args, flags) {
 		console.log("{{commandName}}", args, flags);
 	},
