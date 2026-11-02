@@ -58,7 +58,7 @@ Run `bunary init` with no name in a terminal and it walks you through the setup 
 
 All scaffolding commands (`init` and every `make:*`) accept `--dry-run` to print the files that would be created without writing anything (exit code 0); add `--verbose` to also print file contents. The flag may come before the command: `bunary --dry-run init my-app`.
 
-The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`. The generated project typechecks with `bunx tsc --noEmit` against the `^0.4.0` packages it pins.
+The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`. The generated project typechecks with `bunx tsc --noEmit` against the packages it pins (`@bunary/http` `^0.7.1`, `@bunary/core` `^0.4.0`).
 
 ### Generators (make:*)
 
@@ -132,7 +132,7 @@ What init and the generators produce. The output is written against the
 `httpProvider` and started with `serve` from `@bunary/http/provider`), and
 `createAuth` with the guards of `@bunary/auth`.
 
-**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`, both `^0.4.0`. With `--auth basic` or `--auth jwt`, `@bunary/auth` `^0.4.0` is added.
+**package.json (default):** dependencies include `@bunary/core` `^0.4.0` and `@bunary/http` `^0.7.1`, so new projects can use route model binding (`bind` / `ctx.bound`, also on `router.ws()`) and get a `404` for a `ModelNotFoundError`. With `--auth basic` or `--auth jwt`, `@bunary/auth` `^0.4.0` is added.
 
 **tsconfig.json:** Strict, `moduleResolution: "bundler"`, `noEmit`, with Bun's types, so `bunx tsc --noEmit` typechecks the project.
 
@@ -224,7 +224,7 @@ export function registerUsers(router: Router): void {
 
 **make:provider output:** A `defineProvider({ name, register, boot })` export, e.g. `cacheProvider`. Add it to the `providers` array in `src/index.ts`.
 
-The CLI test suite generates projects with every combination of `init` and `make:*`, installs the published `^0.4.0` packages and checks they pass `tsc --noEmit`.
+The CLI test suite generates projects with every combination of `init` and `make:*`, installs the published packages `init` pins and checks they pass `tsc --noEmit` and serve their routes, including one that uses route model binding.
 
 ## Running the CLI from code
 

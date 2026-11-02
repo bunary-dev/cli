@@ -2,9 +2,10 @@
  * Generated code compiles against the published packages (#141).
  *
  * Scaffolds real projects with the `bunary` binary (`init`, `init --auth
- * basic|jwt`, then every `make:*` generator), installs the `^0.4.0` packages
- * they pin from the npm registry and asserts `tsc --noEmit` reports nothing,
- * the entrypoint's imports resolve and the routes answer requests.
+ * basic|jwt`, then every `make:*` generator), installs the packages they pin
+ * (`@bunary/http` `^0.7.1`, the rest `^0.4.0`) from the npm registry and
+ * asserts `tsc --noEmit` reports nothing, the entrypoint's imports resolve and
+ * the routes answer requests, including a route model binding route (#144).
  *
  * Needs the network. Offline (or with BUNARY_SKIP_NETWORK_TESTS=1) the tests
  * are skipped and say why.
@@ -17,6 +18,30 @@ import { makeTempDir } from "./helpers/temp-dir.js";
 const root = join(import.meta.dir, "..");
 const bin = join(root, "src", "bin.ts");
 const REGISTRY = "https://registry.npmjs.org/@bunary%2fhttp";
+
+/** Minor each scaffolded `@bunary/*` package must resolve to. */
+const INSTALLED: Record<string, RegExp> = {
+	core: /^0\.4\./,
+	http: /^0\.7\.([1-9]|\d{2,})/,
+	auth: /^0\.4\./,
+};
+
+/**
+ * A route using route model binding (`bind` / `ctx.bound`, @bunary/http
+ * 0.7.1+), added to the generated project so it is typechecked and served.
+ */
+const POSTS_ROUTE = `import type { Router } from "@bunary/http";
+
+const posts = new Map([[1, { id: 1, title: "Hello" }]]);
+
+export function registerPosts(router: Router): void {
+	router.get(
+		"/posts/:post",
+		{ bind: { post: (id) => posts.get(Number(id)) } },
+		(ctx) => ({ id: ctx.bound.post.id, title: ctx.bound.post.title }),
+	);
+}
+`;
 
 async function registryReachable(): Promise<boolean> {
 	if (process.env.BUNARY_SKIP_NETWORK_TESTS === "1") return false;
@@ -73,10 +98,12 @@ const SMOKE = `import { createRouter } from "@bunary/http";
 import config from "./config/bunary.js";
 import { registerRoutes } from "./src/routes/index.js";
 import { registerUsers } from "./src/routes/users.js";
+import { registerPosts } from "./src/routes/posts.js";
 
 const router = createRouter();
 registerRoutes(router);
 registerUsers(router);
+registerPosts(router);
 const get = async (path: string) => {
 	const res = await router.fetch(new Request("http://localhost" + path));
 	return { status: res.status, body: await res.json() };
@@ -84,14 +111,17 @@ const get = async (path: string) => {
 console.log(JSON.stringify({
 	name: config.app.name,
 	port: config.http?.port,
+	home: await get("/"),
 	health: await get("/health"),
 	api: await get("/api/users/7"),
 	users: await get("/users/3"),
+	post: await get("/posts/1"),
+	missingPost: await get("/posts/2"),
 }));
 `;
 
 describe.skipIf(!online)(
-	"generated projects compile against @bunary/* ^0.4.0",
+	"generated projects compile against the @bunary/* versions init pins",
 	() => {
 		for (const auth of [undefined, "basic", "jwt"] as const) {
 			const label = auth ? `init --auth ${auth}` : "init";
@@ -112,6 +142,7 @@ describe.skipIf(!online)(
 				await bunary(["make:middleware", "log-request"], app);
 				await bunary(["make:command", "send-emails"], app);
 				await bunary(["make:provider", "cache"], app);
+				await writeFile(join(app, "src", "routes", "posts.ts"), POSTS_ROUTE);
 
 				const install = await spawn(["bun", "install"], app);
 				expect(install.code, install.output).toBe(0);
@@ -119,7 +150,7 @@ describe.skipIf(!online)(
 					const installed = await Bun.file(
 						join(app, "node_modules", "@bunary", pkg, "package.json"),
 					).json();
-					expect(installed.version).toMatch(/^0\.4\./);
+					expect(installed.version).toMatch(INSTALLED[pkg] as RegExp);
 				}
 
 				const tsc = await spawn(
@@ -155,12 +186,24 @@ describe.skipIf(!online)(
 				const result = JSON.parse(smoke.stdout.trim());
 				expect(result.name).toBe("app");
 				expect(result.port).toBe(3000);
+				expect(result.home).toMatchObject({
+					status: 200,
+					body: { message: "Welcome to Bunary!" },
+				});
 				expect(result.health).toMatchObject({
 					status: 200,
 					body: { status: "ok" },
 				});
 				expect(result.api).toEqual({ status: 200, body: { id: "7" } });
 				expect(result.users).toEqual({ status: 200, body: { id: "3" } });
+				expect(result.post).toEqual({
+					status: 200,
+					body: { id: 1, title: "Hello" },
+				});
+				expect(result.missingPost).toMatchObject({
+					status: 404,
+					body: { status: 404, detail: "post not found" },
+				});
 			}, 180_000);
 		}
 	},
