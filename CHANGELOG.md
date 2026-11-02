@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-The CLI is reduced to project scaffolding, `make:*` generators and a command runner; migrations move to drizzle-kit (#96).
+## [0.4.0] - 2026-11-02
+
+0.4.0 baseline: every `@bunary/*` package moves to 0.4.0 together (#134). There is no cli 0.3.0. The CLI is reduced to project scaffolding, `make:*` generators and a command runner; migrations move to drizzle-kit (#96).
 
 ### Breaking
 
 - Generators renamed to `make:*`: `route:make` → `make:route`, `middleware:make` → `make:middleware`. The old names print the new one (#96)
 - Removed `migrate`, `migrate:rollback`, `migrate:status`, `migration:make` and `model:make`, the migration runner (`scripts/migrate.ts` stub) and the `@bunary/orm` dependency check. Use drizzle-kit, or `@bunary/orm`'s `make:model` / `db:*` commands once it ships them. The old names print where to go instead (#96)
 - The `bin` entry is now `dist/bin.js`; `dist/index.js` is a side-effect-free library entry exporting `run(argv)` and the command types (#84, #96)
+- `bunary init` pins `@bunary/core` and `@bunary/http` to `^0.4.0`, and `init --auth` adds `@bunary/auth` `^0.4.0` (previously `^0.2.0`, `^0.3.0` and `^0.1.0`) (#134)
+- Requires `@bunary/core` `^0.4.0`. The exported `Command`, `CommandArg` and `CommandFlag` types are now built on `Command` from `@bunary/core` instead of a copy; flag-name normalisation (`"dry-run"` → `"--dry-run"`) is unchanged (#122, #134)
 
 ### Added
 
