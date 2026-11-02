@@ -13,7 +13,7 @@ import { makeTempDir } from "../helpers/temp-dir.js";
 
 /** Expected dependency versions — update here when packages are released. */
 const EXPECTED_CORE_VERSION = "^0.4.0";
-const EXPECTED_HTTP_VERSION = "^0.4.0";
+const EXPECTED_HTTP_VERSION = "^0.7.1";
 const EXPECTED_AUTH_VERSION = "^0.4.0";
 
 let TEST_DIR: string;
