@@ -11,6 +11,8 @@ import { makeTempDir } from "./helpers/temp-dir.js";
 const root = join(import.meta.dir, "..");
 const bin = join(root, "src", "bin.ts");
 const BASELINE = "^0.4.0";
+/** http is ahead of the baseline: 0.7.1 ships route model binding (#144). */
+const HTTP = "^0.7.1";
 
 async function spawn(cmd: string[], cwd: string) {
 	const proc = Bun.spawn(cmd, { cwd, stdout: "pipe", stderr: "pipe" });
@@ -51,22 +53,22 @@ describe("0.4.0 baseline", () => {
 		expect(bunaryDeps(pkg)).toEqual({ "@bunary/core": BASELINE });
 	});
 
-	test("bunary init pins every @bunary/* dependency to ^0.4.0", async () => {
+	test("bunary init pins @bunary/http ^0.7.1 and every other @bunary/* dependency to ^0.4.0", async () => {
 		const app = await initProject();
 		const pkg = await Bun.file(join(app, "package.json")).json();
 		expect(bunaryDeps(pkg)).toEqual({
 			"@bunary/core": BASELINE,
-			"@bunary/http": BASELINE,
+			"@bunary/http": HTTP,
 		});
 	});
 
 	for (const auth of ["basic", "jwt"]) {
-		test(`bunary init --auth ${auth} pins every @bunary/* dependency to ^0.4.0`, async () => {
+		test(`bunary init --auth ${auth} pins @bunary/http ^0.7.1 and every other @bunary/* dependency to ^0.4.0`, async () => {
 			const app = await initProject("--auth", auth);
 			const pkg = await Bun.file(join(app, "package.json")).json();
 			expect(bunaryDeps(pkg)).toEqual({
 				"@bunary/core": BASELINE,
-				"@bunary/http": BASELINE,
+				"@bunary/http": HTTP,
 				"@bunary/auth": BASELINE,
 			});
 		});
