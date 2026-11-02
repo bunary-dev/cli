@@ -21,7 +21,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { Command } from "../types/command.js";
+import type { Command, CoreCommand } from "../types/command.js";
 import { findInvalidField, normalizeCommand } from "./normalizeCommand.js";
 import { isBunaryProject } from "./validation.js";
 
@@ -113,7 +113,7 @@ export async function loadProjectCommands(
 			);
 			continue;
 		}
-		validated.push(normalizeCommand(entry as Command, "project"));
+		validated.push(normalizeCommand(entry as CoreCommand, "project"));
 	}
 
 	return validated;

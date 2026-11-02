@@ -8,14 +8,22 @@ Command-line interface for the Bunary framework: project scaffolding (`init`), `
 
 ## Installation
 
+Globally, so `bunary` is on your PATH:
+
 ```bash
-bun add -g @bunary/cli
+bun add -g @bunary/cli@^0.4.0
+```
+
+Or per project, run with `bunx bunary`:
+
+```bash
+bun add @bunary/cli@^0.4.0
 ```
 
 Or use directly with `bunx`:
 
 ```bash
-bunx @bunary/cli init my-app
+bunx @bunary/cli@^0.4.0 init my-app
 ```
 
 ### From source

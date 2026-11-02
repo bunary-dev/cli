@@ -16,7 +16,7 @@
  */
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { Command } from "../types/command.js";
+import type { Command, CoreCommand } from "../types/command.js";
 import { findInvalidField, normalizeCommand } from "./normalizeCommand.js";
 
 /** Commands contributed by one package. */
@@ -119,7 +119,7 @@ async function loadFromPackage(
 			);
 			continue;
 		}
-		commands.push(normalizeCommand(cmd as Command, packageName));
+		commands.push(normalizeCommand(cmd as CoreCommand, packageName));
 	}
 	return commands;
 }

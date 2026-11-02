@@ -1,16 +1,16 @@
 /**
  * Command definition for the CLI registry.
  *
- * Each CLI command is a self-contained module that exports a `Command`
- * object describing its name, metadata, and handler. The registry
- * collects these definitions to power dispatch, help output, and
- * "Did you mean?" suggestions from a single source of truth.
+ * The contract is `Command` from `@bunary/core`, which apps and packages
+ * implement so they never depend on the CLI. The registry works on a
+ * normalized form of it, defined here as a thin extension:
  *
- * The shape mirrors the `Command` contract in `@bunary/core`, which is what
- * apps and packages implement so they never depend on the CLI. Commands from
- * outside the CLI are normalized on load (see `utils/normalizeCommand.ts`):
- * core flag names without dashes (`"dry-run"`, alias `"d"`) become
- * `"--dry-run"` / `"-d"` here.
+ * - flag names carry their dashes (`"--dry-run"`, alias `"-d"`). Commands
+ *   from outside the CLI are normalized on load (see
+ *   `utils/normalizeCommand.ts`), so core flag names without dashes
+ *   (`"dry-run"`, alias `"d"`) are accepted;
+ * - `usage` is optional (built-ins derive it from `name` and `args`);
+ * - flags may declare `takesValue` / `boolean`.
  *
  * @example
  * ```ts
@@ -27,26 +27,17 @@
  * };
  * ```
  */
+import type {
+	CommandArg,
+	Command as CoreCommand,
+	CommandFlag as CoreCommandFlag,
+} from "@bunary/core";
+
+export type { CommandArg, CoreCommand, CoreCommandFlag };
 
 /**
- * A positional argument accepted by a command.
- *
- * @example
- * ```ts
- * const arg: CommandArg = { name: "name", required: true, description: "Route name" };
- * ```
- */
-export interface CommandArg {
-	/** Argument name shown in usage (e.g. "name", "table") */
-	name: string;
-	/** Whether the argument is required */
-	required: boolean;
-	/** Short description for help output */
-	description: string;
-}
-
-/**
- * A flag accepted by a command.
+ * A flag accepted by a command: core's `CommandFlag` with the name spelled
+ * with dashes, plus value handling.
  *
  * @example
  * ```ts
@@ -57,15 +48,11 @@ export interface CommandArg {
  * };
  * ```
  */
-export interface CommandFlag {
+export interface CommandFlag extends CoreCommandFlag {
 	/** Flag name including dashes (e.g. "--auth") */
 	name: string;
-	/** Optional single-character alias (e.g. "-a") */
+	/** Optional single-character alias including the dash (e.g. "-a") */
 	alias?: string;
-	/** Short description for help output */
-	description: string;
-	/** Allowed values, if restricted (e.g. ["basic", "jwt"]) */
-	values?: string[];
 	/**
 	 * Whether the flag requires a value (implied when `values` is set).
 	 * A flag declaring neither `takesValue` nor `values` is treated as a
@@ -85,10 +72,8 @@ export interface CommandFlag {
 export type CommandCategory = "scaffold" | "database" | "project";
 
 /**
- * A CLI command definition.
- *
- * Each command module exports a `Command` object that the registry
- * uses for dispatch, help generation, and suggestion matching.
+ * A command as held by the registry: core's `Command` with optional
+ * `usage` and CLI-style {@link CommandFlag}s.
  *
  * @example
  * ```ts
@@ -103,22 +88,12 @@ export type CommandCategory = "scaffold" | "database" | "project";
  * };
  * ```
  */
-export interface Command {
-	/** The command name used on the CLI (e.g. "make:route") */
-	name: string;
-	/** Short description for help output */
-	description: string;
+export interface Command
+	extends Omit<CoreCommand, "usage" | "category" | "flags"> {
 	/** Full usage line for per-command help (e.g. "bunary make:route <name>") */
 	usage?: string;
 	/** Category for grouped help output */
 	category: CommandCategory | (string & {});
-	/** Required positional arguments */
-	args?: CommandArg[];
 	/** Supported flags */
 	flags?: CommandFlag[];
-	/** The handler function */
-	run: (
-		args: string[],
-		flags: Record<string, string | boolean>,
-	) => Promise<void>;
 }

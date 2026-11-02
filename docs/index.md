@@ -4,14 +4,22 @@ Command-line interface for the Bunary framework. Provides project scaffolding an
 
 ## Installation
 
+Globally, so `bunary` is on your PATH:
+
 ```bash
-bun add -g @bunary/cli
+bun add -g @bunary/cli@^0.4.0
+```
+
+Or per project, run with `bunx bunary`:
+
+```bash
+bun add @bunary/cli@^0.4.0
 ```
 
 Or use directly with `bunx`:
 
 ```bash
-bunx @bunary/cli --help
+bunx @bunary/cli@^0.4.0 --help
 ```
 
 To run the current source, or a standalone binary with the stubs embedded
@@ -120,7 +128,7 @@ At startup the CLI reads your `package.json` (`dependencies` and `devDependencie
 
 What init and the generators produce.
 
-**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`. With `--auth basic` or `--auth jwt`, `@bunary/auth` is added.
+**package.json (default):** dependencies include `@bunary/core` and `@bunary/http`, both `^0.4.0`. With `--auth basic` or `--auth jwt`, `@bunary/auth` `^0.4.0` is added.
 
 **config/bunary.ts:** Uses `defineConfig` from `@bunary/core`. Sets app name, env, debug.
 
@@ -136,7 +144,7 @@ What init and the generators produce.
 
 **make:provider output:** A `defineProvider({ name, register, boot })` export, e.g. `cacheProvider`.
 
-`make:command` and `make:provider` output use the `Command` and `defineProvider` exports of `@bunary/core` 1.0.
+`make:command` and `make:provider` output use the `Command` and `defineProvider` exports of `@bunary/core` 0.4.0.
 
 ## Running the CLI from code
 

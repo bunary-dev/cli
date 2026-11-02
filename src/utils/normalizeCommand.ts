@@ -6,7 +6,7 @@
  * names carry no dashes (`"dry-run"`, alias `"d"`). The CLI registry uses
  * `"--dry-run"` / `"-d"`, so both spellings are accepted and normalized.
  */
-import type { Command, CommandFlag } from "../types/command.js";
+import type { Command, CommandFlag, CoreCommand } from "../types/command.js";
 
 /**
  * Find the first required field a command entry is missing or has wrong.
@@ -40,7 +40,7 @@ function withDashes(name: string, dashes: string): string {
  * Normalize a valid external command for the registry: default the
  * category and convert core-style flag names to CLI flag names.
  *
- * @param entry - A command that passed {@link findInvalidField}
+ * @param entry - A core (or CLI-style) command that passed {@link findInvalidField}
  * @param defaultCategory - Category to use when the entry has none
  * @returns A registry-ready command
  *
@@ -54,7 +54,7 @@ function withDashes(name: string, dashes: string): string {
  * ```
  */
 export function normalizeCommand(
-	entry: Command,
+	entry: CoreCommand | Command,
 	defaultCategory: string,
 ): Command {
 	const category =
