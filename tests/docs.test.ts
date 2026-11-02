@@ -78,3 +78,13 @@ describe("generated-code examples match the 0.4.0 stubs (#141)", () => {
 		}
 	});
 });
+
+describe("project command flags docs (#137)", () => {
+	for (const file of ["docs/index.md", "README.md"]) {
+		test(`${file} shows the core-compatible value flag form`, async () => {
+			const text = await Bun.file(join(root, file)).text();
+			expect(text).toContain('name: "out <dir>"');
+			expect(text).not.toContain("must set `takesValue: true`");
+		});
+	}
+});

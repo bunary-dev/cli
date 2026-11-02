@@ -308,11 +308,28 @@ Now `bunary db:seed` and `bunary deploy` work from your project root. They also 
 
 ### Declaring flags in project commands
 
-Flags that accept a value must set `takesValue: true` (or list `values`) in their `CommandFlag` definition. A flag declaring neither is a boolean switch: it never consumes the next argument, and `--flag=value` is rejected with an error.
+A flag is a boolean switch unless it declares that it takes a value. A switch never consumes the next argument, and `--flag=value` on it is rejected with an error.
+
+`CommandFlag` from `@bunary/core` has no `takesValue` field, so a free-text flag puts a value placeholder in its name: `"out <dir>"` (or `"--out <dir>"`). The CLI reads that as the flag `--out` taking a value, and per-command help shows it as `--out <dir>`. A flag that lists `values` takes one of those values.
 
 ```ts
-flags: [
-  { name: "--out", description: "Output directory", takesValue: true },
-  { name: "--force", description: "Overwrite files" },
-],
+import type { Command } from "@bunary/core";
+
+export const exportCommand: Command = {
+  name: "export",
+  description: "Export the data",
+  usage: "bunary export [--out <dir>] [--format json|csv] [--force]",
+  category: "project",
+  flags: [
+    { name: "out <dir>", alias: "o", description: "Output directory" },
+    { name: "format", description: "Output format", values: ["json", "csv"] },
+    { name: "force", description: "Overwrite files" },
+  ],
+  async run(args, flags) {
+    // bunary export --out=dist --force → flags: { out: "dist", force: true }
+    // bunary export -o dist            → flags: { out: "dist" }
+  },
+};
 ```
+
+The CLI also accepts `takesValue: true` on a flag at runtime, but core's `Command` type rejects it in an object literal, so prefer the placeholder.

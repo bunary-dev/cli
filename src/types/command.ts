@@ -10,7 +10,9 @@
  *   `utils/normalizeCommand.ts`), so core flag names without dashes
  *   (`"dry-run"`, alias `"d"`) are accepted;
  * - `usage` is optional (built-ins derive it from `name` and `args`);
- * - flags may declare `takesValue` / `boolean`.
+ * - flags may declare `takesValue` / `boolean`. Core's `CommandFlag` has
+ *   no `takesValue`, so external commands declare a value-taking flag with
+ *   a placeholder in the name (`"out <dir>"`), normalized to `takesValue`.
  *
  * @example
  * ```ts
@@ -58,9 +60,12 @@ export interface CommandFlag extends CoreCommandFlag {
 	 * A flag declaring neither `takesValue` nor `values` is treated as a
 	 * boolean switch: it never consumes the next argument, and
 	 * `--flag=value` is rejected. Set `takesValue: true` on every flag that
-	 * accepts a value.
+	 * accepts a value. Commands typed with core's `CommandFlag` write the
+	 * name as `"out <dir>"` instead, which normalizes to this.
 	 */
 	takesValue?: boolean;
+	/** Value name shown in help (e.g. "dir" renders `--out <dir>`) */
+	placeholder?: string;
 	/** Switch that never takes a value (e.g. "--dry-run") */
 	boolean?: boolean;
 }

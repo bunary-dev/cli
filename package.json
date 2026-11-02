@@ -1,6 +1,6 @@
 {
 	"name": "@bunary/cli",
-	"version": "0.4.2",
+	"version": "0.4.3",
 	"description": "Bunary CLI: project scaffolding, make:* generators and a runner for app and package commands",
 	"type": "module",
 	"bin": {

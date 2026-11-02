@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-02
+
+### Fixed
+
+- App and package commands typed with `Command` from `@bunary/core` can declare a flag that takes a value: core's `CommandFlag` has no `takesValue`, so a value placeholder in the name (`{ name: "out <dir>" }`) now declares `--out` as taking a value (`--out dir`, `--out=dir`, `-o dir`), and per-command help shows `--out <dir>`. The docs and README no longer tell project commands to set `takesValue: true`, which core's type rejects, and the `make:command` stub shows the placeholder form (#137)
+
 ## [0.4.2] - 2026-11-02
 
 ### Fixed

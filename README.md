@@ -66,7 +66,7 @@ The CLI ships no migration commands. With `@bunary/orm` installed, it contribute
 
 ## Declaring flags in project commands
 
-Flags in a `CommandFlag` definition that accept a value must set `takesValue: true` (or list `values`). A flag with neither is a boolean switch: it never consumes the next argument, and `--flag=value` is rejected with an error.
+A flag in a `CommandFlag` definition is a boolean switch unless it takes a value: it never consumes the next argument, and `--flag=value` is rejected with an error. `@bunary/core`'s `CommandFlag` has no `takesValue`, so declare a free-text flag with a value placeholder in its name, e.g. `{ name: "out <dir>", description: "Output directory" }` for `--out <dir>`, or list the accepted `values`. See [docs/index.md](./docs/index.md#declaring-flags-in-project-commands).
 
 ## Requirements
 

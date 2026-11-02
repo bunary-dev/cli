@@ -113,4 +113,29 @@ describe("run()", () => {
 		expect(await run(["deploy"])).toBe(1);
 		expect(err).toContain("project commands are unavailable: bad");
 	});
+
+	test("an app command reads a free-text flag declared as `name <placeholder>` (#137)", async () => {
+		await mkdir(join(cwd, "config"));
+		await writeFile(
+			join(cwd, "config", "bunary.ts"),
+			`export default { app: { name: "app" }, commands: [
+				{
+					name: "export",
+					description: "Export",
+					flags: [
+						{ name: "out <dir>", alias: "o", description: "Output directory" },
+						{ name: "force", description: "Overwrite" },
+					],
+					run: async (_args, flags) => { console.log("flags", JSON.stringify(flags)); },
+				},
+			] };`,
+		);
+		expect(await run(["export", "--out=dist", "--force"])).toBe(0);
+		expect(out).toContain('flags {"out":"dist","force":true}');
+		expect(await run(["export", "-o", "build"])).toBe(0);
+		expect(out).toContain('flags {"out":"build"}');
+		expect(await run(["export", "--help"])).toBe(0);
+		expect(out).toContain("-o, --out <dir>");
+		expect(await run(["export", "--force=yes"])).toBe(1);
+	});
 });
