@@ -53,7 +53,9 @@ describe("make:route command", () => {
 		const routePath = join(testDir, "src", "routes", "users.ts");
 		const content = readFileSync(routePath, "utf-8");
 		expect(content).toContain("export function registerUsers");
-		expect(content).toContain("BunaryApp");
+		expect(content).toContain('import type { Router } from "@bunary/http"');
+		expect(content).toContain("registerUsers(router: Router)");
+		expect(content).not.toContain("BunaryApp");
 	});
 
 	it("should generate with named routes and typed params", async () => {

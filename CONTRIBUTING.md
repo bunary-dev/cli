@@ -9,6 +9,10 @@ bun run lint
 bun run typecheck
 ```
 
+`tests/generated-project.test.ts` scaffolds projects, installs the published
+`@bunary/*` packages from npm and runs `tsc --noEmit` on them. Offline it skips
+itself with a message; set `BUNARY_SKIP_NETWORK_TESTS=1` to skip it on purpose.
+
 ## Temp dirs in tests
 
 Tests that need a scratch directory must create it with the helper in

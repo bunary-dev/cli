@@ -27,6 +27,7 @@ import {
 	generateRoutesIndex,
 	generateRoutesMain,
 } from "./project/routes.js";
+import { generateTsconfig } from "./project/tsconfig.js";
 import type { InitOptions } from "./project/types.js";
 
 export type { InitOptions } from "./project/types.js";
@@ -53,6 +54,7 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	if (!options?.force) {
 		const targets = [
 			"package.json",
+			"tsconfig.json",
 			"config/bunary.ts",
 			"src/index.ts",
 			"src/routes/main.ts",
@@ -75,6 +77,7 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	// Plan files (relative path, content) before touching the disk
 	const planned: Array<[string, string]> = [
 		["package.json", await generatePackageJson(projectName, options)],
+		["tsconfig.json", await generateTsconfig(options)],
 		["config/bunary.ts", await generateConfig(projectName, options)],
 		["src/index.ts", await generateEntrypoint(options)],
 	];
@@ -149,7 +152,12 @@ export {
 	generateRoutesMain,
 } from "./project/routes.js";
 // Re-export generators and commands for programmatic use
-export { generateConfig, generateEntrypoint, generatePackageJson };
+export {
+	generateConfig,
+	generateEntrypoint,
+	generatePackageJson,
+	generateTsconfig,
+};
 
 const AUTH_CHOICES: Array<{ label: string; value: InitOptions["auth"] }> = [
 	{ label: "None", value: undefined },

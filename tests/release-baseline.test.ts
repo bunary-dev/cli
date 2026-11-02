@@ -45,9 +45,9 @@ function bunaryDeps(pkg: {
 }
 
 describe("0.4.0 baseline", () => {
-	test("package.json is 0.4.0 and depends on @bunary/core ^0.4.0", async () => {
+	test("package.json is 0.4.x and depends on @bunary/core ^0.4.0", async () => {
 		const pkg = await Bun.file(join(root, "package.json")).json();
-		expect(pkg.version).toBe("0.4.0");
+		expect(pkg.version).toMatch(/^0\.4\.\d+$/);
 		expect(bunaryDeps(pkg)).toEqual({ "@bunary/core": BASELINE });
 	});
 

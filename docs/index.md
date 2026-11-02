@@ -58,7 +58,7 @@ Run `bunary init` with no name in a terminal and it walks you through the setup 
 
 All scaffolding commands (`init` and every `make:*`) accept `--dry-run` to print the files that would be created without writing anything (exit code 0); add `--verbose` to also print file contents. The flag may come before the command: `bunary --dry-run init my-app`.
 
-The command creates `package.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`.
+The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`. The generated project typechecks with `bunx tsc --noEmit` against the `^0.4.0` packages it pins.
 
 ### Generators (make:*)
 
@@ -68,11 +68,11 @@ Names must start with a letter and contain only letters, digits, `_` and `-`: no
 
 #### bunary make:route \<name\>
 
-Generates a route module in `src/routes/` with a register function (e.g. `registerUsers(app)`). You then add that function to `src/routes/index.ts` and call it from `registerRoutes`.
+Generates a route module in `src/routes/` with a register function that takes the `Router` from `@bunary/http` (e.g. `registerUsers(router)`). You then add that function to `src/routes/index.ts` and call it from `registerRoutes`.
 
 #### bunary make:middleware \<name\>
 
-Generates a middleware file in `src/middleware/`. For names `basic` or `jwt` it uses the auth stubs (Basic or JWT guard); for other names it uses a generic `(ctx, next)` stub.
+Generates a middleware file in `src/middleware/`. For names `basic` or `jwt` it uses the auth stubs (Basic or JWT guard); for other names it uses a generic `(ctx, next)` stub. Register it with `router.use(...)` in `src/index.ts`.
 
 #### bunary make:command \<name\> [--name \<cli-name\>]
 
@@ -126,25 +126,105 @@ At startup the CLI reads your `package.json` (`dependencies` and `devDependencie
 
 ## Generated files (examples)
 
-What init and the generators produce.
+What init and the generators produce. The output is written against the
+0.4.0 APIs: `createApp` / `defineConfig` / `defineProvider` from
+`@bunary/core`, `createRouter` / `Router` from `@bunary/http` (mounted with
+`httpProvider` and started with `serve` from `@bunary/http/provider`), and
+`createAuth` with the guards of `@bunary/auth`.
 
 **package.json (default):** dependencies include `@bunary/core` and `@bunary/http`, both `^0.4.0`. With `--auth basic` or `--auth jwt`, `@bunary/auth` `^0.4.0` is added.
 
-**config/bunary.ts:** Uses `defineConfig` from `@bunary/core`. Sets app name, env, debug.
+**tsconfig.json:** Strict, `moduleResolution: "bundler"`, `noEmit`, with Bun's types, so `bunx tsc --noEmit` typechecks the project.
 
-**src/index.ts:** Creates the app with `createApp`, calls `registerRoutes(app)`, then `app.listen({ port: 3000 })`. With auth, it also imports the middleware and calls `app.use(basicMiddleware)` or `app.use(jwtMiddleware)`.
+**config/bunary.ts:** Uses `defineConfig` from `@bunary/core`. Sets app name, env, debug, and the `http.port` the server listens on:
 
-**src/routes/main.ts:** Registers `/` and `/health`. groupExample registers `/api` and `/api/health`. You add `make:route` modules in `src/routes/index.ts`.
+```typescript
+import { defineConfig } from "@bunary/core";
 
-**make:middleware output (generic):** A single export, e.g. `ensureAuthMiddleware`, of type `Middleware` from `@bunary/http`, with `(ctx, next)` and `return next()`.
+export default defineConfig({
+  app: {
+    name: "my-app",
+    env: "development",
+    debug: true,
+  },
+  http: {
+    port: 3000,
+  },
+});
+```
 
-**make:route output:** A file that exports e.g. `registerUsers(app: BunaryApp)`; you wire it in `src/routes/index.ts`.
+**src/index.ts:** Builds a router with `createRouter`, registers the routes, mounts the router on a core app with `httpProvider`, boots it with the config above and starts the server with `serve(app)`:
+
+```typescript
+import { createApp } from "@bunary/core";
+import { createRouter } from "@bunary/http";
+import { httpProvider, serve } from "@bunary/http/provider";
+import config from "../config/bunary.js";
+import { registerRoutes } from "./routes/index.js";
+
+const router = createRouter();
+registerRoutes(router);
+
+// Providers (make:provider) go in the providers array, after httpProvider.
+const app = await createApp({
+  config,
+  providers: [httpProvider(router)],
+}).boot();
+
+// Port and hostname come from the `http` key in config/bunary.ts.
+const server = serve(app);
+console.log(`🚀 Server running at http://localhost:${server.port}`);
+```
+
+With `--auth jwt` (or `basic`) the router is typed with `AuthLocals`, so handlers can read `ctx.locals.auth`, and the middleware is registered before the routes:
+
+```typescript
+import type { AuthLocals } from "@bunary/auth";
+import { jwtMiddleware } from "./middleware/jwt.js";
+
+const router = createRouter<AuthLocals>();
+router.use(jwtMiddleware);
+registerRoutes(router);
+```
+
+**src/routes/main.ts:** Registers `/` and `/health`. groupExample registers `/api/health` and `/api/users/:id`. You add `make:route` modules in `src/routes/index.ts`:
+
+```typescript
+import type { Router } from "@bunary/http";
+import { registerMain } from "./main.js";
+import { registerGroupExample } from "./groupExample.js";
+
+export function registerRoutes(router: Router): void {
+	registerMain(router);
+	registerGroupExample(router);
+}
+```
+
+**src/middleware/jwt.ts / basic.ts (`--auth` or `make:middleware jwt|basic`):** `createAuth` from `@bunary/auth` with a `createJwtGuard` (reads `JWT_SECRET`) or `createBasicGuard` (checks `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD`); the module throws at startup if the variables are unset.
+
+**make:middleware output (generic):** A single export, e.g. `ensureAuthMiddleware`, of type `Middleware` from `@bunary/http`, with `(ctx, next)` and `return next()`. Register it with `router.use(ensureAuthMiddleware)`.
+
+**make:route output:** A file that exports e.g. `registerUsers(router: Router)`; you wire it in `src/routes/index.ts`:
+
+```typescript
+import type { Router } from "@bunary/http";
+
+export function registerUsers(router: Router): void {
+	router.get("/users", () => ({
+		data: [],
+	})).name("users.index");
+
+	router.get<{ id: string }>("/users/:id", (ctx) => ({
+		id: ctx.params.id,
+	})).name("users.show").whereNumber("id");
+}
+```
 
 **make:command output:** A `Command` object (`name`, `description`, `usage`, `category`, `run`) exported as e.g. `sendEmailsCommand`.
 
-**make:provider output:** A `defineProvider({ name, register, boot })` export, e.g. `cacheProvider`.
+**make:provider output:** A `defineProvider({ name, register, boot })` export, e.g. `cacheProvider`. Add it to the `providers` array in `src/index.ts`.
 
-`make:command` and `make:provider` output use the `Command` and `defineProvider` exports of `@bunary/core` 0.4.0.
+The CLI test suite generates projects with every combination of `init` and `make:*`, installs the published `^0.4.0` packages and checks they pass `tsc --noEmit`.
 
 ## Running the CLI from code
 

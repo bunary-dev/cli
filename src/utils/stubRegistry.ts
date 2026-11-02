@@ -34,6 +34,9 @@ import projectRoutesIndex from "../../stubs/project/routes/index.ts.stub" with {
 import projectRoutesMain from "../../stubs/project/routes/main.ts.stub" with {
 	type: "text",
 };
+import projectTsconfig from "../../stubs/project/tsconfig.ts.stub" with {
+	type: "text",
+};
 import providerMake from "../../stubs/provider/make.ts.stub" with {
 	type: "text",
 };
@@ -50,6 +53,7 @@ export const STUBS: Readonly<Record<string, string>> = {
 	"project/routes/groupExample.ts": projectRoutesGroupExample,
 	"project/routes/index.ts": projectRoutesIndex,
 	"project/routes/main.ts": projectRoutesMain,
+	"project/tsconfig.ts": projectTsconfig,
 	"provider/make.ts": providerMake,
 	"route/make.ts": routeMake,
 };

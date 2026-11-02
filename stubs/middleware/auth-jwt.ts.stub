@@ -2,6 +2,10 @@ import { createAuth, createJwtGuard } from "@bunary/auth";
 
 /**
  * JWT guard: verify Bearer tokens. Requires JWT_SECRET in env (e.g. in .env).
+ *
+ * Register it with router.use({{functionName}}); handlers then read the
+ * request-scoped auth context from ctx.locals.auth (type the router with
+ * createRouter<AuthLocals>(), AuthLocals from @bunary/auth).
  */
 const secret = process.env.JWT_SECRET;
 if (!secret || secret.trim() === "") {

@@ -9,7 +9,7 @@ import type { Middleware } from "@bunary/http";
  * @example
  * ```ts
  * import { {{functionName}} } from "./middleware/{{middlewareName}}.js";
- * app.use({{functionName}});
+ * router.use({{functionName}});
  * ```
  */
 export const {{functionName}}: Middleware = async (ctx, next) => {

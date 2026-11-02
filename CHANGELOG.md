@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-02
+
+### Fixed
+
+- `bunary init` and `make:route` generate code that compiles against the `^0.4.0` packages they pin: the entrypoint builds a `createRouter` router, mounts it with `httpProvider` and starts it with `serve` from `@bunary/http/provider` on a `createApp` app from `@bunary/core` booted with `config/bunary.ts` (which now sets `http.port`), and route modules take a `Router` instead of the removed `BunaryApp`. With `--auth` the router is typed with `AuthLocals` and the middleware is registered with `router.use()`; `make:route` / `make:middleware` next steps say `router` instead of `app`. `init` also writes a `tsconfig.json`, so `bunx tsc --noEmit` works in the new project, and refuses to overwrite an existing one without `--force`. A test now installs the published packages and typechecks every `init` / `make:*` output (#141)
+
 ## [0.4.0] - 2026-11-02
 
 0.4.0 baseline: every `@bunary/*` package moves to 0.4.0 together (#134). There is no cli 0.3.0. The CLI is reduced to project scaffolding, `make:*` generators and a command runner; migrations move to drizzle-kit (#96).
