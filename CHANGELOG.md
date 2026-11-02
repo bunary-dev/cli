@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-02
+
+### Fixed
+
+- `bunary init` pins `@bunary/http` `^0.7.1` instead of `^0.4.0`, so new projects can use route model binding (`bind` / `ctx.bound`, also on `router.ws()`) and get the `ModelNotFoundError` → `404` mapping. `@bunary/core` and `@bunary/auth` stay `^0.4.0`, their current published versions (#144)
+
 ## [0.4.1] - 2026-11-02
 
 ### Fixed
