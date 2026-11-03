@@ -71,7 +71,7 @@ The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/in
 
 `GET /api/me` returns the authenticated user's id (`{ "id": "ada" }`), nothing else. A request without valid credentials (missing, wrong password, or a tampered, expired or wrongly signed JWT) gets the `401` [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem response of `requireAuth()` from `@bunary/auth/provider` (`Content-Type: application/problem+json`), with a challenge header: `WWW-Authenticate: Basic realm="app", charset="UTF-8"` for Basic, `WWW-Authenticate: Bearer` for JWT.
 
-The middleware reads its settings from env vars. `init` writes them, with empty values, to `.env.example`; no secret or default value is scaffolded. Before `bun run dev`, copy it and fill them in (Bun loads `.env` automatically, and the generated `.gitignore` keeps it out of git):
+The middleware reads its settings from env vars. `init` (or `make:middleware basic|jwt` in an existing project) writes them, with empty values, to `.env.example`; no secret or default value is scaffolded. Before `bun run dev`, copy it and fill them in (Bun loads `.env` automatically, and the generated `.gitignore` keeps it out of git):
 
 ```bash
 cp .env.example .env
@@ -109,6 +109,14 @@ Generates a route module in `src/routes/` with a register function that takes th
 #### bunary make:middleware \<name\>
 
 Generates a middleware file in `src/middleware/`. For other names it uses a generic `(ctx, next)` stub: register it with `router.use(...)` in `src/index.ts`. For names `basic` or `jwt` it writes the auth file `init --auth` uses (an `authConfig` with the Basic or JWT guard, and a `requireAuth()` middleware); the next steps it prints show how to boot `authProvider` with `authConfig` and protect a route group (see [Auth scaffolding](#auth-scaffolding---auth-basicjwt)).
+
+For `basic` and `jwt` it also sets up the env file the middleware reads, like `init --auth` does:
+
+- `.env.example` is created with the same content `init --auth` writes, or, if it exists, the keys it lacks (`BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD`, or `JWT_SECRET`) are appended with empty values and their comment lines. Existing lines are kept, and a key already present is never repeated, so running `basic` then `jwt` lists both sets. A real `.env` is never touched.
+- `.gitignore` is created, or extended, so it ignores `.env` (and keeps `.env.example` tracked); patterns already there are not repeated.
+- The next steps add `cp .env.example .env` and which variables to fill in. Until they are set, the app refuses to start with a message pointing at `.env.example`.
+
+With `--dry-run` the `.env.example` and `.gitignore` changes are listed (marked `(update)` for an existing file; `--verbose` shows the resulting content) and nothing is written. Other middleware names touch neither file.
 
 #### bunary make:command \<name\> [--name \<cli-name\>]
 

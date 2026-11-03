@@ -36,6 +36,19 @@ export function routeNextSteps(
 }
 
 /**
+ * The env vars the auth middleware reads, as named in the "fill in" next step
+ * of `init --auth` and `make:middleware basic|jwt` (#151, #153).
+ *
+ * @param auth - Auth middleware type
+ * @returns e.g. "BASIC_AUTH_USER and BASIC_AUTH_PASSWORD"
+ */
+export function authEnvVars(auth: "basic" | "jwt"): string {
+	return auth === "basic"
+		? "BASIC_AUTH_USER and BASIC_AUTH_PASSWORD"
+		: "JWT_SECRET";
+}
+
+/**
  * Next steps after `make:middleware`.
  *
  * @param middlewareName - Middleware file name (e.g. "ensure-auth")
@@ -53,7 +66,8 @@ export function routeNextSteps(
  * ```
  *
  * For the auth middleware (`basic` / `jwt`) the hint boots `authProvider`
- * with the file's `authConfig` and protects a route group instead (#150).
+ * with the file's `authConfig` and protects a route group instead (#150),
+ * then has the env vars filled in from `.env.example` (#153).
  */
 export function middlewareNextSteps(
 	middlewareName: string,
@@ -72,6 +86,11 @@ export function middlewareNextSteps(
 			"  Protect routes by grouping them behind it:",
 			"",
 			`    router.group({ prefix: "/admin", middleware: [${functionName}] }, (admin) => { ... });`,
+			"",
+			"  Then set its env vars:",
+			"",
+			"    cp .env.example .env",
+			`    fill in ${authEnvVars(middlewareName)} in .env`,
 		].join("\n");
 	}
 	return [

@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-11-03
+
 ### Changed
 
 - Publishing now always rebuilds `dist` from clean (#149)
+
+### Fixed
+
+- `bunary make:middleware basic|jwt` in an existing project now sets up the env file its startup error points at: it creates `.env.example` with the same content as `init --auth`, or appends only the keys it lacks (empty values with the same comment lines; existing lines are kept, no key is repeated, a real `.env` is never touched), and creates or extends `.gitignore` so it ignores `.env`. Its next steps add `cp .env.example .env` and which variables to fill in. `--dry-run` lists both changes without writing them. Other middleware names are unchanged (#153)
 
 ## [0.4.5] - 2026-11-03
 
