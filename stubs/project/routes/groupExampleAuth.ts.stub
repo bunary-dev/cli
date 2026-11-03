@@ -1,0 +1,37 @@
+import type { AuthUser } from "@bunary/auth";
+import type { Router } from "{{bunaryHttp}}";
+import { {{functionName}} } from "../middleware/{{auth}}.js";
+
+/**
+ * Protected route group: every route under /api requires {{authLabel}}
+ * ({{functionName}} answers 401 otherwise). / and /health (main.ts) stay public.
+ *
+ * To protect another route or group, put it in a group with the middleware:
+ *   router.group({ prefix: "/admin", middleware: [{{functionName}}] }, (admin) => { ... })
+ * or add it to this group. Routes registered outside such a group are public.
+ *
+ * See https://github.com/bunary-dev/http#route-groups for more.
+ */
+export function registerGroupExample(router: Router): void {
+	router.group(
+		{ prefix: "/api", name: "api.", middleware: [{{functionName}}] },
+		(api) => {
+			// The authenticated user (set by {{functionName}}); never return secrets
+			api.get("/me", (ctx) => {
+				const user = ctx.locals.user as AuthUser;
+				return { id: user.id };
+			}).name("me");
+
+			api.get("/health", () => ({
+				status: "ok",
+				api: true,
+				timestamp: new Date().toISOString(),
+			})).name("health");
+
+			// Typed params with a constraint — :id must be numeric
+			api.get<{ id: string }>("/users/:id", (ctx) => ({
+				id: ctx.params.id,
+			})).name("users.show").whereNumber("id");
+		},
+	);
+}

@@ -138,8 +138,9 @@ describe("make:middleware command", () => {
 			join(testDir, "src", "middleware", "basic.ts"),
 			"utf-8",
 		);
-		expect(content).toContain("basicMiddleware");
-		expect(content).toContain("createAuth");
+		expect(content).toContain("export const basicMiddleware");
+		expect(content).toContain("export const authConfig");
+		expect(content).toContain("requireAuth");
 		expect(content).toContain("createBasicGuard");
 	});
 
@@ -150,8 +151,9 @@ describe("make:middleware command", () => {
 			join(testDir, "src", "middleware", "jwt.ts"),
 			"utf-8",
 		);
-		expect(content).toContain("jwtMiddleware");
-		expect(content).toContain("createAuth");
+		expect(content).toContain("export const jwtMiddleware");
+		expect(content).toContain("export const authConfig");
+		expect(content).toContain("requireAuth");
 		expect(content).toContain("createJwtGuard");
 	});
 });

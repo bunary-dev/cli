@@ -1,13 +1,16 @@
-import { createAuth, createBasicGuard } from "@bunary/auth";
-import type { AuthUser } from "@bunary/auth";
+import { type AuthConfig, createBasicGuard } from "@bunary/auth";
+import { requireAuth } from "@bunary/auth/provider";
+import type { Middleware } from "@bunary/http";
 
 /**
- * Basic Auth guard: verify username/password against env (or replace with DB lookup).
- * Requires BASIC_AUTH_USER and BASIC_AUTH_PASSWORD in env (e.g. in .env).
+ * Basic Auth: checks BASIC_AUTH_USER / BASIC_AUTH_PASSWORD from env (e.g. in
+ * .env; replace verify with a user lookup for real users).
  *
- * Register it with router.use({{functionName}}); handlers then read the
- * request-scoped auth context from ctx.locals.auth (type the router with
- * createRouter<AuthLocals>(), AuthLocals from @bunary/auth).
+ * - authConfig goes under the `auth` config key read by authProvider
+ *   (src/index.ts: config: { ...config, auth: authConfig }, providers: [authProvider, ...]).
+ * - {{functionName}} protects a group: router.group({ prefix: "/admin", middleware: [{{functionName}}] }, ...).
+ *   Requests without valid credentials get a 401 problem response; handlers
+ *   behind it read the user from ctx.locals.user.
  */
 const envUser = process.env.BASIC_AUTH_USER;
 const envPass = process.env.BASIC_AUTH_PASSWORD;
@@ -16,16 +19,33 @@ if (!envUser?.trim() || !envPass?.trim()) {
 		"BASIC_AUTH_USER and BASIC_AUTH_PASSWORD are required. Set them in your environment (e.g. in .env).",
 	);
 }
-const basicGuard = createBasicGuard({
-	async verify(username, password) {
-		if (username === envUser && password === envPass) {
-			return { id: username, username } as AuthUser;
-		}
-		return null;
-	},
-});
+// Keep only a hash; Bun.password.verify checks it in constant time.
+const passwordHash = await Bun.password.hash(envPass);
 
-export const {{functionName}} = createAuth({
+export const authConfig: AuthConfig = {
 	defaultGuard: "basic",
-	guards: { basic: basicGuard },
-});
+	guards: {
+		basic: createBasicGuard({
+			async verify(username, password) {
+				if (username !== envUser) return null;
+				if (!(await Bun.password.verify(password, passwordHash))) return null;
+				return { id: username, username };
+			},
+		}),
+	},
+};
+
+const required = requireAuth({ guard: "basic" });
+
+/** requireAuth() plus the WWW-Authenticate challenge on its 401. */
+export const {{functionName}}: Middleware = async (ctx, next) => {
+	let authenticated = false;
+	const result = await required(ctx, () => {
+		authenticated = true;
+		return next();
+	});
+	if (authenticated || !(result instanceof Response)) return result;
+	const response = new Response(result.body, result);
+	response.headers.set("WWW-Authenticate", 'Basic realm="app", charset="UTF-8"');
+	return response;
+};

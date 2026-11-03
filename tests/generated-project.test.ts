@@ -6,6 +6,9 @@
  * (`@bunary/http` `^0.7.1`, the rest `^0.4.0`) from the npm registry and
  * asserts `tsc --noEmit` reports nothing, the entrypoint's imports resolve and
  * the routes answer requests, including a route model binding route (#144).
+ * `init --auth basic|jwt` projects are also served for real: `/` stays
+ * public and `/api/me` answers 401 (problem+json with a challenge) unless
+ * the credentials or the token are valid (#150).
  *
  * Needs the network. Offline (or with BUNARY_SKIP_NETWORK_TESTS=1) the tests
  * are skipped and say why.
@@ -92,9 +95,13 @@ async function bunary(args: string[], cwd: string): Promise<void> {
 
 /**
  * Smoke script run inside the generated project: mounts the generated routes
- * on a router and calls it in-process, so no port is bound.
+ * on a router and calls it in-process, so no port is bound. The protected
+ * `/api` group of `--auth` projects needs the booted app, so it is only
+ * called here for plain `init` (see {@link serveAuthProject}).
  */
-const SMOKE = `import { createRouter } from "@bunary/http";
+const smokeScript = (
+	withApi: boolean,
+) => `import { createRouter } from "@bunary/http";
 import config from "./config/bunary.js";
 import { registerRoutes } from "./src/routes/index.js";
 import { registerUsers } from "./src/routes/users.js";
@@ -113,12 +120,141 @@ console.log(JSON.stringify({
 	port: config.http?.port,
 	home: await get("/"),
 	health: await get("/health"),
-	api: await get("/api/users/7"),
+	${withApi ? 'api: await get("/api/users/7"),' : ""}
 	users: await get("/users/3"),
 	post: await get("/posts/1"),
 	missingPost: await get("/posts/2"),
 }));
 `;
+
+/** Credentials and secrets the `--auth` tests serve the project with. */
+const AUTH_ENV = {
+	BASIC_AUTH_USER: "ada",
+	BASIC_AUTH_PASSWORD: "correct horse",
+	JWT_SECRET: "test-secret-0123456789abcdef0123456789",
+};
+
+const basic = (user: string, password: string) =>
+	`Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`;
+
+/** A free TCP port for the served project. */
+function freePort(): number {
+	const probe = Bun.serve({ port: 0, fetch: () => new Response() });
+	const { port } = probe;
+	probe.stop(true);
+	return port as number;
+}
+
+/**
+ * Mint JWTs with the project's own `@bunary/auth` through its documented
+ * token issuing (`AuthContext.login()` on a JWT guard).
+ */
+async function mintTokens(app: string) {
+	const auth = await import(Bun.resolveSync("@bunary/auth", app));
+	const mint = (secret: string, ttlSeconds?: number) =>
+		auth
+			.createAuthManager({
+				defaultGuard: "jwt",
+				guards: { jwt: auth.createJwtGuard({ secret, ttlSeconds }) },
+			})
+			.createContext({ request: new Request("http://localhost/") })
+			.login({ id: "ada" }) as Promise<string>;
+	const valid = await mint(AUTH_ENV.JWT_SECRET);
+	const wrongSecret = await mint("some-other-secret-0123456789abcdef");
+	const expired = await mint(AUTH_ENV.JWT_SECRET, 1);
+	// Same signature, different claims: claim to be someone else
+	const [header, , signature] = valid.split(".");
+	const forged = Buffer.from(
+		JSON.stringify({ sub: "admin", exp: Math.floor(Date.now() / 1000) + 600 }),
+	).toString("base64url");
+	const tampered = `${header}.${forged}.${signature}`;
+	await Bun.sleep(2_100); // let `expired` pass its exp
+	return { valid, wrongSecret, expired, tampered };
+}
+
+/**
+ * Serve an `--auth` project with its real entrypoint on a free port and
+ * check what the scaffold protects.
+ */
+async function serveAuthProject(app: string, auth: "basic" | "jwt") {
+	const configPath = join(app, "config", "bunary.ts");
+	const port = freePort();
+	const config = await Bun.file(configPath).text();
+	await writeFile(configPath, config.replace("port: 3000", `port: ${port}`));
+
+	const server = Bun.spawn(["bun", "run", "src/index.ts"], {
+		cwd: app,
+		stdout: "pipe",
+		stderr: "pipe",
+		env: { ...process.env, NO_COLOR: "1", ...AUTH_ENV },
+	});
+	try {
+		const base = `http://localhost:${port}`;
+		let up = false;
+		for (let i = 0; i < 100 && !up; i++) {
+			up = await fetch(`${base}/health`).then(
+				(r) => r.ok,
+				() => false,
+			);
+			if (!up) await Bun.sleep(100);
+		}
+		if (!up) {
+			server.kill();
+			throw new Error(
+				`server did not start:\n${await new Response(server.stderr).text()}`,
+			);
+		}
+		const get = (path: string, authorization?: string) =>
+			fetch(`${base}${path}`, {
+				headers: authorization ? { authorization } : {},
+			});
+		const expectUnauthorized = async (res: Response) => {
+			expect(res.status).toBe(401);
+			expect(res.headers.get("content-type")).toContain(
+				"application/problem+json",
+			);
+			expect(res.headers.get("www-authenticate")).toMatch(
+				auth === "basic" ? /^Basic realm="[^"]+"/ : /^Bearer\b/,
+			);
+			expect(await res.json()).toMatchObject({ status: 401 });
+		};
+
+		const home = await get("/");
+		expect(home.status).toBe(200);
+		expect(await home.json()).toMatchObject({ message: "Welcome to Bunary!" });
+		expect((await get("/health")).status).toBe(200);
+
+		await expectUnauthorized(await get("/api/me"));
+		await expectUnauthorized(await get("/api/health"));
+
+		let ok: Response;
+		if (auth === "basic") {
+			await expectUnauthorized(await get("/api/me", basic("ada", "wrong")));
+			await expectUnauthorized(
+				await get("/api/me", basic("eve", AUTH_ENV.BASIC_AUTH_PASSWORD)),
+			);
+			ok = await get(
+				"/api/me",
+				basic(AUTH_ENV.BASIC_AUTH_USER, AUTH_ENV.BASIC_AUTH_PASSWORD),
+			);
+		} else {
+			const tokens = await mintTokens(app);
+			for (const bad of [tokens.tampered, tokens.expired, tokens.wrongSecret]) {
+				await expectUnauthorized(await get("/api/me", `Bearer ${bad}`));
+			}
+			await expectUnauthorized(await get("/api/me", "Bearer not-a-jwt"));
+			ok = await get("/api/me", `Bearer ${tokens.valid}`);
+		}
+		expect(ok.status).toBe(200);
+		const me = await ok.json();
+		expect(me).toEqual({ id: "ada" });
+		expect(JSON.stringify(me)).not.toContain(AUTH_ENV.BASIC_AUTH_PASSWORD);
+	} finally {
+		server.kill();
+		await server.exited;
+		await writeFile(configPath, config);
+	}
+}
 
 describe.skipIf(!online)(
 	"generated projects compile against the @bunary/* versions init pins",
@@ -180,8 +316,12 @@ describe.skipIf(!online)(
 				);
 				expect(build.code, build.output).toBe(0);
 
-				await writeFile(join(app, "smoke.ts"), SMOKE);
-				const smoke = await spawn(["bun", "run", "smoke.ts"], app);
+				await writeFile(join(app, "smoke.ts"), smokeScript(!auth));
+				const smoke = await spawn(
+					["bun", "run", "smoke.ts"],
+					app,
+					auth ? AUTH_ENV : {},
+				);
 				expect(smoke.code, smoke.output).toBe(0);
 				const result = JSON.parse(smoke.stdout.trim());
 				expect(result.name).toBe("app");
@@ -194,7 +334,9 @@ describe.skipIf(!online)(
 					status: 200,
 					body: { status: "ok" },
 				});
-				expect(result.api).toEqual({ status: 200, body: { id: "7" } });
+				if (!auth) {
+					expect(result.api).toEqual({ status: 200, body: { id: "7" } });
+				}
 				expect(result.users).toEqual({ status: 200, body: { id: "3" } });
 				expect(result.post).toEqual({
 					status: 200,
@@ -204,6 +346,8 @@ describe.skipIf(!online)(
 					status: 404,
 					body: { status: 404, detail: "post not found" },
 				});
+
+				if (auth) await serveAuthProject(app, auth);
 			}, 180_000);
 		}
 	},

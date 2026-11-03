@@ -1,11 +1,16 @@
-import { createAuth, createJwtGuard } from "@bunary/auth";
+import { type AuthConfig, createJwtGuard } from "@bunary/auth";
+import { requireAuth } from "@bunary/auth/provider";
+import type { Middleware } from "@bunary/http";
 
 /**
- * JWT guard: verify Bearer tokens. Requires JWT_SECRET in env (e.g. in .env).
+ * JWT: verifies `Authorization: Bearer <token>` (HS256) with JWT_SECRET from
+ * env (e.g. in .env). Issue tokens with ctx.locals.auth.login(user, "jwt").
  *
- * Register it with router.use({{functionName}}); handlers then read the
- * request-scoped auth context from ctx.locals.auth (type the router with
- * createRouter<AuthLocals>(), AuthLocals from @bunary/auth).
+ * - authConfig goes under the `auth` config key read by authProvider
+ *   (src/index.ts: config: { ...config, auth: authConfig }, providers: [authProvider, ...]).
+ * - {{functionName}} protects a group: router.group({ prefix: "/admin", middleware: [{{functionName}}] }, ...).
+ *   Requests without a valid token get a 401 problem response; handlers
+ *   behind it read the user from ctx.locals.user.
  */
 const secret = process.env.JWT_SECRET;
 if (!secret || secret.trim() === "") {
@@ -13,9 +18,23 @@ if (!secret || secret.trim() === "") {
 		"JWT_SECRET is required. Set it in your environment (e.g. in .env).",
 	);
 }
-const jwtGuard = createJwtGuard({ secret });
 
-export const {{functionName}} = createAuth({
+export const authConfig: AuthConfig = {
 	defaultGuard: "jwt",
-	guards: { jwt: jwtGuard },
-});
+	guards: { jwt: createJwtGuard({ secret }) },
+};
+
+const required = requireAuth({ guard: "jwt" });
+
+/** requireAuth() plus the WWW-Authenticate challenge on its 401. */
+export const {{functionName}}: Middleware = async (ctx, next) => {
+	let authenticated = false;
+	const result = await required(ctx, () => {
+		authenticated = true;
+		return next();
+	});
+	if (authenticated || !(result instanceof Response)) return result;
+	const response = new Response(result.body, result);
+	response.headers.set("WWW-Authenticate", "Bearer");
+	return response;
+};

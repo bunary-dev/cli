@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-11-03
+
+### Fixed
+
+- `bunary init --auth basic|jwt` scaffolds auth that protects something: the `/api` group in `src/routes/groupExample.ts` requires authentication through `requireAuth()` from `@bunary/auth/provider` (the app boots `authProvider` with the middleware file's `authConfig`), and a new `GET /api/me` returns the authenticated user's id. Missing or wrong Basic credentials and missing, tampered, expired or wrongly signed JWTs now get a `401` problem+json response with `WWW-Authenticate: Basic realm="app"` or `WWW-Authenticate: Bearer`, where they used to get `200`; `/` and `/health` stay public. The middleware is no longer registered globally with `router.use()`, and the router is no longer typed with `AuthLocals`. The Basic guard checks the password with `Bun.password.verify` against a hash. `make:middleware basic|jwt` writes the same file and its next steps show how to boot `authProvider` and protect a group. Plain `init` is unchanged. The end-to-end scaffold test serves both auth projects and checks the 401s and 200s (#150)
+
 ## [0.4.3] - 2026-11-02
 
 ### Fixed
