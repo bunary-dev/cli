@@ -58,12 +58,29 @@ describe("nextSteps utilities", () => {
 			expect(result).toContain("src/index.ts");
 		});
 
-		test("works with auth middleware names", () => {
+		test("auth middleware: boot authProvider and protect a group (#150)", () => {
 			const result = middlewareNextSteps("jwt", "jwtMiddleware");
+			expect(result).toContain("bun add @bunary/auth");
 			expect(result).toContain(
-				'import { jwtMiddleware } from "./middleware/jwt.js"',
+				'import { authProvider } from "@bunary/auth/provider";',
 			);
-			expect(result).toContain("router.use(jwtMiddleware);");
+			expect(result).toContain(
+				'import { authConfig, jwtMiddleware } from "./middleware/jwt.js";',
+			);
+			expect(result).toContain("config: { ...config, auth: authConfig },");
+			expect(result).toContain(
+				"providers: [authProvider, httpProvider(router)],",
+			);
+			expect(result).toContain("middleware: [jwtMiddleware]");
+			expect(result).not.toContain("router.use(");
+		});
+
+		test("auth middleware next steps are indented with two spaces", () => {
+			for (const line of middlewareNextSteps("basic", "basicMiddleware").split(
+				"\n",
+			)) {
+				if (line.trim()) expect(line.startsWith("  ")).toBe(true);
+			}
 		});
 	});
 

@@ -44,7 +44,7 @@ Flags accept `--key value` and `--key=value`; a bare `--` ends flag parsing. Fla
 
 ### bunary init [name] [--auth basic|jwt] [--force] [--interactive]
 
-Creates a new Bunary project. You can pass a directory name or `.` for the current directory. With `--auth basic` or `--auth jwt` you get auth middleware stubs (same as running `make:middleware basic` or `jwt` after init).
+Creates a new Bunary project. You can pass a directory name or `.` for the current directory. With `--auth basic` or `--auth jwt` the project gets working auth: the `/api` group requires credentials, the rest stays public (see [Auth scaffolding](#auth-scaffolding---auth-basicjwt)). The middleware file is the same one `make:middleware basic` or `jwt` writes.
 
 ```bash
 bunary init my-app
@@ -60,6 +60,35 @@ All scaffolding commands (`init` and every `make:*`) accept `--dry-run` to print
 
 The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`. The generated project typechecks with `bunx tsc --noEmit` against the packages it pins (`@bunary/http` `^0.7.1`, `@bunary/core` `^0.4.0`).
 
+#### Auth scaffolding (`--auth basic|jwt`)
+
+`init --auth basic` or `init --auth jwt` protects a clearly marked area and leaves the rest public:
+
+| Route | Access |
+| --- | --- |
+| `GET /`, `GET /health` (`src/routes/main.ts`) | public |
+| everything under `/api` (`src/routes/groupExample.ts`): `GET /api/me`, `GET /api/health`, `GET /api/users/:id` | requires auth |
+
+`GET /api/me` returns the authenticated user's id (`{ "id": "ada" }`), nothing else. A request without valid credentials (missing, wrong password, or a tampered, expired or wrongly signed JWT) gets the `401` [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem response of `requireAuth()` from `@bunary/auth/provider` (`Content-Type: application/problem+json`), with a challenge header: `WWW-Authenticate: Basic realm="app", charset="UTF-8"` for Basic, `WWW-Authenticate: Bearer` for JWT.
+
+Set the env vars before starting the app (e.g. in `.env`); the middleware module throws at startup without them:
+
+- Basic: `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD`. Only a `Bun.password` hash of the password is kept in memory; replace `verify` in `src/middleware/basic.ts` with a user lookup for real users.
+- JWT: `JWT_SECRET` (HS256). Issue tokens with `ctx.locals.auth.login(user, "jwt")` or `attempt()` (see the [@bunary/auth docs](https://github.com/bunary-dev/auth/blob/main/docs/index.md#issuing-tokens)).
+
+To protect another route or group, register it in a group with the middleware (`basicMiddleware` or `jwtMiddleware` from `src/middleware/<auth>.ts`), or add it to the `/api` group. Handlers behind it read the user from `ctx.locals.user`:
+
+```typescript
+import type { AuthUser } from "@bunary/auth";
+import { jwtMiddleware } from "../middleware/jwt.js";
+
+router.group({ prefix: "/admin", middleware: [jwtMiddleware] }, (admin) => {
+	admin.get("/stats", (ctx) => ({ by: (ctx.locals.user as AuthUser).id }));
+});
+```
+
+Routes registered outside such a group are public.
+
 ### Generators (make:*)
 
 Every generator must run inside a Bunary project (`package.json` with `@bunary/core`), writes `<name>.ts` into its directory, and never overwrites an existing file.
@@ -72,7 +101,7 @@ Generates a route module in `src/routes/` with a register function that takes th
 
 #### bunary make:middleware \<name\>
 
-Generates a middleware file in `src/middleware/`. For names `basic` or `jwt` it uses the auth stubs (Basic or JWT guard); for other names it uses a generic `(ctx, next)` stub. Register it with `router.use(...)` in `src/index.ts`.
+Generates a middleware file in `src/middleware/`. For other names it uses a generic `(ctx, next)` stub: register it with `router.use(...)` in `src/index.ts`. For names `basic` or `jwt` it writes the auth file `init --auth` uses (an `authConfig` with the Basic or JWT guard, and a `requireAuth()` middleware); the next steps it prints show how to boot `authProvider` with `authConfig` and protect a route group (see [Auth scaffolding](#auth-scaffolding---auth-basicjwt)).
 
 #### bunary make:command \<name\> [--name \<cli-name\>]
 
@@ -130,7 +159,8 @@ What init and the generators produce. The output is written against the
 0.4.0 APIs: `createApp` / `defineConfig` / `defineProvider` from
 `@bunary/core`, `createRouter` / `Router` from `@bunary/http` (mounted with
 `httpProvider` and started with `serve` from `@bunary/http/provider`), and
-`createAuth` with the guards of `@bunary/auth`.
+the guards of `@bunary/auth` with `authProvider` / `requireAuth` from
+`@bunary/auth/provider`.
 
 **package.json (default):** dependencies include `@bunary/core` `^0.4.0` and `@bunary/http` `^0.7.1`, so new projects can use route model binding (`bind` / `ctx.bound`, also on `router.ws()`) and get a `404` for a `ModelNotFoundError`. With `--auth basic` or `--auth jwt`, `@bunary/auth` `^0.4.0` is added.
 
@@ -176,18 +206,19 @@ const server = serve(app);
 console.log(`🚀 Server running at http://localhost:${server.port}`);
 ```
 
-With `--auth jwt` (or `basic`) the router is typed with `AuthLocals`, so handlers can read `ctx.locals.auth`, and the middleware is registered before the routes:
+With `--auth jwt` (or `basic`) the app also boots `authProvider` with the guard config from the middleware file under the `auth` config key. No middleware is registered globally; the `/api` group requires auth (see [Auth scaffolding](#auth-scaffolding---auth-basicjwt)):
 
 ```typescript
-import type { AuthLocals } from "@bunary/auth";
-import { jwtMiddleware } from "./middleware/jwt.js";
+import { authProvider } from "@bunary/auth/provider";
+import { authConfig } from "./middleware/jwt.js";
 
-const router = createRouter<AuthLocals>();
-router.use(jwtMiddleware);
-registerRoutes(router);
+const app = await createApp({
+  config: { ...config, auth: authConfig },
+  providers: [authProvider, httpProvider(router)],
+}).boot();
 ```
 
-**src/routes/main.ts:** Registers `/` and `/health`. groupExample registers `/api/health` and `/api/users/:id`. You add `make:route` modules in `src/routes/index.ts`:
+**src/routes/main.ts:** Registers `/` and `/health`. groupExample registers `/api/health` and `/api/users/:id` (with `--auth`, also `/api/me`, and the whole group requires auth). You add `make:route` modules in `src/routes/index.ts`:
 
 ```typescript
 import type { Router } from "@bunary/http";
@@ -200,7 +231,7 @@ export function registerRoutes(router: Router): void {
 }
 ```
 
-**src/middleware/jwt.ts / basic.ts (`--auth` or `make:middleware jwt|basic`):** `createAuth` from `@bunary/auth` with a `createJwtGuard` (reads `JWT_SECRET`) or `createBasicGuard` (checks `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD`); the module throws at startup if the variables are unset.
+**src/middleware/jwt.ts / basic.ts (`--auth` or `make:middleware jwt|basic`):** exports `authConfig` (an `AuthConfig` with a `createJwtGuard` reading `JWT_SECRET`, or a `createBasicGuard` checking `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` with `Bun.password.verify`) and `jwtMiddleware` / `basicMiddleware`: `requireAuth()` from `@bunary/auth/provider` plus the `WWW-Authenticate` challenge on its 401. The module throws at startup if the variables are unset.
 
 **make:middleware output (generic):** A single export, e.g. `ensureAuthMiddleware`, of type `Middleware` from `@bunary/http`, with `(ctx, next)` and `return next()`. Register it with `router.use(ensureAuthMiddleware)`.
 

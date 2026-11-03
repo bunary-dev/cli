@@ -164,7 +164,7 @@ describe("init command", () => {
 			);
 		});
 
-		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as make:middleware basic), and router.use(basicMiddleware)", async () => {
+		test("with auth basic: adds @bunary/auth, src/middleware/basic.ts (same as make:middleware basic), and a protected /api group (#150)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "basic" });
@@ -180,19 +180,27 @@ describe("init command", () => {
 			const authContent = await Bun.file(
 				join(projectDir, "src", "middleware", "basic.ts"),
 			).text();
-			expect(authContent).toContain("createAuth");
+			expect(authContent).toContain("requireAuth");
 			expect(authContent).toContain("createBasicGuard");
-			expect(authContent).toContain("basicMiddleware");
+			expect(authContent).toContain("export const basicMiddleware");
+			expect(authContent).toContain('WWW-Authenticate", \'Basic realm="');
 
 			const entryContent = await Bun.file(
 				join(projectDir, "src", "index.ts"),
 			).text();
-			expect(entryContent).toContain("basicMiddleware");
-			expect(entryContent).toContain("router.use(basicMiddleware)");
+			expect(entryContent).toContain("authProvider, httpProvider(router)");
+			expect(entryContent).toContain("auth: authConfig");
 			expect(entryContent).toContain("./middleware/basic.js");
+			expect(entryContent).not.toContain("router.use(");
+
+			const group = await Bun.file(
+				join(projectDir, "src", "routes", "groupExample.ts"),
+			).text();
+			expect(group).toContain("middleware: [basicMiddleware]");
+			expect(group).toContain('api.get("/me"');
 		});
 
-		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as make:middleware jwt), and router.use(jwtMiddleware)", async () => {
+		test("with auth jwt: adds @bunary/auth, src/middleware/jwt.ts (same as make:middleware jwt), and a protected /api group (#150)", async () => {
 			const projectDir = join(TEST_DIR, "my-app");
 			process.chdir(TEST_DIR);
 			await init("my-app", { auth: "jwt" });
@@ -208,16 +216,24 @@ describe("init command", () => {
 			const authContent = await Bun.file(
 				join(projectDir, "src", "middleware", "jwt.ts"),
 			).text();
-			expect(authContent).toContain("createAuth");
+			expect(authContent).toContain("requireAuth");
 			expect(authContent).toContain("createJwtGuard");
-			expect(authContent).toContain("jwtMiddleware");
+			expect(authContent).toContain("export const jwtMiddleware");
+			expect(authContent).toContain('"WWW-Authenticate", "Bearer"');
 
 			const entryContent = await Bun.file(
 				join(projectDir, "src", "index.ts"),
 			).text();
-			expect(entryContent).toContain("jwtMiddleware");
-			expect(entryContent).toContain("router.use(jwtMiddleware)");
+			expect(entryContent).toContain("authProvider, httpProvider(router)");
+			expect(entryContent).toContain("auth: authConfig");
 			expect(entryContent).toContain("./middleware/jwt.js");
+			expect(entryContent).not.toContain("router.use(");
+
+			const group = await Bun.file(
+				join(projectDir, "src", "routes", "groupExample.ts"),
+			).text();
+			expect(group).toContain("middleware: [jwtMiddleware]");
+			expect(group).toContain('api.get("/me"');
 		});
 
 		test("without auth: no @bunary/auth, no src/middleware/basic.ts or jwt.ts, no auth middleware in entrypoint", async () => {
@@ -241,8 +257,13 @@ describe("init command", () => {
 			).text();
 			expect(entryContent).not.toContain("basicMiddleware");
 			expect(entryContent).not.toContain("jwtMiddleware");
-			expect(entryContent).not.toContain("router.use(basicMiddleware)");
-			expect(entryContent).not.toContain("router.use(jwtMiddleware)");
+			expect(entryContent).not.toContain("authProvider");
+
+			const group = await Bun.file(
+				join(projectDir, "src", "routes", "groupExample.ts"),
+			).text();
+			expect(group).not.toContain("Middleware]");
+			expect(group).not.toContain("/me");
 		});
 
 		test("package.json has @bunary/core and @bunary/http, imports use @bunary/*", async () => {
@@ -415,24 +436,33 @@ describe("init command", () => {
 			expect(entry).not.toContain("AuthLocals");
 		});
 
-		test("with auth types the router with AuthLocals", async () => {
+		test("with auth boots authProvider with the middleware file's authConfig", async () => {
 			const entry = await generateEntrypoint({ auth: "jwt" });
-			expect(entry).toContain('import type { AuthLocals } from "@bunary/auth"');
-			expect(entry).toContain("const router = createRouter<AuthLocals>();");
+			expect(entry).toContain(
+				'import { authProvider } from "@bunary/auth/provider"',
+			);
+			expect(entry).toContain(
+				'import { authConfig } from "./middleware/jwt.js"',
+			);
+			expect(entry).toContain("config: { ...config, auth: authConfig },");
+			expect(entry).toContain(
+				"providers: [authProvider, httpProvider(router)]",
+			);
+			expect(entry).toContain("const router = createRouter();");
 		});
 
-		test("with auth basic includes basicMiddleware and router.use(basicMiddleware)", async () => {
+		test("with auth basic points at the protected /api group, no global router.use", async () => {
 			const entry = await generateEntrypoint({ auth: "basic" });
-			expect(entry).toContain("basicMiddleware");
-			expect(entry).toContain("router.use(basicMiddleware)");
+			expect(entry).toContain("basicMiddleware protects the /api group");
 			expect(entry).toContain("./middleware/basic.js");
+			expect(entry).not.toContain("router.use(");
 		});
 
-		test("with auth jwt includes jwtMiddleware and router.use(jwtMiddleware)", async () => {
+		test("with auth jwt points at the protected /api group, no global router.use", async () => {
 			const entry = await generateEntrypoint({ auth: "jwt" });
-			expect(entry).toContain("jwtMiddleware");
-			expect(entry).toContain("router.use(jwtMiddleware)");
+			expect(entry).toContain("jwtMiddleware protects the /api group");
 			expect(entry).toContain("./middleware/jwt.js");
+			expect(entry).not.toContain("router.use(");
 		});
 
 		test("without auth option does not include auth middleware", async () => {

@@ -1,6 +1,7 @@
 /**
  * Generate src/routes/ file contents.
  */
+import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { loadStub } from "../../utils/stub.js";
 import type { InitOptions } from "./types.js";
 
@@ -12,9 +13,24 @@ export async function generateRoutesMain(
 	return await loadStub("project/routes/main.ts", { bunaryHttp: BUNARY_HTTP });
 }
 
+/**
+ * The /api group example. With `--auth basic|jwt` the group requires auth
+ * (the middleware from src/middleware/<auth>.ts) and adds GET /api/me.
+ */
 export async function generateRoutesGroupExample(
-	_options?: InitOptions,
+	options?: InitOptions,
 ): Promise<string> {
+	if (options?.auth === "basic" || options?.auth === "jwt") {
+		return await loadStub("project/routes/groupExampleAuth.ts", {
+			bunaryHttp: BUNARY_HTTP,
+			auth: options.auth,
+			authLabel:
+				options.auth === "basic"
+					? "Basic auth credentials"
+					: "a valid JWT (Bearer token)",
+			functionName: middlewareNameToFunctionName(options.auth),
+		});
+	}
 	return await loadStub("project/routes/groupExample.ts", {
 		bunaryHttp: BUNARY_HTTP,
 	});

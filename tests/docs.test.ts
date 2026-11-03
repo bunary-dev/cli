@@ -67,7 +67,7 @@ describe("generated-code examples match the 0.4.0 stubs (#141)", () => {
 		expect(text).not.toMatch(/app\.(listen|use)\(/);
 		expect(text).toContain("tsconfig.json");
 		for (const [stub, snippet] of [
-			["project/entrypoint.ts.stub", "providers: [httpProvider(router)]"],
+			["project/entrypoint.ts.stub", "httpProvider(router)],"],
 			["project/entrypoint.ts.stub", "const server = serve(app);"],
 			["project/routes/index.ts.stub", "registerRoutes(router: Router)"],
 			["project/config.ts.stub", "port: 3000"],

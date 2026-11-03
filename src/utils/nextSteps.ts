@@ -51,11 +51,29 @@ export function routeNextSteps(
  * //     import { ensureAuthMiddleware } from "./middleware/ensure-auth.js";
  * //     router.use(ensureAuthMiddleware);
  * ```
+ *
+ * For the auth middleware (`basic` / `jwt`) the hint boots `authProvider`
+ * with the file's `authConfig` and protects a route group instead (#150).
  */
 export function middlewareNextSteps(
 	middlewareName: string,
 	functionName: string,
 ): string {
+	if (middlewareName === "basic" || middlewareName === "jwt") {
+		return [
+			"",
+			"  Next: bun add @bunary/auth, then in src/index.ts:",
+			"",
+			`    import { authProvider } from "@bunary/auth/provider";`,
+			`    import { authConfig, ${functionName} } from "./middleware/${middlewareName}.js";`,
+			"    config: { ...config, auth: authConfig },",
+			"    providers: [authProvider, httpProvider(router)],",
+			"",
+			"  Protect routes by grouping them behind it:",
+			"",
+			`    router.group({ prefix: "/admin", middleware: [${functionName}] }, (admin) => { ... });`,
+		].join("\n");
+	}
 	return [
 		"",
 		`  Next: Register in src/index.ts:`,

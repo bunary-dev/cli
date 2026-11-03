@@ -28,6 +28,9 @@ import projectPackageJson from "../../stubs/project/packageJson.ts.stub" with {
 import projectRoutesGroupExample from "../../stubs/project/routes/groupExample.ts.stub" with {
 	type: "text",
 };
+import projectRoutesGroupExampleAuth from "../../stubs/project/routes/groupExampleAuth.ts.stub" with {
+	type: "text",
+};
 import projectRoutesIndex from "../../stubs/project/routes/index.ts.stub" with {
 	type: "text",
 };
@@ -51,6 +54,7 @@ export const STUBS: Readonly<Record<string, string>> = {
 	"project/entrypoint.ts": projectEntrypoint,
 	"project/packageJson.ts": projectPackageJson,
 	"project/routes/groupExample.ts": projectRoutesGroupExample,
+	"project/routes/groupExampleAuth.ts": projectRoutesGroupExampleAuth,
 	"project/routes/index.ts": projectRoutesIndex,
 	"project/routes/main.ts": projectRoutesMain,
 	"project/tsconfig.ts": projectTsconfig,
