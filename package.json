@@ -22,8 +22,9 @@
 		"CHANGELOG.md"
 	],
 	"scripts": {
-		"build": "bun build ./src/bin.ts ./src/index.ts --outdir ./dist --target bun && tsc -p tsconfig.build.json",
-		"prepublishOnly": "bun run build",
+		"clean": "rm -rf dist",
+		"build": "bun run clean && bun build ./src/bin.ts ./src/index.ts --outdir ./dist --target bun && tsc -p tsconfig.build.json",
+		"prepublishOnly": "bun run clean && bun run build && bun test && bun run typecheck",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
 		"lint": "biome check ./src ./tests",
