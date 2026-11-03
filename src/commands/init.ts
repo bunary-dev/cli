@@ -2,7 +2,7 @@
  * Bunary init command - scaffolds a new project
  */
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import type { Command } from "../types/command.js";
 import { bold, cyan, dim, green } from "../utils/color.js";
@@ -21,6 +21,7 @@ import {
 import { generateMiddlewareContent } from "./middleware/makeMiddleware.js";
 import { generateConfig } from "./project/config.js";
 import { generateEntrypoint } from "./project/entrypoint.js";
+import { generateEnvExample, generateGitignore } from "./project/env.js";
 import { generatePackageJson } from "./project/packageJson.js";
 import {
 	generateRoutesGroupExample,
@@ -62,7 +63,7 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 			"src/routes/index.ts",
 		];
 		if (options?.auth === "basic" || options?.auth === "jwt") {
-			targets.push(`src/middleware/${options.auth}.ts`);
+			targets.push(`src/middleware/${options.auth}.ts`, ".env.example");
 		}
 		const existing = targets.filter((f) => existsSync(join(projectDir, f)));
 		if (existing.length > 0) {
@@ -74,7 +75,13 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		}
 	}
 
-	// Plan files (relative path, content) before touching the disk
+	// Plan files (relative path, content) before touching the disk.
+	// An existing .gitignore is extended, never refused or replaced.
+	const gitignorePath = join(projectDir, ".gitignore");
+	const existingGitignore = existsSync(gitignorePath)
+		? await readFile(gitignorePath, "utf8")
+		: undefined;
+	const envExample = await generateEnvExample(options?.auth);
 	const planned: Array<[string, string]> = [
 		["package.json", await generatePackageJson(projectName, options)],
 		["tsconfig.json", await generateTsconfig(options)],
@@ -92,7 +99,10 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		["src/routes/main.ts", await generateRoutesMain(options)],
 		["src/routes/groupExample.ts", await generateRoutesGroupExample(options)],
 		["src/routes/index.ts", await generateRoutesIndex(options)],
+		[".gitignore", await generateGitignore(existingGitignore)],
 	);
+	// Only --auth needs env vars; plain init writes no .env.example (#151)
+	if (envExample !== undefined) planned.push([".env.example", envExample]);
 
 	if (options?.dryRun) {
 		reportDryRun(
@@ -142,6 +152,14 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 		console.log(`  ${dim("$")} ${cyan(`cd ${name}`)}`);
 	}
 	console.log(`  ${dim("$")} ${cyan("bun install")}`);
+	if (envExample !== undefined) {
+		const vars =
+			options?.auth === "basic"
+				? "BASIC_AUTH_USER and BASIC_AUTH_PASSWORD"
+				: "JWT_SECRET";
+		console.log(`  ${dim("$")} ${cyan("cp .env.example .env")}`);
+		console.log(`    ${dim(`fill in ${vars} in .env`)}`);
+	}
 	console.log(`  ${dim("$")} ${cyan("bun run dev")}\n`);
 }
 

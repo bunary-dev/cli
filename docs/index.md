@@ -54,11 +54,11 @@ bunary init .
 
 Run `bunary init` with no name in a terminal and it walks you through the setup instead: it asks for the project name, shows the target directory, and lets you pick the auth scaffolding with the arrow keys (or by typing its number). Pass `--interactive` (`-i`) to get the prompts even when you give a name; anything given upfront becomes the default. Without a TTY (CI, piped stdin) or with `--no-interactive`, `init` never prompts and fails if the name is missing, so scripts keep working unchanged.
 
-`init` aborts without writing anything if any file it would create already exists; pass `--force` to overwrite.
+`init` aborts without writing anything if any file it would create already exists; pass `--force` to overwrite. The exception is `.gitignore`: an existing one is kept and only the missing patterns are appended.
 
 All scaffolding commands (`init` and every `make:*`) accept `--dry-run` to print the files that would be created without writing anything (exit code 0); add `--verbose` to also print file contents. The flag may come before the command: `bunary --dry-run init my-app`.
 
-The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/index.ts`, and `src/routes/` (main, groupExample, index). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts` and wires it in the entrypoint. Next steps: `cd <name>`, `bun install`, `bun run dev`. The generated project typechecks with `bunx tsc --noEmit` against the packages it pins (`@bunary/http` `^0.7.1`, `@bunary/core` `^0.4.0`).
+The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/index.ts`, `src/routes/` (main, groupExample, index) and a `.gitignore` that ignores `node_modules/`, `dist/` and `.env` (but never `.env.example`). If you used `--auth`, it also creates `src/middleware/basic.ts` or `jwt.ts`, wires it in the entrypoint, and writes a `.env.example` listing the variables the middleware needs (see below). Without `--auth` no `.env.example` is written. Next steps: `cd <name>`, `bun install`, `bun run dev`; with `--auth`, `cp .env.example .env` and filling in the variables come before `bun run dev`. The generated project typechecks with `bunx tsc --noEmit` against the packages it pins (`@bunary/http` `^0.7.1`, `@bunary/core` `^0.4.0`).
 
 #### Auth scaffolding (`--auth basic|jwt`)
 
@@ -71,10 +71,17 @@ The command creates `package.json`, `tsconfig.json`, `config/bunary.ts`, `src/in
 
 `GET /api/me` returns the authenticated user's id (`{ "id": "ada" }`), nothing else. A request without valid credentials (missing, wrong password, or a tampered, expired or wrongly signed JWT) gets the `401` [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem response of `requireAuth()` from `@bunary/auth/provider` (`Content-Type: application/problem+json`), with a challenge header: `WWW-Authenticate: Basic realm="app", charset="UTF-8"` for Basic, `WWW-Authenticate: Bearer` for JWT.
 
-Set the env vars before starting the app (e.g. in `.env`); the middleware module throws at startup without them:
+The middleware reads its settings from env vars. `init` writes them, with empty values, to `.env.example`; no secret or default value is scaffolded. Before `bun run dev`, copy it and fill them in (Bun loads `.env` automatically, and the generated `.gitignore` keeps it out of git):
+
+```bash
+cp .env.example .env
+# then edit .env
+```
+
+The middleware module throws at startup if they are missing or empty, with a message that points at `.env.example`:
 
 - Basic: `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD`. Only a `Bun.password` hash of the password is kept in memory; replace `verify` in `src/middleware/basic.ts` with a user lookup for real users.
-- JWT: `JWT_SECRET` (HS256). Issue tokens with `ctx.locals.auth.login(user, "jwt")` or `attempt()` (see the [@bunary/auth docs](https://github.com/bunary-dev/auth/blob/main/docs/index.md#issuing-tokens)).
+- JWT: `JWT_SECRET` (HS256), at least 32 characters; generate one with `openssl rand -base64 32`. Issue tokens with `ctx.locals.auth.login(user, "jwt")` or `attempt()` (see the [@bunary/auth docs](https://github.com/bunary-dev/auth/blob/main/docs/index.md#issuing-tokens)).
 
 To protect another route or group, register it in a group with the middleware (`basicMiddleware` or `jwtMiddleware` from `src/middleware/<auth>.ts`), or add it to the `/api` group. Handlers behind it read the user from `ctx.locals.user`:
 

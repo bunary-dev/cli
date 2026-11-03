@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-11-03
+
+### Fixed
+
+- `bunary init --auth basic|jwt` projects start after following the printed next steps: `init --auth basic` writes a `.env.example` with empty `BASIC_AUTH_USER=` and `BASIC_AUTH_PASSWORD=`, `init --auth jwt` one with an empty `JWT_SECRET=` and a comment giving the minimum length (32 characters) and `openssl rand -base64 32`. No secret or default value is scaffolded. Plain `init` writes no `.env.example`. The next steps for `--auth` add `cp .env.example .env` and which variables to fill in before `bun run dev`. Every `init` writes a `.gitignore` ignoring `node_modules/`, `dist/` and `.env` (`.env.example` stays tracked), or appends the missing patterns to an existing one. The startup errors of `src/middleware/basic.ts` / `jwt.ts` (also written by `make:middleware basic|jwt`) point at `.env.example`, and the JWT middleware now also refuses a `JWT_SECRET` shorter than 32 characters (#151)
+
 ## [0.4.4] - 2026-11-03
 
 ### Fixed

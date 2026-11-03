@@ -58,7 +58,7 @@ bun install
 bun run dev
 ```
 
-Run `bunary init` with no name (or with `-i`) in a terminal to be prompted for the name and auth type. With Basic or JWT auth: `bunary init my-app --auth basic` or `--auth jwt` makes everything under `/api` (including `GET /api/me`) require credentials and answer `401` otherwise, while `/` and `/health` stay public; to protect more, put routes in a group with `middleware: [basicMiddleware]` (or `jwtMiddleware`). `init` refuses to overwrite existing files (use `--force` to override), and every scaffolding command accepts `--dry-run`. For all commands, options, and generated file examples, see [docs/index.md](./docs/index.md).
+Run `bunary init` with no name (or with `-i`) in a terminal to be prompted for the name and auth type. With Basic or JWT auth: `bunary init my-app --auth basic` or `--auth jwt` makes everything under `/api` (including `GET /api/me`) require credentials and answer `401` otherwise, while `/` and `/health` stay public; to protect more, put routes in a group with `middleware: [basicMiddleware]` (or `jwtMiddleware`). With `--auth` it also writes a `.env.example` (`BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD`, or `JWT_SECRET` of at least 32 characters, e.g. from `openssl rand -base64 32`): run `cp .env.example .env` and fill them in before `bun run dev`, or the app refuses to start. Every project gets a `.gitignore` that ignores `.env`. `init` refuses to overwrite existing files (use `--force` to override), and every scaffolding command accepts `--dry-run`. For all commands, options, and generated file examples, see [docs/index.md](./docs/index.md).
 
 ## Database
 

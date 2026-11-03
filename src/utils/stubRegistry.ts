@@ -22,6 +22,15 @@ import projectConfig from "../../stubs/project/config.ts.stub" with {
 import projectEntrypoint from "../../stubs/project/entrypoint.ts.stub" with {
 	type: "text",
 };
+import projectEnvBasic from "../../stubs/project/env-basic.ts.stub" with {
+	type: "text",
+};
+import projectEnvJwt from "../../stubs/project/env-jwt.ts.stub" with {
+	type: "text",
+};
+import projectGitignore from "../../stubs/project/gitignore.ts.stub" with {
+	type: "text",
+};
 import projectPackageJson from "../../stubs/project/packageJson.ts.stub" with {
 	type: "text",
 };
@@ -52,6 +61,9 @@ export const STUBS: Readonly<Record<string, string>> = {
 	"middleware/make.ts": middlewareMake,
 	"project/config.ts": projectConfig,
 	"project/entrypoint.ts": projectEntrypoint,
+	"project/env-basic.ts": projectEnvBasic,
+	"project/env-jwt.ts": projectEnvJwt,
+	"project/gitignore.ts": projectGitignore,
 	"project/packageJson.ts": projectPackageJson,
 	"project/routes/groupExample.ts": projectRoutesGroupExample,
 	"project/routes/groupExampleAuth.ts": projectRoutesGroupExampleAuth,

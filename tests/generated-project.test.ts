@@ -8,7 +8,10 @@
  * the routes answer requests, including a route model binding route (#144).
  * `init --auth basic|jwt` projects are also served for real: `/` stays
  * public and `/api/me` answers 401 (problem+json with a challenge) unless
- * the credentials or the token are valid (#150).
+ * the credentials or the token are valid (#150). They are started the way
+ * the printed next steps say, from a `.env` copied from `.env.example`:
+ * with the values filled in they serve, left empty they exit naming
+ * `.env.example` (#151).
  *
  * Needs the network. Offline (or with BUNARY_SKIP_NETWORK_TESTS=1) the tests
  * are skipped and say why.
@@ -172,9 +175,39 @@ async function mintTokens(app: string) {
 	return { valid, wrongSecret, expired, tampered };
 }
 
+/** process.env without the auth vars, so only the project's .env sets them. */
+function envWithoutAuth(): Record<string, string | undefined> {
+	const env: Record<string, string | undefined> = {
+		...process.env,
+		NO_COLOR: "1",
+	};
+	for (const key of Object.keys(AUTH_ENV)) delete env[key];
+	return env;
+}
+
+/**
+ * Follow the printed next steps (#151): `cp .env.example .env`, then fill
+ * in each empty `KEY=` with the value from AUTH_ENV.
+ */
+async function writeDotEnv(app: string, filled: boolean): Promise<void> {
+	const example = await Bun.file(join(app, ".env.example")).text();
+	await writeFile(
+		join(app, ".env"),
+		filled
+			? example.replace(/^(\w+)=$/gm, (line, key: string) =>
+					key in AUTH_ENV
+						? `${key}="${AUTH_ENV[key as keyof typeof AUTH_ENV]}"`
+						: line,
+				)
+			: example,
+	);
+}
+
 /**
  * Serve an `--auth` project with its real entrypoint on a free port and
- * check what the scaffold protects.
+ * check what the scaffold protects. The credentials come from the `.env`
+ * copied from `.env.example`; with the values left empty the app exits
+ * naming `.env.example` (#151).
  */
 async function serveAuthProject(app: string, auth: "basic" | "jwt") {
 	const configPath = join(app, "config", "bunary.ts");
@@ -182,11 +215,26 @@ async function serveAuthProject(app: string, auth: "basic" | "jwt") {
 	const config = await Bun.file(configPath).text();
 	await writeFile(configPath, config.replace("port: 3000", `port: ${port}`));
 
+	await writeDotEnv(app, false);
+	const empty = Bun.spawnSync(["bun", "run", "src/index.ts"], {
+		cwd: app,
+		env: envWithoutAuth(),
+		timeout: 30_000,
+	});
+	expect(empty.exitCode).not.toBe(0);
+	expect(empty.stderr.toString()).toContain(
+		auth === "basic"
+			? "BASIC_AUTH_USER and BASIC_AUTH_PASSWORD are required"
+			: "JWT_SECRET is required",
+	);
+	expect(empty.stderr.toString()).toContain(".env.example");
+
+	await writeDotEnv(app, true);
 	const server = Bun.spawn(["bun", "run", "src/index.ts"], {
 		cwd: app,
 		stdout: "pipe",
 		stderr: "pipe",
-		env: { ...process.env, NO_COLOR: "1", ...AUTH_ENV },
+		env: envWithoutAuth(),
 	});
 	try {
 		const base = `http://localhost:${port}`;
