@@ -9,7 +9,11 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { cyan, green } from "./color.js";
-import { type DryRunOptions, reportDryRun } from "./dryRun.js";
+import {
+	type DryRunOptions,
+	type PlannedFile,
+	reportDryRun,
+} from "./dryRun.js";
 import {
 	assertInsideProject,
 	ensureBunaryProject,
@@ -26,6 +30,14 @@ export interface GeneratedFile {
 	dir: string[];
 	/** Produces the file content once the target is known to be safe */
 	render: () => Promise<string>;
+	/**
+	 * Other project files to create or update alongside it (e.g.
+	 * `.env.example` for the auth middleware, #153), planned once the target
+	 * is known to be safe (absolute paths, inside the project). Written
+	 * (replacing any current content) after the main file, or listed on a
+	 * dry run.
+	 */
+	companions?: (cwd: string) => Promise<PlannedFile[]>;
 }
 
 /**
@@ -67,9 +79,11 @@ export async function generateFile(
 	}
 
 	const content = await file.render();
+	const companions = (await file.companions?.(cwd)) ?? [];
+	for (const companion of companions) assertInsideProject(cwd, companion.path);
 
 	if (options.dryRun) {
-		reportDryRun([{ path, content }], cwd, options.verbose);
+		reportDryRun([{ path, content }, ...companions], cwd, options.verbose);
 		return undefined;
 	}
 
@@ -77,5 +91,11 @@ export async function generateFile(
 	await writeFile(path, content, { encoding: "utf-8", flag: "wx" });
 
 	console.log(green(`✅ Created ${file.label}: ${cyan(path)}`));
+
+	for (const companion of companions) {
+		await writeFile(companion.path, companion.content, "utf-8");
+		const verb = companion.update ? "Updated" : "Created";
+		console.log(green(`✅ ${verb} ${cyan(companion.path)}`));
+	}
 	return path;
 }

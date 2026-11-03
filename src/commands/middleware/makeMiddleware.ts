@@ -2,17 +2,22 @@
  * make:middleware command - scaffold middleware files (Laravel-inspired)
  * init --auth basic|jwt is a shortcut that uses this same content generator.
  */
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import type { Command } from "../../types/command.js";
 import { dim } from "../../utils/color.js";
 import {
 	type DryRunOptions,
 	dryRunFlags,
 	dryRunOptionsFromFlags,
+	type PlannedFile,
 } from "../../utils/dryRun.js";
 import { generateFile } from "../../utils/generate.js";
 import { middlewareNameToFunctionName } from "../../utils/naming.js";
 import { middlewareNextSteps } from "../../utils/nextSteps.js";
 import { loadStub } from "../../utils/stub.js";
+import { extendEnvExample, generateGitignore } from "../project/env.js";
 
 /**
  * Generate middleware file content. Used by make:middleware and by init --auth.
@@ -40,7 +45,50 @@ export async function generateMiddlewareContent(
 }
 
 /**
+ * The `.env.example` and `.gitignore` changes the auth middleware needs in
+ * an existing project (#153): the same content `init --auth` writes, with
+ * only what is missing appended. A real `.env` is never touched.
+ *
+ * @param auth - Auth middleware type
+ * @param cwd - Project root
+ * @returns Files to create or update (none when both are up to date)
+ */
+export async function authEnvFiles(
+	auth: "basic" | "jwt",
+	cwd: string,
+): Promise<PlannedFile[]> {
+	const read = async (path: string) =>
+		existsSync(path) ? await readFile(path, "utf8") : undefined;
+	const files: PlannedFile[] = [];
+
+	const envPath = join(cwd, ".env.example");
+	const env = await read(envPath);
+	const envContent = await extendEnvExample(auth, env);
+	if (envContent !== undefined) {
+		files.push({
+			path: envPath,
+			content: envContent,
+			update: env !== undefined,
+		});
+	}
+
+	const gitignorePath = join(cwd, ".gitignore");
+	const gitignore = await read(gitignorePath);
+	const gitignoreContent = await generateGitignore(gitignore);
+	if (gitignoreContent !== gitignore) {
+		files.push({
+			path: gitignorePath,
+			content: gitignoreContent,
+			update: gitignore !== undefined,
+		});
+	}
+	return files;
+}
+
+/**
  * Generate a middleware file in src/middleware/.
+ * For `basic` / `jwt` also creates or extends `.env.example` and
+ * `.gitignore` (see {@link authEnvFiles}).
  * init --auth basic|jwt is equivalent to running make:middleware basic|jwt after init.
  *
  * @param middlewareName - Middleware name (e.g. "basic", "jwt", "ensure-auth")
@@ -63,6 +111,10 @@ export async function makeMiddleware(
 			name: middlewareName,
 			dir: ["src", "middleware"],
 			render: () => generateMiddlewareContent(middlewareName),
+			companions:
+				middlewareName === "basic" || middlewareName === "jwt"
+					? (cwd) => authEnvFiles(middlewareName, cwd)
+					: undefined,
 		},
 		options,
 	);

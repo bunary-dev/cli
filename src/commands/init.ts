@@ -12,6 +12,7 @@ import {
 	reportDryRun,
 } from "../utils/dryRun.js";
 import { buildFileTree } from "../utils/fileTree.js";
+import { authEnvVars } from "../utils/nextSteps.js";
 import {
 	ask,
 	isInteractive,
@@ -153,10 +154,7 @@ export async function init(name: string, options?: InitOptions): Promise<void> {
 	}
 	console.log(`  ${dim("$")} ${cyan("bun install")}`);
 	if (envExample !== undefined) {
-		const vars =
-			options?.auth === "basic"
-				? "BASIC_AUTH_USER and BASIC_AUTH_PASSWORD"
-				: "JWT_SECRET";
+		const vars = authEnvVars(options?.auth as "basic" | "jwt");
 		console.log(`  ${dim("$")} ${cyan("cp .env.example .env")}`);
 		console.log(`    ${dim(`fill in ${vars} in .env`)}`);
 	}

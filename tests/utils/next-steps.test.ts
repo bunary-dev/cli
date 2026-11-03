@@ -75,6 +75,20 @@ describe("nextSteps utilities", () => {
 			expect(result).not.toContain("router.use(");
 		});
 
+		test("auth middleware: copy .env.example and fill in its keys (#153)", () => {
+			const basic = middlewareNextSteps("basic", "basicMiddleware");
+			expect(basic).toContain("cp .env.example .env");
+			expect(basic).toContain(
+				"fill in BASIC_AUTH_USER and BASIC_AUTH_PASSWORD in .env",
+			);
+			const jwt = middlewareNextSteps("jwt", "jwtMiddleware");
+			expect(jwt).toContain("cp .env.example .env");
+			expect(jwt).toContain("fill in JWT_SECRET in .env");
+			expect(
+				middlewareNextSteps("ensure-auth", "ensureAuthMiddleware"),
+			).not.toContain(".env");
+		});
+
 		test("auth middleware next steps are indented with two spaces", () => {
 			for (const line of middlewareNextSteps("basic", "basicMiddleware").split(
 				"\n",

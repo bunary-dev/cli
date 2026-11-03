@@ -19,6 +19,8 @@ export interface PlannedFile {
 	path: string;
 	/** Content that would be written. */
 	content: string;
+	/** The file exists and would be replaced by `content`, not created. */
+	update?: boolean;
 }
 
 /** Flag definitions shared by all scaffolding commands. */
@@ -57,7 +59,8 @@ export function reportDryRun(
 	console.log(`\n  ${bold("Dry run")} — no files will be written\n`);
 	console.log("  Would create:");
 	for (const file of files) {
-		console.log(`    ${cyan(relative(baseDir, file.path) || file.path)}`);
+		const shown = cyan(relative(baseDir, file.path) || file.path);
+		console.log(`    ${shown}${file.update ? dim(" (update)") : ""}`);
 		if (verbose) {
 			for (const line of file.content.split("\n")) {
 				console.log(dim(`      │ ${line}`));

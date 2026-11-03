@@ -11,7 +11,9 @@
  * the credentials or the token are valid (#150). They are started the way
  * the printed next steps say, from a `.env` copied from `.env.example`:
  * with the values filled in they serve, left empty they exit naming
- * `.env.example` (#151).
+ * `.env.example` (#151). A plain `init` project gets the same auth from
+ * `make:middleware jwt` plus the registration its next steps print, and is
+ * served the same way from the `.env.example` that writes (#153).
  *
  * Needs the network. Offline (or with BUNARY_SKIP_NETWORK_TESTS=1) the tests
  * are skipped and say why.
@@ -207,9 +209,13 @@ async function writeDotEnv(app: string, filled: boolean): Promise<void> {
  * Serve an `--auth` project with its real entrypoint on a free port and
  * check what the scaffold protects. The credentials come from the `.env`
  * copied from `.env.example`; with the values left empty the app exits
- * naming `.env.example` (#151).
+ * naming `.env.example` (#151). `prefix` is the protected group.
  */
-async function serveAuthProject(app: string, auth: "basic" | "jwt") {
+async function serveAuthProject(
+	app: string,
+	auth: "basic" | "jwt",
+	prefix = "/api",
+) {
 	const configPath = join(app, "config", "bunary.ts");
 	const port = freePort();
 	const config = await Bun.file(configPath).text();
@@ -272,26 +278,28 @@ async function serveAuthProject(app: string, auth: "basic" | "jwt") {
 		expect(await home.json()).toMatchObject({ message: "Welcome to Bunary!" });
 		expect((await get("/health")).status).toBe(200);
 
-		await expectUnauthorized(await get("/api/me"));
-		await expectUnauthorized(await get("/api/health"));
+		await expectUnauthorized(await get(`${prefix}/me`));
+		await expectUnauthorized(await get(`${prefix}/health`));
 
 		let ok: Response;
 		if (auth === "basic") {
-			await expectUnauthorized(await get("/api/me", basic("ada", "wrong")));
 			await expectUnauthorized(
-				await get("/api/me", basic("eve", AUTH_ENV.BASIC_AUTH_PASSWORD)),
+				await get(`${prefix}/me`, basic("ada", "wrong")),
+			);
+			await expectUnauthorized(
+				await get(`${prefix}/me`, basic("eve", AUTH_ENV.BASIC_AUTH_PASSWORD)),
 			);
 			ok = await get(
-				"/api/me",
+				`${prefix}/me`,
 				basic(AUTH_ENV.BASIC_AUTH_USER, AUTH_ENV.BASIC_AUTH_PASSWORD),
 			);
 		} else {
 			const tokens = await mintTokens(app);
 			for (const bad of [tokens.tampered, tokens.expired, tokens.wrongSecret]) {
-				await expectUnauthorized(await get("/api/me", `Bearer ${bad}`));
+				await expectUnauthorized(await get(`${prefix}/me`, `Bearer ${bad}`));
 			}
-			await expectUnauthorized(await get("/api/me", "Bearer not-a-jwt"));
-			ok = await get("/api/me", `Bearer ${tokens.valid}`);
+			await expectUnauthorized(await get(`${prefix}/me`, "Bearer not-a-jwt"));
+			ok = await get(`${prefix}/me`, `Bearer ${tokens.valid}`);
 		}
 		expect(ok.status).toBe(200);
 		const me = await ok.json();
@@ -302,6 +310,41 @@ async function serveAuthProject(app: string, auth: "basic" | "jwt") {
 		await server.exited;
 		await writeFile(configPath, config);
 	}
+}
+
+/**
+ * Apply the registration `make:middleware jwt` prints to a plain `init`
+ * entrypoint: boot authProvider with the file's authConfig and protect an
+ * `/admin` group with jwtMiddleware.
+ */
+function registerJwt(entrypoint: string): string {
+	const steps: Array<[string, string]> = [
+		[
+			'import config from "../config/bunary.js";',
+			`import { authProvider } from "@bunary/auth/provider";
+import config from "../config/bunary.js";
+import { authConfig, jwtMiddleware } from "./middleware/jwt.js";`,
+		],
+		[
+			"registerRoutes(router);",
+			`registerRoutes(router);
+router.group({ prefix: "/admin", middleware: [jwtMiddleware] }, (admin) => {
+  admin.get("/me", (ctx) => ({ id: (ctx.locals.user as { id: string }).id }));
+  admin.get("/health", () => ({ status: "ok" }));
+});`,
+		],
+		["  config,", "  config: { ...config, auth: authConfig },"],
+		[
+			"providers: [httpProvider(router)],",
+			"providers: [authProvider, httpProvider(router)],",
+		],
+	];
+	let result = entrypoint;
+	for (const [from, to] of steps) {
+		if (!result.includes(from)) throw new Error(`entrypoint lacks: ${from}`);
+		result = result.replace(from, to);
+	}
+	return result;
 }
 
 describe.skipIf(!online)(
@@ -398,5 +441,36 @@ describe.skipIf(!online)(
 				if (auth) await serveAuthProject(app, auth);
 			}, 180_000);
 		}
+
+		test("init + make:middleware jwt, registered as its next steps say (#153)", async () => {
+			const cwd = await makeTempDir("bunary-cli-compile-");
+			await bunary(["init", "app", "--no-interactive"], cwd);
+			const app = join(cwd, "app");
+			expect(await Bun.file(join(app, ".env.example")).exists()).toBe(false);
+			await bunary(["make:middleware", "jwt"], app);
+			expect(await Bun.file(join(app, ".env.example")).text()).toContain(
+				"JWT_SECRET=",
+			);
+
+			const add = await spawn(["bun", "add", "@bunary/auth@^0.4.0"], app);
+			expect(add.code, add.output).toBe(0);
+			await writeFile(
+				join(app, "src", "index.ts"),
+				registerJwt(await Bun.file(join(app, "src", "index.ts")).text()),
+			);
+
+			const tsc = await spawn(
+				[
+					"bun",
+					join(app, "node_modules", "typescript", "bin", "tsc"),
+					"--noEmit",
+				],
+				app,
+			);
+			expect(tsc.output).toBe("");
+			expect(tsc.code).toBe(0);
+
+			await serveAuthProject(app, "jwt", "/admin");
+		}, 180_000);
 	},
 );
