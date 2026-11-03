@@ -3,8 +3,9 @@ import { requireAuth } from "@bunary/auth/provider";
 import type { Middleware } from "@bunary/http";
 
 /**
- * Basic Auth: checks BASIC_AUTH_USER / BASIC_AUTH_PASSWORD from env (e.g. in
- * .env; replace verify with a user lookup for real users).
+ * Basic Auth: checks BASIC_AUTH_USER / BASIC_AUTH_PASSWORD from env (copy
+ * .env.example to .env and fill them in; replace verify with a user lookup
+ * for real users).
  *
  * - authConfig goes under the `auth` config key read by authProvider
  *   (src/index.ts: config: { ...config, auth: authConfig }, providers: [authProvider, ...]).
@@ -16,7 +17,7 @@ const envUser = process.env.BASIC_AUTH_USER;
 const envPass = process.env.BASIC_AUTH_PASSWORD;
 if (!envUser?.trim() || !envPass?.trim()) {
 	throw new Error(
-		"BASIC_AUTH_USER and BASIC_AUTH_PASSWORD are required. Set them in your environment (e.g. in .env).",
+		"BASIC_AUTH_USER and BASIC_AUTH_PASSWORD are required. Copy .env.example to .env and fill them in (or set them in your environment).",
 	);
 }
 // Keep only a hash; Bun.password.verify checks it in constant time.

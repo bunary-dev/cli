@@ -49,13 +49,14 @@ describe("--dry-run", () => {
 		expect(output).toContain("my-app/package.json");
 		expect(output).toContain("my-app/tsconfig.json");
 		expect(output).toContain("my-app/src/index.ts");
-		expect(output).toContain("7 files (dry run)");
+		expect(output).toContain("8 files (dry run)");
 	});
 
 	it("init --auth jwt includes the middleware file", async () => {
 		await init("my-app", { dryRun: true, auth: "jwt" });
 		expect(output).toContain("my-app/src/middleware/jwt.ts");
-		expect(output).toContain("8 files (dry run)");
+		expect(output).toContain("my-app/.env.example");
+		expect(output).toContain("10 files (dry run)");
 	});
 
 	it("init dry run for '.' does not write", async () => {

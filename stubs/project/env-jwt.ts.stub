@@ -1,0 +1,4 @@
+# HS256 signing secret read by src/middleware/jwt.ts: at least 32 characters.
+# Generate one with: openssl rand -base64 32
+# Copy to .env (git-ignored) and fill in; the app refuses to start without it.
+JWT_SECRET=
